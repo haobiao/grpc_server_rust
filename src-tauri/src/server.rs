@@ -5,7 +5,7 @@
 
 use std::net::SocketAddr;
 
-use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
+use tonic::transport::{Certificate, Identity, Server as TonicServer, ServerTlsConfig};
 
 use crate::dialout::gnmi::{GnmiConfig, GnmiDialoutService};
 use crate::dialout::gnmi::proto::dial_out::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
@@ -81,7 +81,7 @@ impl Server {
             let tls = ServerTlsConfig::new()
                 .identity(tls_config.identity)
                 .client_ca_optional(tls_config.ca);
-            Server::builder()
+            TonicServer::builder()
                 .tls_config(tls)?
                 .max_frame_size(MAX_MESSAGE_SIZE)
                 .max_message_size(MAX_MESSAGE_SIZE)
@@ -90,7 +90,7 @@ impl Server {
                 .await
                 .map_err(Into::into)
         } else {
-            Server::builder()
+            TonicServer::builder()
                 .max_frame_size(MAX_MESSAGE_SIZE)
                 .max_message_size(MAX_MESSAGE_SIZE)
                 .add_service(service)
@@ -140,7 +140,7 @@ impl Server {
             let tls = ServerTlsConfig::new()
                 .identity(tls_config.identity)
                 .client_ca_optional(tls_config.ca);
-            Server::builder()
+            TonicServer::builder()
                 .tls_config(tls)?
                 .max_frame_size(MAX_MESSAGE_SIZE)
                 .max_message_size(MAX_MESSAGE_SIZE)
@@ -149,7 +149,7 @@ impl Server {
                 .await
                 .map_err(Into::into)
         } else {
-            Server::builder()
+            TonicServer::builder()
                 .max_frame_size(MAX_MESSAGE_SIZE)
                 .max_message_size(MAX_MESSAGE_SIZE)
                 .add_service(service)
@@ -181,7 +181,7 @@ impl Server {
             let tls = ServerTlsConfig::new()
                 .identity(tls_config.identity)
                 .client_ca_optional(tls_config.ca);
-            Server::builder()
+            TonicServer::builder()
                 .tls_config(tls)?
                 .max_frame_size(MAX_MESSAGE_SIZE)
                 .max_message_size(MAX_MESSAGE_SIZE)
@@ -190,7 +190,7 @@ impl Server {
                 .await
                 .map_err(Into::into)
         } else {
-            Server::builder()
+            TonicServer::builder()
                 .max_frame_size(MAX_MESSAGE_SIZE)
                 .max_message_size(MAX_MESSAGE_SIZE)
                 .add_service(service)

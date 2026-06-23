@@ -17,6 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // google well-known protos needed by gnmi.proto
     let google_protos = [
         "google/protobuf/any.proto",
+        "google/protobuf/descriptor.proto",
     ];
 
     let mut proto_files: Vec<PathBuf> = core_protos
@@ -31,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     proto_files.append(&mut google_proto_files);
 
-    let mut protos_include: Vec<PathBuf> = vec![proto_root.clone()];
+    let protos_include: Vec<PathBuf> = vec![proto_root.clone()];
 
     tonic_build::configure()
         .build_server(true)

@@ -188,7 +188,7 @@ impl DialoutV3Service {
                 let content = format!(
                     "{}\ndata_str:\n{}\n==================gRPC 3-layer server count: {} source addr: {}==================",
                     telemetry_info,
-                    telemetry.encoding == 0 { &data_json } else { &format!("{:?}", telemetry_obj) },
+                    if telemetry.encoding == 0 { &data_json } else { &format!("{:?}", telemetry_obj) },
                     count, peer
                 );
                 tracing::info!("{}", content);
