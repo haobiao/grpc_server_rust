@@ -31,8 +31,8 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "proto/*",
-      "tls/*"
+      "../proto/*",
+      "../tls/*"
     ],
     "windows": {
       "nsis": {
