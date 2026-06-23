@@ -1,4 +1,3 @@
-use std::env;
 use std::path::PathBuf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,19 +24,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|f| proto_root.join(f))
         .collect();
 
-    let mut google_proto_files: Vec<PathBuf> = google_protos
+    let google_proto_files: Vec<PathBuf> = google_protos
         .iter()
         .map(|f| proto_root.join(f))
         .collect();
 
-    proto_files.append(&mut google_proto_files);
+    proto_files.extend(google_proto_files);
 
     let protos_include: Vec<PathBuf> = vec![proto_root.clone()];
 
     tonic_build::configure()
         .build_server(true)
         .build_client(false)
-        .compile(&proto_files, &protos_include)?;
+        .compile_protos(&proto_files, &protos_include)?;
 
     // Tauri mobile build hook (no-op when Tauri is not enabled)
     #[cfg(feature = "gui")]
