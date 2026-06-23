@@ -10,6 +10,10 @@ use tonic::{Request, Response, Status, Streaming};
 use crate::error::Result;
 
 /// Include the compiled protobuf definitions.
+///
+/// Note: prost-build merges protos that share a package tree into one file.
+/// gnmi.proto (package `gnmi`) and dial_out.proto (package `gnmi.sonic`)
+/// are both in the generated `gnmi.rs` — so we include `gnmi` for both.
 pub mod proto {
     pub mod gnmi_ext {
         tonic::include_proto!("gnmi_ext");
@@ -17,17 +21,12 @@ pub mod proto {
     pub mod gnmi {
         tonic::include_proto!("gnmi");
     }
-    /// dial_out.proto declares `package gnmi.sonic;`
-    /// prost-build generates nested modules: gnmi::sonic
-    pub mod dial_out {
-        tonic::include_proto!("dial_out");
-    }
 }
 
 // Import types from the generated proto code.
-// dial_out.proto: package gnmi.sonic → nested module path
-use proto::dial_out::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
-use proto::dial_out::gnmi::sonic::PublishResponse;
+// dial_out.proto: package gnmi.sonic → merged into gnmi module tree
+use proto::gnmi::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
+use proto::gnmi::gnmi::sonic::PublishResponse;
 // SubscribeResponse comes from gnmi.proto (package gnmi)
 use proto::gnmi::SubscribeResponse;
 // Oneof enum types for accessing nested fields
@@ -57,7 +56,7 @@ impl GnmiDialoutService {
 }
 
 #[tonic::async_trait]
-impl proto::dial_out::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
+impl proto::gnmi::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
     async fn publish(
         &self,
         request: Request<Streaming<SubscribeResponse>>,

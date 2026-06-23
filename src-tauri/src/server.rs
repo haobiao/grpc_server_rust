@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 use tonic::transport::{Certificate, Identity, Server as TonicServer, ServerTlsConfig};
 
 use crate::dialout::gnmi::{GnmiConfig, GnmiDialoutService};
-use crate::dialout::gnmi::proto::dial_out::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
+use crate::dialout::gnmi::proto::gnmi::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
 use crate::dialout::gpb_v3::{DialoutV3Service, V3Config};
 use crate::dialout::gpb_v3::proto::grpc_dialout_v3::grpc_dialout_v3_server::GrpcDialoutV3Server;
 use crate::dialout::normal::{DialoutConfig, DialoutService};
