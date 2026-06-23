@@ -11,25 +11,33 @@ use crate::error::Result;
 
 /// Include the compiled protobuf definitions.
 ///
-/// prost-build generates one .rs file per package name (dots→underscores):
-///   gnmi_ext    (package gnmi_ext) → gnmi_ext.rs
-///   gnmi        (package gnmi)     → gnmi.rs
-///   gnmi_sonic  (package gnmi.sonic) → gnmi_sonic.rs  ← from dial_out.proto
+/// prost-build generates these files (confirmed via CI debug output):
+///   gnmi.rs          (package gnmi)
+///   gnmi.sonic.rs    (package gnmi.sonic)  ← from dial_out.proto
+///   gnmi_ext.rs      (package gnmi_ext)
+///   grpc_dialout.rs  (package grpc_dialout)
+///   grpc_dialout_v3.rs
+///   telemetry.rs
+///
+/// IMPORTANT: gnmi.sonic.rs uses `super::Path`, `super::super::SubscribeResponse`
+/// referencing types in gnmi.rs. So it MUST be nested inside the gnmi module.
 pub mod proto {
     pub mod gnmi_ext {
         tonic::include_proto!("gnmi_ext");
     }
     pub mod gnmi {
         tonic::include_proto!("gnmi");
-    }
-    pub mod gnmi_sonic {
-        tonic::include_proto!("gnmi.sonic");
+        // gnmi.sonic.rs references types in gnmi via `super::`, so it must
+        // be a submodule of `gnmi`.
+        pub mod sonic {
+            tonic::include_proto!("gnmi.sonic");
+        }
     }
 }
 
-// Import types from generated gnmi_sonic.rs (package gnmi.sonic)
-use proto::gnmi_sonic::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
-use proto::gnmi_sonic::gnmi::sonic::PublishResponse;
+// Import types: gnmi::sonic::* (nested module for cross-package refs)
+use proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
+use proto::gnmi::sonic::PublishResponse;
 // SubscribeResponse comes from gnmi.proto (package gnmi)
 use proto::gnmi::SubscribeResponse;
 // Oneof enum types for accessing nested fields
@@ -59,7 +67,7 @@ impl GnmiDialoutService {
 }
 
 #[tonic::async_trait]
-impl proto::gnmi_sonic::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
+impl proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
     async fn publish(
         &self,
         request: Request<Streaming<SubscribeResponse>>,

@@ -88,7 +88,7 @@ impl GRpcDialoutV3 for DialoutV3Service {
     async fn dialout_v3(
         &self,
         request: Request<Streaming<DialoutV3Args>>,
-    ) -> std::result::Result<Response<Streaming<DialoutV3Args>>, Status> {
+    ) -> std::result::Result<Response<Self::DialoutV3Stream>, Status> {
         let peer = request
             .remote_addr()
             .map(|a| a.to_string())
