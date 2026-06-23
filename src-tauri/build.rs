@@ -5,20 +5,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Core service protos that must be compiled at build time.
     // Each proto's package determines the generated module name.
-    // dial_out.proto imports gnmi.proto (package "gnmi") → prost generates
-    //   dial_out.rs containing gnmi module tree.
-    // BUT gnmi_ext.proto also has package "gnmi_ext" → separate file.
-    // The key issue: when multiple .proto files are compiled together,
-    // prost-build groups them by package into ONE .rs file per package.
     // dial_out.proto (package gnmi.sonic) + gnmi.proto (package gnmi) →
-    //   prost may merge into gnmi.rs (no dial_out.rs generated!).
-    let core_protos = [
-        "grpc_dialout.proto",      // package grpc_dialout      → grpc_dialout.rs
-        "grpc_dialout_v3.proto",   // package grpc_dialout_v3   → grpc_dialout_v3.rs
-        "telemetry.proto",          // package telemetry         → telemetry.rs
-        "gnmi_ext.proto",           // package gnmi_ext          → gnmi_ext.rs
-        "gnmi.proto",               // package gnmi              → gnmi.rs
-        "dial_out.proto",           // package gnmi.sonic        → dial_out.rs (separate package)
+    //   prost-build merges them into ONE file named after the top-level package.
+    //   So dial_out.rs does NOT exist; it's merged into gnmi.rs.
+    // Fix: split compilation into separate groups so each package gets its own .rs file.
+    let gnmi_protos = [
+        "gnmi_ext.proto",           // package gnmi_ext → gnmi_ext.rs
+        "gnmi.proto",               // package gnmi
+        "dial_out.proto",           // package gnmi.sonic → merged into gnmi.rs
+    ];
+
+    let other_protos = [
+        "grpc_dialout.proto",       // package grpc_dialout → grpc_dialout.rs
+        "grpc_dialout_v3.proto",    // package grpc_dialout_v3 → grpc_dialout_v3.rs
+        "telemetry.proto",          // package telemetry → telemetry.rs
     ];
 
     // google well-known protos needed by gnmi.proto
@@ -27,25 +27,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "google/protobuf/descriptor.proto",
     ];
 
-    let mut proto_files: Vec<PathBuf> = core_protos
+    let protos_include: Vec<PathBuf> = vec![proto_root.clone()];
+
+    // ── Group 1: gnmi + dial_out (merged, module name = "gnmi") ──
+    let mut gnmi_files: Vec<PathBuf> = gnmi_protos
         .iter()
         .map(|f| proto_root.join(f))
         .collect();
-
     let google_proto_files: Vec<PathBuf> = google_protos
         .iter()
         .map(|f| proto_root.join(f))
         .collect();
+    gnmi_files.extend(google_proto_files.clone());
 
-    proto_files.extend(google_proto_files);
-
-    let protos_include: Vec<PathBuf> = vec![proto_root.clone()];
-
-    // Use compile_protos (the renamed, non-deprecated method)
     tonic_build::configure()
         .build_server(true)
         .build_client(false)
-        .compile_protos(&proto_files, &protos_include)?;
+        .compile_protos(&gnmi_files, &protos_include)?;
+
+    // ── Group 2: other service protos ──
+    let other_files: Vec<PathBuf> = other_protos
+        .iter()
+        .map(|f| proto_root.join(f))
+        .collect();
+
+    tonic_build::configure()
+        .build_server(true)
+        .build_client(false)
+        .compile_protos(&other_files, &protos_include)?;
 
     // Debug: list what files were generated in OUT_DIR
     if let Ok(out_dir) = std::env::var("OUT_DIR") {
