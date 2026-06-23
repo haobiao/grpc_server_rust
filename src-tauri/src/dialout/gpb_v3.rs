@@ -23,7 +23,7 @@ pub mod proto {
 }
 
 use proto::grpc_dialout_v3::{
-    g_rpc_dialout_v3_server::{GrpcDialoutV3, GrpcDialoutV3Server},
+    g_rpc_dialout_v3_server::{GRpcDialoutV3, GRpcDialoutV3Server},
     DialoutV3Args,
 };
 use proto::telemetry::{Telemetry, TelemetryRowGpb};
@@ -82,7 +82,7 @@ impl DialoutV3Service {
 }
 
 #[tonic::async_trait]
-impl GrpcDialoutV3 for DialoutV3Service {
+impl GRpcDialoutV3 for DialoutV3Service {
     /// Handle bidirectional stream of DialoutV3Args.
     async fn dialout_v3(
         &self,
@@ -188,7 +188,7 @@ impl DialoutV3Service {
                 let content = format!(
                     "{}\ndata_str:\n{}\n==================gRPC 3-layer server count: {} source addr: {}==================",
                     telemetry_info,
-                    if telemetry.encoding == 0 { &data_json } else { &format!("{:?}", telemetry_obj) },
+                    if telemetry_obj.encoding == 0 { &data_json } else { &format!("{:?}", telemetry_obj) },
                     count, peer
                 );
                 tracing::info!("{}", content);

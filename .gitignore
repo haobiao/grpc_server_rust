@@ -10,3 +10,4 @@
 *.local
 *.tmp
 *.log
+# Do NOT ignore Cargo.lock — it's needed for reproducible CI caching
