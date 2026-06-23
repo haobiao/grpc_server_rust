@@ -57,7 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Tauri mobile build hook (no-op when Tauri is not enabled)
     #[cfg(feature = "gui")]
-    tauri_build::build();
+    {
+        tauri_build::build();
+    }
 
     println!("cargo:rerun-if-changed=../proto");
 

@@ -7,6 +7,7 @@ edition = "2021"
 [build-dependencies]
 tonic-build = "0.12"
 prost-build = "0.13"
+tauri-build = { version = "2", optional = true }
 
 [dependencies]
 tonic = { version = "0.12", features = ["transport", "tls"] }
@@ -36,4 +37,6 @@ tauri-build = { version = "2", features = [], optional = true }
 
 [features]
 default = []
-gui = ["tauri", "tauri-build"]
+# The 'gui' feature enables both the runtime tauri dependency and
+# the build-time tauri-build dependency.
+gui = ["tauri", "dep:tauri-build"]
