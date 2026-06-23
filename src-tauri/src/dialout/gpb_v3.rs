@@ -83,6 +83,7 @@ impl DialoutV3Service {
 
 #[tonic::async_trait]
 impl GRpcDialoutV3 for DialoutV3Service {
+    type DialoutV3Stream = std::pin::Pin<Box<dyn tokio_stream::Stream<Item = std::result::Result<DialoutV3Args, Status>> + Send>>;
     /// Handle bidirectional stream of DialoutV3Args.
     async fn dialout_v3(
         &self,
