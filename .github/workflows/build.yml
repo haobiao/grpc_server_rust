@@ -31,6 +31,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ── 安装 Rust 工具链 ────────────────────────────────────────
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
       # ── 安装 protoc (build.rs 和运行时都需要) ────────────────────
       - name: Install protoc
         uses: arduino/setup-protoc@v3
@@ -39,6 +43,10 @@ jobs:
 
       - name: Verify protoc
         run: protoc --version
+
+      # ── 生成 Cargo.lock（确保 cache key 稳定）────────────────────
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
 
       - name: Cache Cargo registry & build
         uses: actions/cache@v4
@@ -50,10 +58,6 @@ jobs:
           key: cli-windows-${{ hashFiles('src-tauri/Cargo.lock') }}
           restore-keys: |
             cli-windows-
-
-      - name: Generate Cargo.lock (if missing)
-        run: |
-          cargo generate-lockfile --manifest-path src-tauri/Cargo.toml 2>$null || cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
 
       - name: Build release binary
         run: |
@@ -102,13 +106,12 @@ jobs:
       - name: Verify protoc
         run: protoc --version
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      # ── 生成 Cargo.lock（确保 cache key 稳定）────────────────────
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
 
       - name: Rust cache
         uses: actions/cache@v4
@@ -121,19 +124,17 @@ jobs:
           restore-keys: |
             gui-windows-
 
-      - name: Install Tauri CLI & JS dependencies
-        run: |
-          cargo install tauri-cli --version "^2" --locked 2>$null || cargo install tauri-cli --version "^2"
-          npm ci 2>$null || echo "No package.json found, skipping npm ci"
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
 
       - name: Build Tauri app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: cargo tauri build --manifest-path src-tauri/tauri.conf.json
-        continue-on-error: true   # 首次构建允许失败，Tauri 配置可能需要微调
+        run: cargo tauri build --manifest-path src-tauri/Cargo.toml --features gui
 
       - name: Upload Tauri NSIS installer
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: grpc-server-rust-gui-windows
@@ -142,6 +143,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Tauri MSI installer
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: grpc-server-rust-gui-msi-windows
