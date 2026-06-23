@@ -59,13 +59,13 @@ jobs:
         run: |
           cargo build --profile ci --bins --manifest-path src-tauri/Cargo.toml
           echo "CLI binary size:"
-          (Get-Item src-tauri/target/ci/grpc-server-rust.exe).Length / 1MB
+          (Get-Item target/ci/grpc-server-rust.exe).Length / 1MB
 
       - name: Prepare CLI artifact
         run: |
           mkdir artifacts-cli
           # 可执行文件
-          cp src-tauri/target/ci/grpc-server-rust.exe artifacts-cli/
+          cp target/ci/grpc-server-rust.exe artifacts-cli/
           # 打包 proto 和 tls 目录（运行时需要）
           xcopy /E /I /Y proto artifacts-cli\proto
           xcopy /E /I /Y tls  artifacts-cli\tls
