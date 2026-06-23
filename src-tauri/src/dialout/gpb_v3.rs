@@ -188,10 +188,11 @@ impl DialoutV3Service {
                     String::from("<GPB data>")
                 };
 
+                let debug_str = format!("{:?}", telemetry_obj);
                 let content = format!(
                     "{}\ndata_str:\n{}\n==================gRPC 3-layer server count: {} source addr: {}==================",
                     telemetry_info,
-                    if telemetry_obj.encoding == 0 { &data_json } else { &format!("{:?}", telemetry_obj) },
+                    if telemetry_obj.encoding == 0 { &data_json } else { &debug_str },
                     count, peer
                 );
                 tracing::info!("{}", content);
@@ -459,7 +460,7 @@ fn field_value_to_json(val: &prost_reflect::Value, kind: &prost_reflect::Kind) -
         prost_reflect::Value::Map(map) => {
             let mut obj = serde_json::Map::new();
             for (k, v) in map.iter() {
-                obj.insert(format!("{}", k), field_value_to_json(v, kind));
+                obj.insert(format!("{:?}", k), field_value_to_json(v, kind));
             }
             serde_json::Value::Object(obj)
         }

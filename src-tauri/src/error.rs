@@ -48,6 +48,9 @@ pub enum AppError {
 
     #[error("Unsupported operation: {0}")]
     Unsupported(String),
+
+    #[error("Address parse error: {0}")]
+    AddrParse(#[from] std::net::AddrParseError),
 }
 
 /// Convenience type alias for results in this crate.

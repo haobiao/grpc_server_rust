@@ -52,7 +52,8 @@ pub fn init_file_logging(
         .filename_prefix(&prefix)
         .filename_suffix(&timestamp.to_string())
         .max_log_files(max_files)
-        .build(&log_dir)?;
+        .build(&log_dir)
+        .map_err(|e| AppError::Config(format!("{}", e)))?;
 
     // Build a non-blocking writer
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);

@@ -110,11 +110,7 @@ impl GrpcDialout for DialoutService {
             let sensor_path = msg.sensor_path.clone();
             let json_data = Bytes::from(msg.json_data.clone());
 
-            let device_msg_bytes = if let Some(ref dm) = msg.device_msg {
-                dm.encode_to_vec().into()
-            } else {
-                Bytes::new()
-            };
+            let device_msg_bytes: Bytes = msg.device_msg.encode_to_vec().into();
 
             let (dev_msg, merged_json) = match chunk_records.add(
                 device_msg_bytes,
