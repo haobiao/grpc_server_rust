@@ -122,7 +122,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: cargo tauri build --manifest-path src-tauri/Cargo.toml --features gui -- --profile ci
+        run: cd src-tauri && cargo tauri build --features gui -- --profile ci
 
       - name: Upload Tauri NSIS installer
         if: always()
