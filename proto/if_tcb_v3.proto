@@ -1,0 +1,107 @@
+syntax = "proto3";
+package  tcb_v3;
+message TCB {
+    message MsgPortConfigurations {
+        message MsgPortConfiguration {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            uint32 Type = 3;
+            uint32 QueNum = 4;
+            bool IsLocalAnalysis = 5;
+            string GroupIndex = 6;
+            message MsgThreshold {
+                uint32 StartThreshold = 1;
+                uint32 StopThreshold = 2;
+            }
+            MsgThreshold Threshold = 7;
+            message MsgFreeze {
+                uint32 FreezeNum = 1;
+                uint32 FreezeTime = 2;
+            }
+            MsgFreeze Freeze = 8;
+            message MsgSample {
+                uint32 PreSampleRate = 1;
+                uint32 PostSampleRate = 2;
+            }
+            MsgSample Sample = 9;
+            uint32 PollFrequency = 10;
+        }
+        repeated MsgPortConfiguration PortConfiguration = 1;
+    }
+    MsgPortConfigurations PortConfigurations = 1;
+    message MsgSlotConfigurations {
+        message MsgSlotConfiguration {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            uint32 CPUID = 3;
+            uint32 Type = 4;
+            bool IsLocalAnalysis = 5;
+            string GroupIndex = 6;
+            message MsgThreshold {
+                uint32 StartThreshold = 1;
+                uint32 StopThreshold = 2;
+            }
+            MsgThreshold Threshold = 7;
+            message MsgFreeze {
+                uint32 FreezeNum = 1;
+                uint32 FreezeTime = 2;
+            }
+            MsgFreeze Freeze = 8;
+            message MsgSample {
+                uint32 PreSampleRate = 1;
+                uint32 PostSampleRate = 2;
+            }
+            MsgSample Sample = 9;
+            uint32 PollFrequency = 10;
+        }
+        repeated MsgSlotConfiguration SlotConfiguration = 1;
+    }
+    MsgSlotConfigurations SlotConfigurations = 2;
+    message MsgTCBPacketInfoEvent {
+        message MsgTCBPacketInfo {
+            message MsgGlobal {
+                string IfName = 1;
+                uint32 Type = 2;
+                uint32 QueNum = 3;
+                uint32 TupleFilterType = 4;
+                uint32 InterruptType = 5;
+                uint32 TupleTypeCount = 6;
+            }
+            MsgGlobal Global = 1;
+            message MsgTCBData {
+                uint64 StartTimeStamp = 1;
+                uint32 TupleID = 2;
+                uint32 DropReason = 3;
+                uint32 ProtocolNo = 4;
+                uint32 SourcePort = 5;
+                uint32 DestPort = 6;
+                string SourceIP = 7;
+                string DestIP = 8;
+                uint32 DropCount = 9;
+                uint32 SourceQP = 10;
+                uint32 DestQP = 11;
+                uint32 OPCode = 12;
+                uint32 ProtocolMask = 13;
+            }
+            repeated MsgTCBData TCBData = 2;
+        }
+        repeated MsgTCBPacketInfo TCBPacketInfo = 1;
+    }
+    MsgTCBPacketInfoEvent TCBPacketInfoEvent = 3;
+    message MsgTCBRawPacketInfoEvent {
+        message MsgTCBRawPacketInfo {
+            string IfName = 1;
+            uint32 Type = 2;
+            uint32 QueNum = 3;
+            uint32 TupleFilterType = 4;
+            uint32 InterruptType = 5;
+            uint32 TupleTypeCount = 6;
+            uint32 TCBBufCount = 7;
+            string TCBBufData = 8;
+            uint32 TCBDropCount = 9;
+            string EventBufData = 10;
+        }
+        repeated MsgTCBRawPacketInfo TCBRawPacketInfo = 1;
+    }
+    MsgTCBRawPacketInfoEvent TCBRawPacketInfoEvent = 4;
+}

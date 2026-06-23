@@ -1,0 +1,108 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  buffermonitor;
+message BufferMonitorStatistics {
+    message Statistic {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 DataIndex = 4;
+        optional uint32 PortNumber = 5;
+        optional uint32 QueNumber = 6;
+        optional uint32 UnitLen = 7;
+        optional string Data = 8;
+        optional uint32 CurrentPortNumber = 9;
+    }
+    repeated Statistic statistic = 1;
+}
+message BufferMonitorGlobalConfigurations {
+    optional uint32 DropAlarmEnable = 1;
+    optional uint32 DropAlarmInterval = 2;
+    optional uint32 IngressAlarmEnable = 3;
+    optional uint32 IngressAlarmInterval = 4;
+    optional uint32 EgressAlarmEnable = 5;
+    optional uint32 EgressAlarmInterval = 6;
+    optional uint32 HeadroomAlarmEnable = 7;
+    optional uint32 HeadroomAlarmInterval = 8;
+}
+message BufferMonitorBoardConfigurations {
+    message BoardConfiguration {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 HeadroomThreshold = 4;
+    }
+    repeated BoardConfiguration boardconfiguration = 1;
+}
+message BufferMonitorBoardQueConfigurations {
+    message BoardQueConfiguration {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 QueIndex = 4;
+        optional uint32 IngressThreshold = 5;
+        optional uint32 EgressThreshold = 6;
+    }
+    repeated BoardQueConfiguration boardqueconfiguration = 1;
+}
+message BufferMonitorPortQueConfigurations {
+    message PortQueConfiguration {
+        optional uint32 IfIndex = 1;
+        optional uint32 QueIndex = 2;
+        optional uint32 IngressThreshold = 3;
+        optional uint32 EgressThreshold = 4;
+        optional uint32 HeadroomThreshold = 5;
+        optional string IfName = 6;
+    }
+    repeated PortQueConfiguration portqueconfiguration = 1;
+}
+message BoardOverrunEvent {
+    message BoardOverrun {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 AlarmType = 4;
+        optional uint32 CurrentValue = 5;
+        optional uint32 CurrentRatio = 6;
+        optional uint32 Threshold = 7;
+    }
+    repeated BoardOverrun boardoverrun = 1;
+}
+message PortQueOverrunEvent {
+    message PortQueOverrun {
+        optional uint32 IfIndex = 1;
+        optional uint32 QueIndex = 2;
+        optional uint32 AlarmType = 3;
+        optional uint64 CurrentValue = 4;
+        optional uint32 CurrentRatio = 5;
+        optional uint32 Threshold = 6;
+        optional uint64 OverrunCounters = 7;
+        optional string IfName = 8;
+    }
+    repeated PortQueOverrun portqueoverrun = 1;
+}
+message PortQueDropEvent {
+    message PortQueDrop {
+        optional uint32 IfIndex = 1;
+        optional uint32 QueIndex = 2;
+        optional uint32 AlarmType = 3;
+        optional uint64 DropCounters = 4;
+        optional uint64 DropBytes = 5;
+        optional string IfName = 6;
+    }
+    repeated PortQueDrop portquedrop = 1;
+}
+message EventStream {
+    optional string stream_name = 1;
+}
+service BufferMonitorService {
+    rpc GetJsonBufferMonitorStatistics(BufferMonitorStatistics) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBufferMonitorGlobalConfigurations(BufferMonitorGlobalConfigurations) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBufferMonitorBoardConfigurations(BufferMonitorBoardConfigurations) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBufferMonitorBoardQueConfigurations(BufferMonitorBoardQueConfigurations) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBufferMonitorPortQueConfigurations(BufferMonitorPortQueConfigurations) returns (grpc_service.GetJsonReply) {}
+    rpc SubscribeBoardOverrunEvent(BoardOverrunEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribePortQueOverrunEvent(PortQueOverrunEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribePortQueDropEvent(PortQueDropEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeEventStream(EventStream) returns (grpc_service.SubscribeReply) {}
+}

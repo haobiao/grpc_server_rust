@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package  oc_chip_tree_v3;
+
+message chip {
+    message MsgBuffers {
+        message MsgBuffer {
+            string name = 1;
+            message MsgInterfaces {
+                message MsgInterface {
+                    string interface_id = 1;
+                    message MsgConfig {
+                        string interface_id = 1;
+                    }
+                    MsgConfig config = 2;
+                    message MsgInput {
+                        message MsgQueues {
+                            message MsgQueue {
+                                string name = 1;
+                                message MsgConfig {
+                                    string name = 1;
+                                }
+                                MsgConfig config = 2;
+                                message MsgState {
+                                    uint64 current_usage = 1;
+                                    uint64 available_usage = 2;
+                                    uint32 alarm_threshold = 3;
+                                    uint32 current_utilization = 4;
+                                    uint64 historical_peak = 5;
+                                    uint64 discard_pkt = 6;
+                                    uint64 discard_traffic = 7;
+                                    uint64 historical_peak_time = 8;
+                                    uint32 alarm_count = 9;
+                                    uint64 forward_pkt = 10;
+                                    uint64 forward_traffic = 11;
+                                }
+                                MsgState state = 3;
+                            }
+                            repeated MsgQueue queue = 1;
+                        }
+                        MsgQueues queues = 1;
+                    }
+                    MsgInput input = 3;
+                    message MsgOutput {
+                        message MsgQueues {
+                            message MsgQueue {
+                                string name = 1;
+                                message MsgConfig {
+                                    string name = 1;
+                                }
+                                MsgConfig config = 2;
+                                message MsgState {
+                                    uint32 alarm_threshold = 1;
+                                    uint64 current_usage = 2;
+                                    uint64 available_usage = 3;
+                                    uint32 current_utilization = 4;
+                                    uint64 historical_peak = 5;
+                                    uint64 discard_pkt = 6;
+                                    uint64 discard_traffic = 7;
+                                    uint64 historical_peak_time = 8;
+                                    uint32 alarm_count = 9;
+                                    uint64 forward_pkt = 10;
+                                    uint64 forward_traffic = 11;
+                                }
+                                MsgState state = 3;
+                            }
+                            repeated MsgQueue queue = 1;
+                        }
+                        MsgQueues queues = 1;
+                    }
+                    MsgOutput output = 4;
+                }
+                repeated MsgInterface interface = 1;
+            }
+            MsgInterfaces interfaces = 2;
+        }
+        repeated MsgBuffer buffer = 1;
+    }
+    MsgBuffers buffers = 1;
+    message MsgState {
+        string error_reason = 1;
+    }
+    MsgState state = 2;
+}
+
+

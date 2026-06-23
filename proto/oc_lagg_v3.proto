@@ -1,0 +1,14 @@
+syntax = "proto3";
+import "oc_switched_vlan_v3.proto";
+package  aggregation_v3;
+message aggregation {
+    message Config {
+        string lag_type = 1;
+    }
+    repeated Config config = 1;
+    message State {
+        repeated string member = 1;
+    }
+    State state = 2;
+    switched_vlan_v3.switched_vlan switched_vlan = 3;
+}

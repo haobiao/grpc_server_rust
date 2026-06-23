@@ -1,0 +1,30 @@
+syntax = "proto3";
+package  diagnostic_v3;
+message Diagnostic {
+    message MsgMemories {
+        message MsgMemory {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            uint32 CPUID = 3;
+            uint32 Total = 4;
+            uint32 Used = 5;
+            uint32 Free = 6;
+            string FreeRatio = 7;
+            uint32 Buffers = 8;
+            uint32 Cached = 9;
+            uint64 CommitLimit = 10;
+            uint64 CommittedAS = 11;
+            uint64 VmallocTotal = 13;
+            uint64 VmallocUsed = 14;
+            uint64 VmallocChunk = 15;
+            uint32 SwapTotal = 16;
+            uint32 SwapFree = 17;
+            uint32 LowTotal = 18;
+            uint32 LowFree = 19;
+            uint32 HighTotal = 20;
+            uint32 HighFree = 21;
+        }
+        repeated MsgMemory Memory = 1;
+    }
+    MsgMemories Memories = 3;
+}

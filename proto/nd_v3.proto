@@ -1,0 +1,36 @@
+syntax = "proto3";
+package  nd_v3;
+message ND {
+    message MsgNDTable {
+        message MsgNDEntry {
+            uint32 IfIndex = 1;
+            string Ipv6Address = 2;
+            string IfName = 3;
+            string MacAddress = 4;
+            uint32 VLANID = 5;
+            uint32 PortIndex = 6;
+            string PortIfName = 7;
+            uint32 VrfIndex = 8;
+            uint32 Type = 9;
+            uint32 State = 10;
+            uint32 AgeTime = 11;
+        }
+        repeated MsgNDEntry NDEntry = 1;
+    }
+    MsgNDTable NDTable = 1;
+    message MsgNdTableEvent {
+        message MsgNdTable {
+            uint32 EventType = 1;
+            uint32 IfIndex = 2;
+            string Ipv6Address = 3;
+            string MacAddress = 4;
+            uint32 VLANID = 5;
+            uint32 PortIndex = 6;
+            uint32 VrfIndex = 7;
+            uint32 Type = 8;
+            uint32 Sequence = 9;
+        }
+        repeated MsgNdTable NdTable = 1;
+    }
+    MsgNdTableEvent NdTableEvent = 2;
+}

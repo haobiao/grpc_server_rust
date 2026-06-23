@@ -1,0 +1,16 @@
+syntax = "proto3";
+package  ipv6_v3;
+message ipv6 {
+    message Addresses {
+        message Address {
+            string ip = 1;
+            message Config {
+                string ip = 1;
+                uint32 prefix_length = 2;
+            }
+            Config config = 2;
+        }
+        repeated Address address = 1;
+    }
+    Addresses addresses = 1;
+}

@@ -1,0 +1,186 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  diagnostic;
+message DiagnosticCPUHistory {
+    message CPU {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 CPUUsage = 4;
+    }
+    repeated CPU cpu = 1;
+}
+message DiagnosticMemories {
+    message Memory {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 Total = 4;
+        optional uint32 Used = 5;
+        optional uint32 Free = 6;
+        optional string FreeRatio = 7;
+        optional uint32 Buffers = 8;
+        optional uint32 Cached = 9;
+        optional uint64 CommitLimit = 10;
+        optional uint64 CommittedAS = 11;
+        optional uint64 VmallocTotal = 12;
+        optional uint64 VmallocUsed = 13;
+        optional uint64 VmallocChunk = 14;
+        optional uint32 SwapTotal = 15;
+        optional uint32 SwapFree = 16;
+        optional uint32 LowTotal = 17;
+        optional uint32 LowFree = 18;
+        optional uint32 HighTotal = 19;
+        optional uint32 HighFree = 20;
+        optional string MemoryUsage = 21;
+    }
+    repeated Memory memory = 1;
+}
+message CPUEvent {
+    message CPU {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional string Description = 4;
+        optional uint32 CPUUsage = 5;
+        message Core {
+            optional uint32 CoreID = 1;
+            optional string CPUUsage = 2;
+            optional string Idle = 3;
+            optional string User = 4;
+            optional string Kernel = 5;
+            optional string Interrupt = 6;
+        }
+        repeated Core core = 6;
+        message Process {
+            optional uint32 JobID = 1;
+            optional uint32 PID = 2;
+            optional string Name = 3;
+            optional string CPUUsage = 4;
+            optional uint32 Priority = 5;
+            optional string State = 6;
+            optional uint32 FDs = 7;
+            optional uint32 Memory = 8;
+            optional string RunTime = 9;
+        }
+        repeated Process process = 7;
+    }
+    repeated CPU cpu = 1;
+}
+message MemoryEvent {
+    message Memory {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional string Description = 4;
+        optional uint64 Total = 5;
+        optional uint64 Used = 6;
+        optional uint64 Free = 7;
+        optional uint32 FreeRatio = 8;
+        optional uint64 LowTotal = 9;
+        optional uint64 LowFree = 10;
+        optional uint64 HighTotal = 11;
+        optional uint64 HighFree = 12;
+        message TopUsageProcess {
+            optional uint32 JID = 1;
+            optional string Name = 2;
+            optional uint64 Used = 3;
+        }
+        repeated TopUsageProcess topusageprocess = 13;
+        message TopUsageSlub {
+            optional string Name = 1;
+            optional uint64 Used = 2;
+        }
+        repeated TopUsageSlub topusageslub = 14;
+    }
+    repeated Memory memory = 1;
+}
+message CoreEvent {
+    message Cores {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 CoreID = 4;
+        optional uint32 CoreUsage = 5;
+        optional uint32 CoreThreshold = 6;
+        optional string CpuLast5sUsage = 7;
+        optional string CpuLast1mUsage = 8;
+        optional string CpuLast5mUsage = 9;
+        optional string EventType = 10;
+        optional uint32 CoreMinorThreshold = 11;
+        optional uint32 CoreRecoveryThreshold = 12;
+        message Process {
+            optional string Name = 1;
+            optional uint32 CPU = 2;
+            optional uint32 JobID = 3;
+            optional uint32 PID = 4;
+            optional uint32 PPID = 5;
+            optional string InLast5sUsage = 6;
+            optional string InLast1mUsage = 7;
+            optional string InLast5mUsage = 8;
+            optional string State = 9;
+            optional uint32 Memory = 10;
+        }
+        repeated Process process = 13;
+    }
+    repeated Cores cores = 1;
+}
+message CPUUsageAlarmEvent {
+    message CPU {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 Type = 4;
+        optional uint32 CPUUsage = 5;
+        optional uint32 Threshold = 6;
+    }
+    repeated CPU cpu = 1;
+}
+message CPUUsageRecoverEvent {
+    message CPU {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 Type = 4;
+        optional uint32 CPUUsage = 5;
+        optional uint32 Threshold = 6;
+    }
+    repeated CPU cpu = 1;
+}
+message MemoryUsageAlarmEvent {
+    message Memory {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 Type = 4;
+        optional uint32 MemoryUsage = 5;
+        optional uint32 Threshold = 6;
+    }
+    repeated Memory memory = 1;
+}
+message MemoryUsageRecoverEvent {
+    message Memory {
+        optional uint32 Chassis = 1;
+        optional uint32 Slot = 2;
+        optional uint32 CPUID = 3;
+        optional uint32 Type = 4;
+        optional uint32 MemoryUsage = 5;
+        optional uint32 Threshold = 6;
+    }
+    repeated Memory memory = 1;
+}
+message EventStream {
+    optional string stream_name = 1;
+}
+service DiagnosticService {
+    rpc GetJsonDiagnosticCPUHistory(DiagnosticCPUHistory) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonDiagnosticMemories(DiagnosticMemories) returns (grpc_service.GetJsonReply) {}
+    rpc SubscribeCPUEvent(CPUEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeMemoryEvent(MemoryEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeCoreEvent(CoreEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeCPUUsageAlarmEvent(CPUUsageAlarmEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeCPUUsageRecoverEvent(CPUUsageRecoverEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeMemoryUsageAlarmEvent(MemoryUsageAlarmEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeMemoryUsageRecoverEvent(MemoryUsageRecoverEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeEventStream(EventStream) returns (grpc_service.SubscribeReply) {}
+}

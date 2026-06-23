@@ -1,0 +1,101 @@
+syntax = "proto3";
+package  syslog_v3;
+message Syslog {
+    message MsgConfiguration {
+        string State = 1;
+        string DuplicateLogSuppression = 2;
+    }
+    MsgConfiguration Configuration = 1;
+    message MsgLogBuffer {
+        string State = 1;
+        uint32 BufferSize = 2;
+        uint32 BufferSizeLimit = 3;
+        uint32 LogsCount = 4;
+        uint32 DroppedLogsCount = 5;
+        uint32 OverwrittenLogsCount = 6;
+        message MsgLogsCountPerSeverity {
+            uint32 Emergency = 1;
+            uint32 Alert = 2;
+            uint32 Critical = 3;
+            uint32 Error = 4;
+            uint32 Warning = 5;
+            uint32 Notice = 6;
+            uint32 Informational = 7;
+            uint32 Debug = 8;
+        }
+        MsgLogsCountPerSeverity LogsCountPerSeverity = 7;
+    }
+    MsgLogBuffer LogBuffer = 2;
+    message MsgLogs {
+        message MsgLog {
+            uint32 Index = 1;
+            string Time = 2;
+            string Group = 3;
+            string Digest = 4;
+            uint32 Severity = 5;
+            string Content = 6;
+        }
+        repeated MsgLog Log = 1;
+    }
+    MsgLogs Logs = 3;
+    message MsgLogHosts {
+        message MsgHost {
+            string Address = 1;
+            string VRF = 2;
+            uint32 Port = 3;
+            uint32 Facility = 4;
+        }
+        repeated MsgHost Host = 1;
+    }
+    MsgLogHosts LogHosts = 4;
+    message MsgOutputRules {
+        message MsgOutputRule {
+            uint32 Destination = 1;
+            string MouduleName = 2;
+            string Rule = 3;
+        }
+        repeated MsgOutputRule OutputRule = 1;
+    }
+    MsgOutputRules OutputRules = 5;
+    message MsgIndependLogInfos {
+        message MsgIndependLogInfo {
+            string ModuleName = 1;
+            string SubModuleName = 2;
+            uint32 Index = 3;
+            string Time = 4;
+            string Digest = 5;
+            uint32 Severity = 6;
+            string Content = 7;
+        }
+        repeated MsgIndependLogInfo IndependLogInfo = 1;
+    }
+    MsgIndependLogInfos IndependLogInfos = 6;
+    message MsgIndependLogCfgs {
+        message MsgIndependLogCfg {
+            string ModuleName = 1;
+            uint32 BufferSize = 2;
+            uint32 AlarmThreshold = 3;
+            uint32 MinAge = 4;
+            uint32 SizeQuota = 5;
+        }
+        repeated MsgIndependLogCfg IndependLogCfg = 1;
+    }
+    MsgIndependLogCfgs IndependLogCfgs = 7;
+    message MsgIndependLogCount {
+        string ModuleName = 1;
+        string SubModuleName = 2;
+        string CountFilter = 3;
+        uint32 Count = 4;
+    }
+    MsgIndependLogCount IndependLogCount = 8;
+    message MsgLOGEvent {
+        message MsgLOG {
+            string Group = 1;
+            string Code = 2;
+            uint32 Severity = 3;
+            string Content = 4;
+        }
+        repeated MsgLOG LOG = 1;
+    }
+    MsgLOGEvent LOGEvent = 9;
+}

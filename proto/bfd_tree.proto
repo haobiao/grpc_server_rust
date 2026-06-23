@@ -1,0 +1,155 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  bfd;
+message BFDBase {
+    optional uint32 MultihopMinTransmitInterval = 1;
+    optional uint32 MultihopMinReceiveInterval = 2;
+    optional uint32 MultihopDetectMultiplier = 3;
+    optional string EchoSourceIp = 4;
+    optional string EchoSourceIpv6 = 5;
+    optional bool IpRouterAlert = 6;
+    optional uint32 InitMode = 7;
+    optional string SbfdSourceIpv6 = 8;
+    optional uint32 MultihopMinEchoReceiveInterval = 9;
+    optional bool SbfdInitAcceptDown = 10;
+    message MultihopAuthentication {
+        optional uint32 AuthType = 1;
+        optional uint32 KeyID = 2;
+        optional uint32 KeyType = 3;
+        optional string Key = 4;
+    }
+    repeated MultihopAuthentication multihopauthentication = 11;
+}
+message BFDInterfaces {
+    message Interface {
+        optional uint32 IfIndex = 1;
+        optional uint32 MinTransmitInterval = 2;
+        optional uint32 MinReceiveInterval = 3;
+        optional uint32 DetectMultiplier = 4;
+        optional uint32 MinEchoReceiveInterval = 5;
+        optional bool Demand = 6;
+        optional uint32 Echo = 7;
+        message Authentication {
+            optional uint32 AuthType = 1;
+            optional uint32 KeyID = 2;
+            optional uint32 KeyType = 3;
+            optional string Key = 4;
+        }
+        repeated Authentication authentication = 8;
+    }
+    repeated Interface interface = 1;
+}
+message BFDSBFDReflectorNumbers {
+    message ReflectorNumber {
+        optional uint32 LocalDiscrNumber = 1;
+    }
+    repeated ReflectorNumber reflectornumber = 1;
+}
+message BFDSBFDReflectorIpv4Addrs {
+    message ReflectorIpv4Address {
+        optional string LocalDiscrIpv4Address = 1;
+    }
+    repeated ReflectorIpv4Address reflectoripv4address = 1;
+}
+message BFDSBFDDestAddrRemoteDiscrs {
+    message DestAddrRemoteDiscr {
+        optional string AddrType = 1;
+        optional string DestinationAddress = 2;
+        optional uint32 RemoteDiscriminator = 3;
+        optional string RemoteDiscrIpv4Addr = 4;
+    }
+    repeated DestAddrRemoteDiscr destaddrremotediscr = 1;
+}
+message BFDTemplates {
+    message Template_new {
+        optional string TemplateName = 1;
+        optional uint32 MinTransmitInterval = 2;
+        optional uint32 MinReceiveInterval = 3;
+        optional uint32 DetectMultiplier = 4;
+        optional uint32 MinEchoReceiveInterval = 5;
+        message Authentication {
+            optional uint32 AuthType = 1;
+            optional uint32 KeyID = 2;
+            optional uint32 KeyType = 3;
+            optional string Key = 4;
+        }
+        repeated Authentication authentication = 6;
+    }
+    repeated Template_new template_new = 1;
+}
+message BFDSessions {
+    message Session {
+        optional uint32 LocalDiscr = 1;
+        optional uint32 RemoteDiscr = 2;
+        optional string SourceAddr = 3;
+        optional string DestAddr = 4;
+        optional uint32 DestinationPort = 5;
+        optional uint32 SessionState = 6;
+        optional string Interface = 7;
+        optional string ProtocolType = 8;
+        optional string SessionType = 9;
+        optional uint32 DetectMult = 10;
+        optional uint32 DesiredMinTxInterval = 11;
+        optional uint32 RequiredMinRxInterval = 12;
+        optional uint32 RemoteMinTxInterval = 13;
+        optional uint32 RemoteMinRxInterval = 14;
+        optional uint32 NegotiatedTxInterval = 15;
+        optional uint32 NegotiatedRxInterval = 16;
+        optional uint32 DetectionTime = 17;
+        optional uint64 RxCount = 18;
+        optional uint64 TxCount = 19;
+        optional uint32 MinEchoRxInterval = 20;
+        optional uint32 EchoDetectionTime = 21;
+        optional uint32 ActEchoRxInterval = 22;
+        optional uint64 EchoRxCount = 23;
+        optional uint64 EchoTxCount = 24;
+        optional uint32 ConnectionType = 25;
+        optional uint32 UpDuration = 26;
+        optional uint32 HoldTime = 27;
+        optional uint32 AuthMode = 28;
+        optional uint32 DetectionMode = 29;
+        optional uint32 Version = 30;
+        optional uint32 DiagInfo = 31;
+        optional bool DemandMode = 32;
+        optional bool RemoteDemandMode = 33;
+    }
+    repeated Session session = 1;
+}
+message BFDStaticSessions {
+    message StaticSession {
+        optional string SessionName = 1;
+        optional string IfName = 2;
+        optional string VrfName = 3;
+        optional string AddrType = 4;
+        optional string SrcAddr = 5;
+        optional string PeerAddr = 6;
+        optional string DestAddr = 7;
+        optional uint32 LocalDiscriminator = 8;
+        optional uint32 RemoteDiscriminator = 9;
+        optional bool Auto_mine = 10;
+        optional bool OneArmEcho = 11;
+        optional string EchoSrcAddr = 12;
+        optional uint32 MinTransmitInterval = 13;
+        optional uint32 MinReceiveInterval = 14;
+        optional uint32 DetectMultiplier = 15;
+        optional uint32 MinEchoReceiveInterval = 16;
+        message Authentication {
+            optional uint32 AuthType = 1;
+            optional uint32 KeyID = 2;
+            optional uint32 KeyType = 3;
+            optional string Key = 4;
+        }
+        repeated Authentication authentication = 17;
+    }
+    repeated StaticSession staticsession = 1;
+}
+service BFDService {
+    rpc GetJsonBFDBase(BFDBase) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDInterfaces(BFDInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDSBFDReflectorNumbers(BFDSBFDReflectorNumbers) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDSBFDReflectorIpv4Addrs(BFDSBFDReflectorIpv4Addrs) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDSBFDDestAddrRemoteDiscrs(BFDSBFDDestAddrRemoteDiscrs) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDTemplates(BFDTemplates) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDSessions(BFDSessions) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonBFDStaticSessions(BFDStaticSessions) returns (grpc_service.GetJsonReply) {}
+}

@@ -1,0 +1,471 @@
+syntax = "proto3";
+package  buffermonitor_v3;
+message BufferMonitor {
+    message MsgEcnAndWredStatistics {
+        message MsgEcnAndWredStatistic {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            uint64 EcnMarked = 3;
+            uint64 WredDropped = 4;
+        }
+        repeated MsgEcnAndWredStatistic EcnAndWredStatistic = 1;
+    }
+    MsgEcnAndWredStatistics EcnAndWredStatistics = 1;
+    message MsgPFCStatistics {
+        message MsgPFCStatistic {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            string PfcSend = 3;
+            string PfcRecv = 4;
+            string PfcDeadlockCounters = 5;
+            string PfcDeadlockRecoverCounters = 6;
+        }
+        repeated MsgPFCStatistic PFCStatistic = 1;
+    }
+    MsgPFCStatistics PFCStatistics = 2;
+    message MsgIngressDrops {
+        message MsgIngressDrop {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            uint64 NoBufferPkts = 3;
+            uint64 NoBufferBytes = 4;
+            uint64 OtherDroppedPkts = 5;
+            uint64 OtherDroppedBytes = 6;
+        }
+        repeated MsgIngressDrop IngressDrop = 1;
+    }
+    MsgIngressDrops IngressDrops = 3;
+    message MsgEgressDrops {
+        message MsgEgressDrop {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            string UnicastDroppedPkts = 3;
+            string UnicastDroppedBytes = 4;
+            string MulticastDroppedPkts = 5;
+            string MulticastDroppedBytes = 6;
+            string UnicastDroppedPPS = 7;
+            string UnicastDroppedBPS = 8;
+            string DroppedPkts = 9;
+            string DroppedBytes = 10;
+        }
+        repeated MsgEgressDrop EgressDrop = 1;
+    }
+    MsgEgressDrops EgressDrops = 4;
+    message MsgBufferUsages {
+        message MsgBufferUsage {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            uint32 XpeCount = 3;
+            message MsgIngressUsed{
+                string Xpe0 = 1;
+                string Xpe1 = 2;
+                string Xpe2 = 3;
+                string Xpe3 = 4;
+                string Xpe4 = 5;
+                string Xpe5 = 6;
+                string Xpe6 = 7;
+                string Xpe7 = 8;
+                string Xpe8 = 9;
+                string Xpe9 = 10;
+                string Xpe10 = 11;
+                string Xpe11 = 12;
+                string Xpe12 = 13;
+                string Xpe13 = 14;
+                string Xpe14 = 15;
+                string Xpe15 = 16;
+				}
+			MsgIngressUsed IngressUsed = 4;
+            message MsgUnicastUsed{
+                string Xpe0 = 1;
+                string Xpe1 = 2;
+                string Xpe2 = 3;
+                string Xpe3 = 4;
+                string Xpe4 = 5;
+                string Xpe5 = 6;
+                string Xpe6 = 7;
+                string Xpe7 = 8;
+                string Xpe8 = 9;
+                string Xpe9 = 10;
+                string Xpe10 = 11;
+                string Xpe11 = 12;
+                string Xpe12 = 13;
+                string Xpe13 = 14;
+                string Xpe14 = 15;
+                string Xpe15 = 16;
+				}
+			MsgUnicastUsed UnicastUsed = 5;
+            message MsgMulticastUsed{
+                string Xpe0 = 1;
+                string Xpe1 = 2;
+                string Xpe2 = 3;
+                string Xpe3 = 4;
+                string Xpe4 = 5;
+                string Xpe5 = 6;
+                string Xpe6 = 7;
+                string Xpe7 = 8;
+                string Xpe8 = 9;
+                string Xpe9 = 10;
+                string Xpe10 = 11;
+                string Xpe11 = 12;
+                string Xpe12 = 13;
+                string Xpe13 = 14;
+                string Xpe14 = 15;
+                string Xpe15 = 16;
+				}
+			MsgMulticastUsed MulticastUsed = 6;
+			}
+        repeated MsgBufferUsage BufferUsage = 1;
+    }
+    MsgBufferUsages BufferUsages = 5;
+    message MsgCommBufferUsages {
+        message MsgCommBufferUsage {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            uint32 SliceCount = 3;
+            message MsgIngressUsed{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgIngressUsed IngressUsed = 4;
+            message MsgUnicastUsed{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgUnicastUsed UnicastUsed = 5;
+            message MsgMulticastUsed{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgMulticastUsed MulticastUsed = 6;
+            message MsgUnicastQueLen{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgUnicastQueLen UnicastQueLen = 7;
+            message MsgUnicastPPS{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgUnicastPPS UnicastPPS = 8;
+            message MsgUnicastBPS{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgUnicastBPS UnicastBPS = 9;
+            message MsgUnicastTransBytes{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgUnicastTransBytes UnicastTransBytes = 10;
+            message MsgMulticastTransBytes{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgMulticastTransBytes MulticastTransBytes = 11;
+            message MsgUnicastQueLenInBytes{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgUnicastQueLenInBytes UnicastQueLenInBytes = 12;
+            message MsgMulticastQueLen{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgMulticastQueLen MulticastQueLen = 13;
+            message MsgMulticastQueLenInBytes{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgMulticastQueLenInBytes MulticastQueLenInBytes = 14;
+            message MsgIngressQueLen{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgIngressQueLen IngressQueLen = 15;
+            message MsgIngressQueLenInBytes{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgIngressQueLenInBytes IngressQueLenInBytes = 16;
+            message MsgIngressGuaranteedUsed{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgIngressGuaranteedUsed IngressGuaranteedUsed = 17;
+            message MsgIngressGuaranteedQueLen{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgIngressGuaranteedQueLen IngressGuaranteedQueLen = 18;
+            message MsgIngressGuaranteedQueLenInBytes{
+                string Slice0 = 1;
+                string Slice1 = 2;
+                string Slice2 = 3;
+                string Slice3 = 4;
+                string Slice4 = 5;
+                string Slice5 = 6;
+                string Slice6 = 7;
+                string Slice7 = 8;
+                string Slice8 = 9;
+                string Slice9 = 10;
+                string Slice10 = 11;
+                string Slice11 = 12;
+                string Slice12 = 13;
+                string Slice13 = 14;
+                string Slice14 = 15;
+                string Slice15 = 16;
+				}
+			MsgIngressGuaranteedQueLenInBytes IngressGuaranteedQueLenInBytes = 19;
+            message MsgUnicastTotalQueLen{
+                repeated uint64 Slice0 = 1;
+                repeated uint64 Slice1 = 2;
+                repeated uint64 Slice2 = 3;
+                repeated uint64 Slice3 = 4;
+                repeated uint64 Slice4 = 5;
+                repeated uint64 Slice5 = 6;
+                repeated uint64 Slice6 = 7;
+                repeated uint64 Slice7 = 8;
+                repeated uint64 Slice8 = 9;
+                repeated uint64 Slice9 = 10;
+                repeated uint64 Slice10 = 11;
+                repeated uint64 Slice11 = 12;
+                repeated uint64 Slice12 = 13;
+                repeated uint64 Slice13 = 14;
+                repeated uint64 Slice14 = 15;
+                repeated uint64 Slice15 = 16;
+				}
+			MsgUnicastTotalQueLen UnicastTotalQueLen = 20;
+            message MsgUnicastTotalQueLenInBytes{
+                repeated uint64 Slice0 = 1;
+                repeated uint64 Slice1 = 2;
+                repeated uint64 Slice2 = 3;
+                repeated uint64 Slice3 = 4;
+                repeated uint64 Slice4 = 5;
+                repeated uint64 Slice5 = 6;
+                repeated uint64 Slice6 = 7;
+                repeated uint64 Slice7 = 8;
+                repeated uint64 Slice8 = 9;
+                repeated uint64 Slice9 = 10;
+                repeated uint64 Slice10 = 11;
+                repeated uint64 Slice11 = 12;
+                repeated uint64 Slice12 = 13;
+                repeated uint64 Slice13 = 14;
+                repeated uint64 Slice14 = 15;
+                repeated uint64 Slice15 = 16;
+				}
+			MsgUnicastTotalQueLenInBytes UnicastTotalQueLenInBytes = 21;
+        }
+        repeated MsgCommBufferUsage CommBufferUsage = 1;
+    }
+    MsgCommBufferUsages CommBufferUsages = 6;
+}

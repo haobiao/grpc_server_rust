@@ -1,0 +1,121 @@
+syntax = "proto3";
+package ntp_v3;
+message NTP {
+    message MsgClients {
+        message MsgClient {
+            uint32 Service = 1;
+            string VRF = 2;
+            uint32 AddressType = 3;
+            string IpAddress = 4;
+            string HostName = 5;
+            uint32 HostMode = 6;
+            uint32 IfIndex = 7;
+            uint32 KeyID = 8;
+            uint32 Version = 9;
+            bool Priority = 10;
+        }
+        repeated MsgClient Client = 1;
+    }
+    MsgClients Clients = 1;
+    message MsgAuthenticationKey {
+        message MsgAuthentication {
+            uint32 Service = 1;
+            uint32 KeyID = 2;
+            uint32 AuthMode = 3;
+            uint32 AclNumber = 4;
+            uint32 IPv6AclNumber = 5;
+            bool Reliable = 6;
+        }
+        repeated MsgAuthentication Authentication = 1;
+    }
+    MsgAuthenticationKey AuthenticationKey = 2;
+    message MsgService {
+        bool NTPEnable = 1;
+        bool SNTPEnable = 2;
+        bool NTPAuthEnable = 3;
+        bool SNTPAuthEnable = 4;
+        uint32 NTPSource = 5;
+        uint32 NTPIpv6Source = 6;
+        uint32 NTPMaxDynamicSession = 7;
+        uint32 NTPDscp = 8;
+        uint32 NTPIpv6Dscp = 9;
+        message MsgNTPTimeOffsetThreshold {
+            uint32 LogThreshold = 1;
+            uint32 TrapThreshold = 2;
+        }
+        MsgNTPTimeOffsetThreshold NTPTimeOffsetThreshold = 10;
+        message MsgSNTPTimeOffsetThreshold {
+            uint32 LogThreshold = 1;
+            uint32 TrapThreshold = 2;
+        }
+        MsgSNTPTimeOffsetThreshold SNTPTimeOffsetThreshold = 11;
+        message MsgNTPAcl {
+            uint32 PeerAcl = 1;
+            uint32 ServerAcl = 2;
+            uint32 SyncAcl = 3;
+            uint32 QueryAcl = 4;
+        }
+        MsgNTPAcl NTPAcl = 12;
+        message MsgNTPIpv6Acl {
+            uint32 PeerAcl = 1;
+            uint32 ServerAcl = 2;
+            uint32 SyncAcl = 3;
+            uint32 QueryAcl = 4;
+        }
+        MsgNTPIpv6Acl NTPIpv6Acl = 13;
+    }
+    MsgService Service = 3;
+    message MsgRefClocks {
+        message MsgRefClock {
+            string RefID = 1;
+            uint32 Stratum = 2;
+        }
+        repeated MsgRefClock RefClock = 1;
+    }
+    MsgRefClocks RefClocks = 4;
+    message MsgStatus {
+        bool NTPSynchronized = 1;
+        bool SNTPSynchronized = 2;
+    }
+    MsgStatus Status = 5;
+    message MsgMulticastClients {
+        message MsgMulticastClient {
+            uint32 IfIndex = 1;
+            uint32 AddressType = 2;
+            string IpAddress = 3;
+        }
+        repeated MsgMulticastClient MulticastClient = 1;
+    }
+    MsgMulticastClients MulticastClients = 6;
+    message MsgMulticastServers {
+        message MsgMulticastServer {
+            uint32 IfIndex = 1;
+            uint32 AddressType = 2;
+            string IpAddress = 3;
+            uint32 KeyID = 4;
+            uint32 Ttl = 5;
+            uint32 Version = 6;
+        }
+        repeated MsgMulticastServer MulticastServer = 1;
+    }
+    MsgMulticastServers MulticastServers = 7;
+    message MsgInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            bool Ipv4Inbound = 2;
+            bool Ipv6Inbound = 3;
+            message MsgBroadcastClient {
+                bool Enable = 1;
+            }
+            MsgBroadcastClient BroadcastClient = 4;
+            message MsgBroadcastServer {
+                bool Enable = 1;
+                uint32 KeyID = 2;
+                uint32 Version = 3;
+            }
+            MsgBroadcastServer BroadcastServer = 5;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgInterfaces Interfaces = 8;
+}

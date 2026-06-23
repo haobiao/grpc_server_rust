@@ -1,0 +1,240 @@
+syntax = "proto3";
+package  route_v3;
+message Route {
+    message MsgIpv4Routes {
+        message MsgRouteEntry {
+            string VRF = 1;
+            string Topology = 2;
+            message MsgIpv4 {
+                string Ipv4Address = 1;
+                uint32 Ipv4PrefixLength = 2;
+            }
+            MsgIpv4 Ipv4 = 3;
+            string Nexthop = 4;
+            uint32 IfIndex = 5;
+            uint32 AllVRF = 6;
+            message MsgProtocol {
+                uint32 ProtocolID = 1;
+                uint32 SubProtocolID = 2;
+            }
+            MsgProtocol Protocol = 7;
+            uint32 ProcessID = 8;
+            uint32 Age = 9;
+            uint32 Preference = 10;
+            uint32 Metric = 11;
+            uint32 Tag = 12;
+            string Neighbor = 13;
+            message MsgASNumber {
+                uint32 OriginAS = 1;
+                uint32 LastAS = 2;
+            }
+            MsgASNumber ASNumber = 14;
+            message MsgBackupPathAttribute {
+                uint32 BackupIfIndex = 1;
+                string BackupNexthop = 2;
+                string BackupIfName = 3;
+            }
+            MsgBackupPathAttribute BackupPathAttribute = 15;
+            string IfName = 16;
+        }
+        repeated MsgRouteEntry RouteEntry = 1;
+    }
+    MsgIpv4Routes Ipv4Routes = 1;
+    message MsgIpv4RoutingTable {
+        message MsgRouteEntry {
+            string VRF = 1;
+            string Topology = 2;
+            string Ipv4Address = 3;
+            uint32 Ipv4PrefixLength = 4;
+            string Nexthop = 5;
+            uint32 IfIndex = 6;
+            uint32 AllVRF = 7;
+            message MsgProtocol {
+                uint32 ProtocolID = 1;
+                uint32 SubProtocolID = 2;
+            }
+            MsgProtocol Protocol = 8;
+            uint32 ProcessID = 9;
+            uint32 Age = 10;
+            uint32 Preference = 11;
+            uint32 Metric = 12;
+            uint32 Tag = 13;
+            string Neighbor = 14;
+            message MsgASNumber {
+                uint32 OriginAS = 1;
+                uint32 LastAS = 2;
+            }
+            MsgASNumber ASNumber = 15;
+            message MsgBackupPathAttribute {
+                uint32 BackupIfIndex = 1;
+                string BackupNexthop = 2;
+                string BackupIfName = 3;
+            }
+            MsgBackupPathAttribute BackupPathAttribute = 16;
+            string IfName = 17;
+        }
+        repeated MsgRouteEntry RouteEntry = 1;
+    }
+    MsgIpv4RoutingTable Ipv4RoutingTable = 2;
+    message MsgIpv6Routes {
+        message MsgRouteEntry {
+            string VRF = 1;
+            string Topology = 2;
+            message MsgIpv6Prefix {
+                string Ipv6Address = 1;
+                uint32 Ipv6PrefixLength = 2;
+            }
+            MsgIpv6Prefix Ipv6Prefix = 3;
+            string Nexthop = 4;
+            uint32 IfIndex = 5;
+            uint32 AllVRF = 6;
+            message MsgProtocol {
+                uint32 ProtocolID = 1;
+                uint32 SubProtocolID = 2;
+            }
+            MsgProtocol Protocol = 7;
+            uint32 ProcessID = 8;
+            uint32 Age = 9;
+            uint32 Metric = 10;
+            uint32 Preference = 11;
+            uint32 Tag = 12;
+            string Neighbor = 13;
+            message MsgASNumber {
+                uint32 OriginAS = 1;
+                uint32 LastAS = 2;
+            }
+            MsgASNumber ASNumber = 14;
+            message MsgBackupPathAttribute {
+                uint32 BackupIfIndex = 1;
+                string BackupNexthop = 2;
+                string BackupIfName = 3;
+            }
+            MsgBackupPathAttribute BackupPathAttribute = 15;
+            string IfName = 16;
+        }
+        repeated MsgRouteEntry RouteEntry = 1;
+    }
+    MsgIpv6Routes Ipv6Routes = 3;
+    message MsgIpv6RoutingTable {
+        message MsgRouteEntry {
+            string VRF = 1;
+            string Topology = 2;
+            string Ipv6Address = 3;
+            uint32 Ipv6PrefixLength = 4;
+            string Nexthop = 5;
+            uint32 IfIndex = 6;
+            uint32 AllVRF = 7;
+            message MsgProtocol {
+                uint32 ProtocolID = 1;
+                uint32 SubProtocolID = 2;
+            }
+            MsgProtocol Protocol = 8;
+            uint32 ProcessID = 9;
+            uint32 Age = 10;
+            uint32 Metric = 11;
+            uint32 Preference = 12;
+            uint32 Tag = 13;
+            string Neighbor = 14;
+            message MsgASNumber {
+                uint32 OriginAS = 1;
+                uint32 LastAS = 2;
+            }
+            MsgASNumber ASNumber = 15;
+            message MsgBackupPathAttribute {
+                uint32 BackupIfIndex = 1;
+                string BackupNexthop = 2;
+                string BackupIfName = 3;
+            }
+            MsgBackupPathAttribute BackupPathAttribute = 16;
+            string IfName = 17;
+        }
+        repeated MsgRouteEntry RouteEntry = 1;
+    }
+    MsgIpv6RoutingTable Ipv6RoutingTable = 4;
+    message MsgIpv4RouteStatistics {
+        message MsgStatistics {
+            string VRF = 1;
+            string Topology = 2;
+            uint32 ProtocolID = 3;
+            uint32 TotalRoutes = 4;
+            uint32 ActiveRoutes = 5;
+            uint32 AddedRoutes = 6;
+            uint32 DeletedRoutes = 7;
+        }
+        repeated MsgStatistics Statistics = 1;
+    }
+    MsgIpv4RouteStatistics Ipv4RouteStatistics = 5;
+    message MsgIpv6RouteStatistics {
+        message MsgStatistics {
+            string VRF = 1;
+            string Topology = 2;
+            uint32 ProtocolID = 3;
+            uint32 TotalRoutes = 4;
+            uint32 ActiveRoutes = 5;
+            uint32 AddedRoutes = 6;
+            uint32 DeletedRoutes = 7;
+        }
+        repeated MsgStatistics Statistics = 1;
+    }
+    MsgIpv6RouteStatistics Ipv6RouteStatistics = 6;
+    message MsgIpv4RouteECMPNumbers {
+        message MsgRouteECMPNumber {
+            string VRF = 1;
+            string Topology = 2;
+            message MsgIpv4 {
+                string Ipv4Address = 1;
+                uint32 Ipv4PrefixLength = 2;
+            }
+            MsgIpv4 Ipv4 = 3;
+            uint32 ECMPNumber = 4;
+        }
+        repeated MsgRouteECMPNumber RouteECMPNumber = 1;
+    }
+    MsgIpv4RouteECMPNumbers Ipv4RouteECMPNumbers = 7;
+    message MsgIpv4ECMPNumbers {
+        message MsgRouteECMPNumber {
+            string VRF = 1;
+            string Topology = 2;
+            string Ipv4Address = 3;
+            uint32 Ipv4PrefixLength = 4;
+            uint32 ECMPNumber = 5;
+        }
+        repeated MsgRouteECMPNumber RouteECMPNumber = 1;
+    }
+    MsgIpv4ECMPNumbers Ipv4ECMPNumbers = 8;
+    message MsgIpv6RouteECMPNumbers {
+        message MsgRouteECMPNumber {
+            string VRF = 1;
+            string Topology = 2;
+            message MsgIpv6Prefix {
+                string Ipv6Address = 1;
+                uint32 Ipv6PrefixLength = 2;
+            }
+            MsgIpv6Prefix Ipv6Prefix = 3;
+            uint32 ECMPNumber = 4;
+        }
+        repeated MsgRouteECMPNumber RouteECMPNumber = 1;
+    }
+    MsgIpv6RouteECMPNumbers Ipv6RouteECMPNumbers = 9;
+    message MsgIpv6ECMPNumbers {
+        message MsgRouteECMPNumber {
+            string VRF = 1;
+            string Topology = 2;
+            string Ipv6Address = 3;
+            uint32 Ipv6PrefixLength = 4;
+            uint32 ECMPNumber = 5;
+        }
+        repeated MsgRouteECMPNumber RouteECMPNumber = 1;
+    }
+    MsgIpv6ECMPNumbers Ipv6ECMPNumbers = 10;
+    message MsgIpv4RoutingTableLimit {
+        uint32 Ipv4MaxRoutes = 1;
+        uint32 Ipv4RouteThreshold = 2;
+        bool Ipv4SimplyAlert = 3;
+    }
+    message MsgIpv6RoutingTableLimit {
+        uint32 Ipv6MaxRoutes = 1;
+        uint32 Ipv6RouteThreshold = 2;
+        bool Ipv6SimplyAlert = 3;
+    }
+}

@@ -1,0 +1,155 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  route;
+message RouteIpv4Routes {
+    message RouteEntry {
+        optional string VRF = 1;
+        optional string Topology = 2;
+        optional string Nexthop = 3;
+        optional uint32 IfIndex = 4;
+        optional uint32 ProcessID = 5;
+        optional uint32 Age = 6;
+        optional uint32 Preference = 7;
+        optional uint32 Metric = 8;
+        optional uint32 Tag = 9;
+        optional string Neighbor = 10;
+        message Ipv4 {
+            optional string Ipv4Address = 1;
+            optional uint32 Ipv4PrefixLength = 2;
+        }
+        repeated Ipv4 ipv4 = 11;
+        message Protocol {
+            optional uint32 ProtocolID = 1;
+            optional uint32 SubProtocolID = 2;
+        }
+        repeated Protocol protocol = 12;
+        message ASNumber {
+            optional uint32 OriginAS = 1;
+            optional uint32 LastAS = 2;
+        }
+        repeated ASNumber asnumber = 13;
+        message BackupPathAttribute {
+            optional uint32 BackupIfIndex = 1;
+            optional string BackupNexthop = 2;
+        }
+        repeated BackupPathAttribute backuppathattribute = 14;
+    }
+    repeated RouteEntry routeentry = 1;
+}
+message RouteIpv6Routes {
+    message RouteEntry {
+        optional string VRF = 1;
+        optional string Topology = 2;
+        optional string Nexthop = 3;
+        optional uint32 IfIndex = 4;
+        optional uint32 ProcessID = 5;
+        optional uint32 Age = 6;
+        optional uint32 Metric = 7;
+        optional uint32 Preference = 8;
+        optional uint32 Tag = 9;
+        optional string Neighbor = 10;
+        message Ipv6Prefix {
+            optional string Ipv6Address = 1;
+            optional uint32 Ipv6PrefixLength = 2;
+        }
+        repeated Ipv6Prefix ipv6prefix = 11;
+        message Protocol {
+            optional uint32 ProtocolID = 1;
+            optional uint32 SubProtocolID = 2;
+        }
+        repeated Protocol protocol = 12;
+        message ASNumber {
+            optional uint32 OriginAS = 1;
+            optional uint32 LastAS = 2;
+        }
+        repeated ASNumber asnumber = 13;
+        message BackupPathAttribute {
+            optional uint32 BackupIfIndex = 1;
+            optional string BackupNexthop = 2;
+        }
+        repeated BackupPathAttribute backuppathattribute = 14;
+    }
+    repeated RouteEntry routeentry = 1;
+}
+message RouteIpv4RouteStatistics {
+    message Statistics {
+        optional string VRF = 1;
+        optional string Topology = 2;
+        optional uint32 ProtocolID = 3;
+        optional uint32 TotalRoutes = 4;
+        optional uint32 ActiveRoutes = 5;
+        optional uint32 AddedRoutes = 6;
+        optional uint32 DeletedRoutes = 7;
+    }
+    repeated Statistics statistics = 1;
+}
+message RouteIpv6RouteStatistics {
+    message Statistics {
+        optional string VRF = 1;
+        optional string Topology = 2;
+        optional uint32 ProtocolID = 3;
+        optional uint32 TotalRoutes = 4;
+        optional uint32 ActiveRoutes = 5;
+        optional uint32 AddedRoutes = 6;
+        optional uint32 DeletedRoutes = 7;
+    }
+    repeated Statistics statistics = 1;
+}
+message RouteIpv4RouteECMPNumbers {
+    message RouteECMPNumber {
+        optional string VRF = 1;
+        optional string Topology = 2;
+        optional uint32 ECMPNumber = 3;
+        message Ipv4 {
+            optional string Ipv4Address = 1;
+            optional uint32 Ipv4PrefixLength = 2;
+        }
+        repeated Ipv4 ipv4 = 4;
+    }
+    repeated RouteECMPNumber routeecmpnumber = 1;
+}
+message RouteIpv6RouteECMPNumbers {
+    message RouteECMPNumber {
+        optional string VRF = 1;
+        optional string Topology = 2;
+        optional uint32 ECMPNumber = 3;
+        message Ipv6Prefix {
+            optional string Ipv6Address = 1;
+            optional uint32 Ipv6PrefixLength = 2;
+        }
+        repeated Ipv6Prefix ipv6prefix = 4;
+    }
+    repeated RouteECMPNumber routeecmpnumber = 1;
+}
+message RouteIpv4BandwidthBasedSharing {
+    optional uint32 Mode = 1;
+}
+message RouteIpv6BandwidthBasedSharing {
+    optional uint32 Mode = 1;
+}
+message RouteIpv4FRR {
+    message Ipv4InterProtocolFRR {
+        optional string VRF = 1;
+        optional uint32 InterProtocolFRR = 2;
+    }
+    repeated Ipv4InterProtocolFRR ipv4interprotocolfrr = 1;
+}
+message RouteIpv6FRR {
+    message Ipv6InterProtocolFRR {
+        optional string VRF = 1;
+        optional uint32 InterProtocolFRR = 2;
+    }
+    repeated Ipv6InterProtocolFRR ipv6interprotocolfrr = 1;
+}
+service RouteService {
+    rpc GetJsonRouteIpv4Routes(RouteIpv4Routes) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv6Routes(RouteIpv6Routes) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv4RouteStatistics(RouteIpv4RouteStatistics) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv6RouteStatistics(RouteIpv6RouteStatistics) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv4RouteECMPNumbers(RouteIpv4RouteECMPNumbers) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv6RouteECMPNumbers(RouteIpv6RouteECMPNumbers) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv4BandwidthBasedSharing(RouteIpv4BandwidthBasedSharing) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv6BandwidthBasedSharing(RouteIpv6BandwidthBasedSharing) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv4FRR(RouteIpv4FRR) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonRouteIpv6FRR(RouteIpv6FRR) returns (grpc_service.GetJsonReply) {}
+}

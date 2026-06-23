@@ -1,0 +1,27 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  mld;
+message MLDInterfaces {
+    message Interface {
+        optional uint32 IfIndex = 1;
+        optional bool Enabled = 2;
+        optional uint32 Version = 3;
+        optional bool AuthEnabled = 4;
+        optional uint32 JoinBySession = 5;
+        optional uint32 UserAggOuterVlan = 6;
+        optional uint32 UserAggInnerVlan = 7;
+        optional uint32 DynamicVlan = 8;
+    }
+    repeated Interface interface = 1;
+}
+message MLDUserProfiles {
+    message UserProfile {
+        optional string UserProfileName = 1;
+        optional uint32 AccessPolicy = 2;
+    }
+    repeated UserProfile userprofile = 1;
+}
+service MLDService {
+    rpc GetJsonMLDInterfaces(MLDInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonMLDUserProfiles(MLDUserProfiles) returns (grpc_service.GetJsonReply) {}
+}

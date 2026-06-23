@@ -1,0 +1,23 @@
+syntax = "proto3";
+package  l2vpn_v3;
+message L2VPN {
+    message MsgVSIStatistics {
+        message MsgStatistics {
+            string VsiName = 1;
+            uint64 InPkts = 2;
+            uint64 InOctets = 3;
+            uint64 InErrors = 4;
+            uint64 InDiscards = 5;
+            uint64 OutPkts = 6;
+            uint64 OutOctets = 7;
+            uint64 OutErrors = 8;
+            uint64 OutDiscards = 9;
+            uint64 InPktsRate = 10;
+            uint64 InOctetsRate = 11;
+            uint64 OutPktsRate = 12;
+            uint64 OutOctetsRate = 13;
+        }
+        repeated MsgStatistics Statistics = 1;
+    }
+    MsgVSIStatistics VSIStatistics = 1;
+}

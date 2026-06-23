@@ -1,0 +1,76 @@
+syntax = "proto3";
+package  hardwarequeue_v3;
+message HardwareQueue {
+    message MsgQueueMode {
+        message MsgQueue {
+            uint32 IfIndex = 1;
+            uint32 Mode = 2;
+            string IfName = 3;
+        }
+        repeated MsgQueue Queue = 1;
+    }
+    MsgQueueMode QueueMode = 1;
+    message MsgQueueParameter {
+        message MsgQueue {
+            uint32 IfIndex = 1;
+            uint32 QueueID = 2;
+            uint32 GroupID = 3;
+            uint32 Weight = 4;
+            uint32 ByteCount = 5;
+            uint32 MinBandwidthKbps = 6;
+            string IfName = 7;
+        }
+        repeated MsgQueue Queue = 1;
+    }
+    MsgQueueParameter QueueParameter = 2;
+    message MsgQueueCapacility {
+        message MsgQueue {
+            uint32 IfIndex = 1;
+            uint32 WrrWeightMin = 2;
+            uint32 WrrWeightMax = 3;
+            uint32 WrrByteMin = 4;
+            uint32 WrrByteMax = 5;
+            uint32 WfqWeightMin = 6;
+            uint32 WfqWeightMax = 7;
+            uint32 WfqByteMin = 8;
+            uint32 WfqByteMax = 9;
+            uint32 WfqBandWidthMin = 10;
+            uint32 WfqBandWidthMax = 11;
+            string IfName = 12;
+        }
+        repeated MsgQueue Queue = 1;
+    }
+    MsgQueueCapacility QueueCapacility = 3;
+    message MsgDefaultQueueMode {
+        message MsgQueue {
+            uint32 IfType = 1;
+            uint32 ScheduleMode = 2;
+            uint32 ScheduleUnit = 3;
+            uint32 QueueNum = 4;
+            uint32 BasicMode = 5;
+            uint32 MaxBandWidth1 = 6;
+            uint32 MaxBandWidth2 = 7;
+            uint32 MaxBandWidth3 = 8;
+            uint32 MaxBandWidth4 = 9;
+            uint32 IsDefault = 10;
+        }
+        repeated MsgQueue Queue = 1;
+    }
+    message MsgDefaultQueueParameter {
+        message MsgQueue {
+            uint32 IfType = 1;
+            uint32 ScheduleMode = 2;
+            uint32 ScheduleUnit = 3;
+            uint32 QueueID = 4;
+            uint32 SetMask = 5;
+            uint32 MinBandWidth = 6;
+            uint32 QueueLength = 7;
+            uint32 Group = 8;
+            uint32 ScheduleValue = 9;
+            uint32 MaxBandWidth = 10;
+            uint32 ServiceType = 11;
+            uint32 MinBandWidthPct = 12;
+        }
+        repeated MsgQueue Queue = 1;
+    }
+}

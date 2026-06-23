@@ -1,0 +1,458 @@
+syntax = "proto3";
+package segment_routing_ipv6_v3;
+message segment_routing_ipv6 {
+    message MsgTraffic_engineering {
+        message MsgAttributes {
+            string locator = 1;
+            bool traffic_statistics = 2;
+            bool traffic_service_class = 3;
+            uint32 traffic_statistics_interval = 4;
+            bool backup_hot_standby = 5;
+            bool sbfd = 6;
+            uint32 sbfd_remoteid = 7;
+            string sbfd_template = 8;
+            string sbfd_backuptemplate = 9;
+            uint32 sbfd_reverse_path_type = 10;
+            bool bfd_echo = 11;
+            string bfd_echo_sourceipv6 = 12;
+            string bfd_echo_template = 13;
+            string bfd_echo_backuptemplate = 14;
+            bool bfd_echo_reverse_path_bsid = 15;
+            uint32 bfd_type = 16;
+            uint32 switch_delay = 17;
+            uint32 delete_delay = 18;
+            bool bgp_ls = 19;
+            bool pce_delegation = 20;
+            bool passive_delegate_report_only = 21;
+            bool path_verification = 22;
+            uint32 path_verification_type = 23;
+            bool drop_upon_invalid = 24;
+            bool bfd_trigger_path_down = 25;
+            bool pce_reoptimization = 26;
+            uint32 pce_reoptimization_frequency = 27;
+            message MsgCalc_schedule_interval {
+                uint32 maximum = 1;
+                uint32 minimum = 2;
+                uint32 incremental = 3;
+                uint32 millisecond = 4;
+                bool conservative = 5;
+            }
+            MsgCalc_schedule_interval calc_schedule_interval = 28;
+            message MsgSuppress_flapping {
+                bool enable = 1;
+                uint32 detect_interval = 2;
+                uint32 threshold = 3;
+                uint32 resume_interval = 4;
+            }
+            MsgSuppress_flapping suppress_flapping = 29;
+            uint32 up_delay = 30;
+            uint32 bfd_first_fail_timer = 31;
+            message MsgSegment_lists {
+                message MsgSegment_list {
+                    string name = 1;
+                    string local_binding_sid = 2;
+                    string reverse_binding_sid = 3;
+                    message MsgSegments {
+                        message MsgSegment {
+                            uint32 index = 1;
+                            uint32 type = 2;
+                            bool validate = 3;
+                            message MsgSegment_types {
+                                message MsgSegment_type_2 {
+                                    string sid_value = 1;
+                                    uint32 prefix_length = 2;
+                                    uint32 flags = 3;
+                                }
+                                MsgSegment_type_2 segment_type_2 = 1;
+                            }
+                            MsgSegment_types segment_types = 4;
+                        }
+                        repeated MsgSegment segment = 1;
+                    }
+                    MsgSegments segments = 4;
+                }
+                repeated MsgSegment_list segment_list = 1;
+            }
+            MsgSegment_lists segment_lists = 32;
+        }
+        MsgAttributes attributes = 1;
+        message MsgPolicies {
+            message MsgPolicy {
+                uint32 color = 1;
+                string endpoint = 2;
+                string name = 3;
+                uint32 priority = 4;
+                uint32 oper_state = 5;
+                string forwarding_state = 6;
+                string up_time = 7;
+                string down_time = 8;
+                string down_reason = 9;
+                message MsgBinding_sid {
+                    uint32 dataplane = 1;
+                    string value = 2;
+                    uint32 alloc_mode = 3;
+                    string allocated_sid = 4;
+                    uint32 oper_state = 5;
+                }
+                MsgBinding_sid binding_sid = 10;
+                message MsgCounters {
+                    uint64 pkts = 1;
+                    uint64 octets = 2;
+                    uint64 inpkts = 3;
+                    uint64 inoctets = 4;
+                    uint64 avg_bit_rate = 5;
+                    uint64 avg_octet_rate = 6;
+                    uint64 avg_packet_rate = 7;
+                    uint64 rt_bit_rate = 8;
+                    uint64 rt_octet_rate = 9;
+                    uint64 rt_packet_rate = 10;
+                }
+                MsgCounters counters = 11;
+                uint32 admin_state = 12;
+                bool traffic_statistics = 13;
+                bool traffic_service_class = 14;
+                bool backup_hot_standby = 15;
+                bool drop_upon_invalid = 16;
+                bool bfd_trigger_path_down = 17;
+                bool sbfd = 18;
+                uint32 sbfd_remoteid = 19;
+                string sbfd_template = 20;
+                string sbfd_backuptemplate = 21;
+                string sbfd_oam_sid = 22;
+                uint32 sbfd_encap = 23;
+                uint32 sbfd_reverse_path_type = 24;
+                bool bfd_echo = 25;
+                string bfd_echo_sourceipv6 = 26;
+                string bfd_echo_template = 27;
+                string bfd_echo_backuptemplate = 28;
+                string bfd_oam_sid = 29;
+                bool bfd_echo_reverse_path_bsid = 30;
+                uint32 bfd_encap = 31;
+                uint32 bfd_type = 32;
+                uint32 service_class = 33;
+                uint32 rate_limit = 34;
+                bool pce_delegation = 35;
+                bool passive_delegate_report_only = 36;
+                bool pce_reoptimization = 37;
+                uint32 pce_reoptimization_frequency = 38;
+                bool path_verification = 39;
+                uint32 path_verification_type = 40;
+                message MsgAutoroute {
+                    string protocol = 1;
+                    uint32 cost_absolute = 2;
+                    int32 cost_relative = 3;
+                }
+                MsgAutoroute autoroute = 41;
+                bool bypassEnable = 42;
+                uint32 up_delay = 43;
+                message MsgAutoroute_parameters {
+                    message MsgAutoroute_parameter {
+                        string protocol = 1;
+                        string type = 2;
+                        string route_policy = 3;
+                        string include_ipv4 = 4;
+                    }
+                    repeated MsgAutoroute_parameter autoroute_parameter = 1;
+                }
+                MsgAutoroute_parameters autoroute_parameters = 44;
+                message MsgCandidate_paths {
+                    message MsgCandidate_path {
+                        uint32 protocol_origin = 1;
+                        string originator = 2;
+                        uint32 discriminator = 3;
+                        uint32 preference = 4;
+                        bool dynamic = 5;
+                        bool pcep = 6;
+                        string name = 7;
+                        bool strict_sid_only = 8;
+                        bool metric = 9;
+                        uint32 metric_type = 10;
+                        uint32 sid_limit = 11;
+                        bool constraints = 12;
+                        bool segments = 13;
+                        uint32 sid_algorithm = 14;
+                        bool affinity = 15;
+                        bool include_any_enable = 16;
+                        bool include_all_enable = 17;
+                        bool exclude_any_enable = 18;
+                        message MsgNetwork_slice {
+                            uint32 slice_id = 1;
+                        }
+                        MsgNetwork_slice network_slice = 19;
+                        bool is_best_candidate_path = 20;
+                        string non_selection_reason = 21;
+                        bool is_valid = 22;
+                        message MsgAffinities_include_any {
+                            message MsgInclude_any {
+                                string name = 1;
+                            }
+                            repeated MsgInclude_any include_any = 1;
+                        }
+                        MsgAffinities_include_any affinities_include_any = 23;
+                        message MsgAffinities_include_all {
+                            message MsgInclude_all {
+                                string name = 1;
+                            }
+                            repeated MsgInclude_all include_all = 1;
+                        }
+                        MsgAffinities_include_all affinities_include_all = 24;
+                        message MsgAffinities_exclude_any {
+                            message MsgExclude_any {
+                                string name = 1;
+                            }
+                            repeated MsgExclude_any exclude_any = 1;
+                        }
+                        MsgAffinities_exclude_any affinities_exclude_any = 25;
+                        message MsgSegment_lists {
+                            message MsgSegment_list {
+                                string name_ref = 1;
+                                uint32 list_id = 2;
+                                uint32 weight = 3;
+                                uint32 path_mtu = 4;
+                                string local_binding_sid = 5;
+                                string reverse_binding_sid = 6;
+                                string state = 7;
+                                string bfd_state = 8;
+                                string forwarding_state = 9;
+                                uint64 pkts = 10;
+                                uint64 octets = 11;
+                                message MsgRate {
+                                    uint64 avg_bit_rate = 1;
+                                    uint64 avg_octet_rate = 2;
+                                    uint64 avg_packet_rate = 3;
+                                    uint64 rt_bit_rate = 4;
+                                    uint64 rt_octet_rate = 5;
+                                    uint64 rt_packet_rate = 6;
+                                }
+                                MsgRate rate = 12;
+                                message MsgSid_list {
+                                    message MsgSids {
+                                        string sid = 1;
+                                    }
+                                    repeated MsgSids sids = 1;
+                                }
+                                MsgSid_list sid_list = 13;
+                                message MsgService_classes {
+                                    message MsgService_class {
+                                        uint32 service_class_id = 1;
+                                        uint64 pkts = 2;
+                                        uint64 octets = 3;
+                                        message MsgRate {
+                                            uint64 avg_bit_rate = 1;
+                                            uint64 avg_octet_rate = 2;
+                                            uint64 avg_packet_rate = 3;
+                                            uint64 rt_bit_rate = 4;
+                                            uint64 rt_octet_rate = 5;
+                                            uint64 rt_packet_rate = 6;
+                                        }
+                                        MsgRate rate = 4;
+                                    }
+                                    repeated MsgService_class service_class = 1;
+                                }
+                                MsgService_classes service_classes = 14;
+                            }
+                            repeated MsgSegment_list segment_list = 1;
+                        }
+                        MsgSegment_lists segment_lists = 26;
+                        message MsgForwarding_paths {
+                            message MsgForwarding_path {
+                                uint32 path_id = 1;
+                                string next_hop_address = 2;
+                                uint32 next_hop_table_id = 3;
+                                uint32 interface = 4;
+                                bool is_protected = 5;
+                                bool is_pure_backup = 6;
+                                uint32 weight = 7;
+                                uint64 pkts = 8;
+                                uint64 octets = 9;
+                                message MsgRate {
+                                    uint64 avg_bit_rate = 1;
+                                    uint64 avg_octet_rate = 2;
+                                    uint64 avg_packet_rate = 3;
+                                    uint64 rt_bit_rate = 4;
+                                    uint64 rt_octet_rate = 5;
+                                    uint64 rt_packet_rate = 6;
+                                }
+                                MsgRate rate = 10;
+                                string if_name = 11;
+                                message MsgSid_list {
+                                    message MsgSids {
+                                        string sid = 1;
+                                    }
+                                    repeated MsgSids sids = 1;
+                                }
+                                MsgSid_list sid_list = 12;
+                                message MsgService_classes {
+                                    message MsgService_class {
+                                        uint64 service_class_id = 1;
+                                        uint64 pkts = 2;
+                                        uint64 octets = 3;
+                                        message MsgRate {
+                                            uint64 avg_bit_rate = 1;
+                                            uint64 avg_octet_rate = 2;
+                                            uint64 avg_packet_rate = 3;
+                                            uint64 rt_bit_rate = 4;
+                                            uint64 rt_octet_rate = 5;
+                                            uint64 rt_packet_rate = 6;
+                                        }
+                                        MsgRate rate = 4;
+                                    }
+                                    repeated MsgService_class service_class = 1;
+                                }
+                                MsgService_classes service_classes = 13;
+                            }
+                            repeated MsgForwarding_path forwarding_path = 1;
+                        }
+                        MsgForwarding_paths forwarding_paths = 27;
+                    }
+                    repeated MsgCandidate_path candidate_path = 1;
+                }
+                MsgCandidate_paths candidate_paths = 45;
+            }
+            repeated MsgPolicy policy = 1;
+        }
+        MsgPolicies policies = 2;
+        message MsgPolicygroups {
+            message MsgPolicygroup {
+                uint32 groupid = 1;
+                string endpoint = 2;
+                uint32 group_color = 3;
+                string group_origin = 4;
+                string drop_upon_mismatch = 5;
+                bool forward_type_dot1p = 6;
+                string forward_type = 7;
+                string best_effort_serviceclass = 8;
+                string best_effort_default = 9;
+                message MsgAutoroute {
+                    string protocol = 1;
+                    uint32 cost_absolute = 2;
+                    int32 cost_relative = 3;
+                }
+                MsgAutoroute autoroute = 10;
+                message MsgAutoroute_parameters {
+                    message MsgAutoroute_parameter {
+                        string protocol = 1;
+                        string type = 2;
+                        string route_policy = 3;
+                        string include_ipv4 = 4;
+                    }
+                    repeated MsgAutoroute_parameter autoroute_parameter = 1;
+                }
+                MsgAutoroute_parameters autoroute_parameters = 11;
+                message MsgColor_dscps {
+                    message MsgColor_dscp {
+                        uint32 color = 1;
+                        string dscp_ipv4 = 2;
+                        string dscp_ipv6 = 3;
+                        bool dscp_ipv4_default = 4;
+                        bool dscp_ipv6_default = 5;
+                    }
+                    repeated MsgColor_dscp color_dscp = 1;
+                }
+                MsgColor_dscps color_dscps = 12;
+                message MsgColor_dot1ps {
+                    message MsgColor_dot1p {
+                        uint32 color = 1;
+                        string dot1p = 2;
+                        bool dot1p_default = 3;
+                    }
+                    repeated MsgColor_dot1p color_dot1p = 1;
+                }
+                MsgColor_dot1ps color_dot1ps = 13;
+                message MsgColor_serviceclasses {
+                    message MsgColor_serviceclass {
+                        uint32 color = 1;
+                        string serviceclass = 2;
+                        string serviceclass_default = 3;
+                    }
+                    repeated MsgColor_serviceclass color_serviceclass = 1;
+                }
+                MsgColor_serviceclasses color_serviceclasses = 14;
+            }
+            repeated MsgPolicygroup policygroup = 1;
+        }
+        MsgPolicygroups policygroups = 3;
+        message MsgOn_demands {
+            message MsgOn_demand {
+                uint32 color = 1;
+                bool dynamic = 2;
+                bool pcep = 3;
+                string restrict_prefix_list = 4;
+                uint32 delete_delay = 5;
+                uint32 maximum_sid_depth = 6;
+                uint32 sid_algorithm = 7;
+                bool strict_sid_only = 8;
+                bool metric = 9;
+                uint32 metric_type = 10;
+                bool include_any_enable = 11;
+                bool include_all_enable = 12;
+                bool exclude_any_enable = 13;
+                message MsgAffinities_include_any {
+                    message MsgInclude_any {
+                        string name = 1;
+                    }
+                    repeated MsgInclude_any include_any = 1;
+                }
+                MsgAffinities_include_any affinities_include_any = 14;
+                message MsgAffinities_include_all {
+                    message MsgInclude_all {
+                        string name = 1;
+                    }
+                    repeated MsgInclude_all include_all = 1;
+                }
+                MsgAffinities_include_all affinities_include_all = 15;
+                message MsgAffinities_exclude_any {
+                    message MsgExclude_any {
+                        string name = 1;
+                    }
+                    repeated MsgExclude_any exclude_any = 1;
+                }
+                MsgAffinities_exclude_any affinities_exclude_any = 16;
+            }
+            repeated MsgOn_demand on_demand = 1;
+        }
+        MsgOn_demands on_demands = 4;
+        message MsgOn_demand_groups {
+            message MsgOn_demand_group {
+                uint32 color = 1;
+                string description = 2;
+                string drop_upon_mismatch = 3;
+                bool forward_type_dscp = 4;
+                string forward_type = 5;
+                string best_effort_serviceclass = 6;
+                string best_effort_default = 7;
+                message MsgColor_dscps {
+                    message MsgColor_dscp {
+                        uint32 color = 1;
+                        string dscp_ipv4 = 2;
+                        string dscp_ipv6 = 3;
+                        bool dscp_ipv4_default = 4;
+                        bool dscp_ipv6_default = 5;
+                    }
+                    repeated MsgColor_dscp color_dscp = 1;
+                }
+                MsgColor_dscps color_dscps = 8;
+                message MsgColor_serviceclasses {
+                    message MsgColor_serviceclass {
+                        uint32 color = 1;
+                        string serviceclass = 2;
+                        string serviceclass_default = 3;
+                    }
+                    repeated MsgColor_serviceclass color_serviceclass = 1;
+                }
+                MsgColor_serviceclasses color_serviceclasses = 9;
+            }
+            repeated MsgOn_demand_group on_demand_group = 1;
+        }
+        MsgOn_demand_groups on_demand_groups = 5;
+        message MsgAffinity_maps {
+            message MsgAffinity_map {
+                string name = 1;
+                uint32 bit_position = 2;
+            }
+            repeated MsgAffinity_map affinity_map = 1;
+        }
+        MsgAffinity_maps affinity_maps = 6;
+    }
+    MsgTraffic_engineering traffic_engineering = 1;
+}

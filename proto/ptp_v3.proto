@@ -1,0 +1,252 @@
+syntax = "proto3";
+package  ptp_v3;
+
+message PTP {
+    message MsgBase {
+        uint32 Profile = 1;
+        uint32 Mode = 2;
+        uint32 Domain = 3;
+        bool SlaveOnly = 4;
+        bool ActiveForceState = 5;
+        uint32 UtcOffset = 6;
+        uint32 MaxStepsRemoved = 7;
+        bool PathTrace = 8;
+        uint32 AbnormalOffsetThreshold = 9;
+        uint32 SuppressionTimesThreshold = 10;
+        uint32 TechnicalStandard = 11;
+        bool RefClockSyncUTC = 12;
+        bool WhitelistClockIdEnable = 13;
+        string VirtualClockId = 14;
+        uint32 GmWaitRestoreTime = 15;
+    }
+    MsgBase Base = 1;
+    message MsgWhitelistClockIds {
+        message MsgWhitelistClockId {
+            string ClockId = 1;
+        }
+        repeated MsgWhitelistClockId WhitelistClockId = 1;
+    }
+    MsgWhitelistClockIds WhitelistClockIds = 2;
+    message MsgSources {
+        message MsgSource {
+            string SourceVpn = 1;
+            string SourceIpv4 = 2;
+            string SourceIpv6 = 3;
+        }
+        repeated MsgSource Source = 1;
+    }
+    MsgSources Sources = 3;
+    message MsgClockSources {
+        message MsgClockSource {
+            uint32 ClockType = 1;
+            uint32 Priority1 = 2;
+            uint32 Priority2 = 3;
+            uint32 LocalPriority = 4;
+            uint32 TodDirection = 5;
+            uint32 TodDelayTime = 6;
+            uint32 Class = 7;
+            uint32 Accuracy = 8;
+            uint32 OffsetLogVariance = 9;
+            uint32 TimeSource = 10;
+            string GrandMasterClockId = 11;
+        }
+        repeated MsgClockSource ClockSource = 1;
+    }
+    MsgClockSources ClockSources = 4;
+    message MsgClock {
+        string ClockId = 1;
+        uint32 ClockType = 2;
+        uint32 PtpPortNumber = 3;
+        int64 OffsetFromMaster = 4;
+        uint64 MeanPathDelay = 5;
+        uint32 ReceiveIfIndex = 6;
+        string ReceiveIfName = 7;
+        uint32 StepsRemoved = 8;
+        bool TimeLockStatus = 9;
+        string LocalTime = 10;
+        int64 ToDOffsetFromMaster = 11;
+    }
+    MsgClock Clock = 5;
+    message MsgParent {
+        message MsgParentClock {
+            string ClockId = 1;
+            uint32 PortNumber = 2;
+        }
+        MsgParentClock ParentClock = 1;
+        message MsgGmClock {
+            string ClockId = 1;
+            uint32 Class = 2;
+            uint32 Accuracy = 3;
+            uint32 OffsetLogVariance = 4;
+            uint32 Priority1 = 5;
+            uint32 Priority2 = 6;
+        }
+        MsgGmClock GmClock = 2;
+    }
+    MsgParent Parent = 6;
+    message MsgInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            uint32 PortNum = 3;
+            bool Enable = 4;
+            uint32 PortState = 5;
+            uint32 ForceState = 6;
+            uint32 ClockStep = 7;
+            int32 SynInterval = 8;
+            int32 AnnounceInterval = 9;
+            uint32 AnnounceTimeout = 10;
+            int32 PdelayRequestInterval = 11;
+            int32 MinDelayReqInterval = 12;
+            int32 DelayRequestInterval = 13;
+            uint32 DelayMechanism = 14;
+            int32 AsymmetryCorrection = 15;
+            uint32 PortMode = 16;
+            uint32 TransportProtocol = 17;
+            string DestinationMac = 18;
+            uint32 Dscp = 19;
+            uint32 LocalPriority = 20;
+            string UnicastDestinationIpv4 = 21;
+            uint32 UnicastNegotiation = 22;
+            int32 DelayRespInterval = 23;
+            bool NotSlave = 24;
+            bool AnnounceDrop = 25;
+            message MsgVlan {
+                uint32 VLANID = 1;
+                uint32 Dot1p = 2;
+            }
+            MsgVlan Vlan = 26;
+            uint64 MeanPathDelay = 27;
+            string UnicastDestinationIpv6 = 28;
+            uint32 WTRRemainTime = 29;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgInterfaces Interfaces = 7;
+    message MsgCorrections {
+        message MsgCorrection {
+            uint32 Index = 1;
+            uint32 SlavePort = 2;
+            string CorrectionTime = 3;
+            int64 Corrections = 4;
+            uint64 RateRatio = 5;
+        }
+        repeated MsgCorrection Correction = 1;
+    }
+    MsgCorrections Corrections = 8;
+    message MsgInterfacesStatistics {
+        message MsgInterfaceStatistics {
+            uint32 IfIndex = 1;
+            string IfName = 2;
+            message MsgRecived {
+                uint64 Announce = 1;
+                uint64 Sync = 2;
+                uint64 Signaling = 3;
+                uint64 DelayReq = 4;
+                uint64 DelayResp = 5;
+                uint64 FollowUp = 6;
+                uint64 PdelayReq = 7;
+                uint64 PdelayResp = 8;
+                uint64 PdelayRespFollowUp = 9;
+            }
+            MsgRecived Recived = 3;
+            message MsgSent {
+                uint64 Announce = 1;
+                uint64 Sync = 2;
+                uint64 Signaling = 3;
+                uint64 DelayReq = 4;
+                uint64 DelayResp = 5;
+                uint64 FollowUp = 6;
+                uint64 PdelayReq = 7;
+                uint64 PdelayResp = 8;
+                uint64 PdelayRespFollowUp = 9;
+            }
+            MsgSent Sent = 4;
+            message MsgDiscarded {
+                uint64 Announce = 1;
+                uint64 Sync = 2;
+                uint64 Signaling = 3;
+                uint64 DelayReq = 4;
+                uint64 DelayResp = 5;
+                uint64 FollowUp = 6;
+                uint64 PdelayReq = 7;
+                uint64 PdelayResp = 8;
+                uint64 PdelayRespFollowUp = 9;
+            }
+            MsgDiscarded Discarded = 5;
+        }
+        repeated MsgInterfaceStatistics InterfaceStatistics = 1;
+    }
+    MsgInterfacesStatistics InterfacesStatistics = 9;
+    message MsgInstances {
+        message MsgInstance {
+            uint32 InstanceID = 1;
+            string Name = 2;
+            ptp_v3.PTP.MsgBase Base = 3;
+            ptp_v3.PTP.MsgSources Sources = 4;
+            message MsgClockSources {
+                message MsgClockSource {
+                    uint32 ClockType = 1;
+                    uint32 Priority1 = 2;
+                    uint32 Priority2 = 3;
+                    uint32 LocalPriority = 4;
+                    uint32 Class = 5;
+                    uint32 Accuracy = 6;
+                    uint32 OffsetLogVariance = 7;
+                    uint32 TimeSource = 8;
+                    string GrandMasterClockId = 9;
+                }
+                repeated MsgClockSource ClockSource = 1;
+            }
+            MsgClockSources ClockSources = 5;
+            ptp_v3.PTP.MsgClock Clock = 6;
+            ptp_v3.PTP.MsgInterfaces Interfaces = 7;
+            ptp_v3.PTP.MsgInterfacesStatistics InterfacesStatistics = 8;
+            message MsgSlave {
+                uint32 SlavePort = 1;
+                uint32 SyncState = 2;
+                ptp_v3.PTP.MsgParent Parent = 3;
+                ptp_v3.PTP.MsgCorrections Corrections = 4;
+            }
+            MsgSlave Slave = 9;
+            message MsgWhitelistClockIds {
+                message MsgWhitelistClockId {
+                    string ClockId = 1;
+                }
+                repeated MsgWhitelistClockId WhitelistClockId = 1;
+            }
+            MsgWhitelistClockIds WhitelistClockIds = 10;
+        }
+        repeated MsgInstance Instance = 1;
+    }
+    MsgInstances Instances = 10;
+    message MsgGlobalStatus {
+        bool Enable = 1;
+        uint32 LockThreshold = 2;
+        uint32 UnlockThreshold = 3;
+        bool UnicastForward = 4;
+    }
+    MsgGlobalStatus GlobalStatus = 11;
+    message MsgToDCorrections {
+        message MsgToDCorrection {
+            uint32 Index = 1;
+            string ToDType = 2;
+            string CorrectionTime = 3;
+            int64 Corrections = 4;
+            string ToDDirection = 5;
+        }
+        repeated MsgToDCorrection ToDCorrection = 1;
+    }
+    MsgToDCorrections ToDCorrections = 12;
+    message MsgSlotConfigs {
+        message MsgSlotConfig {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            bool Hardware = 3;
+        }
+        repeated MsgSlotConfig SlotConfig = 1;
+    }
+    MsgSlotConfigs SlotConfigs = 13;
+}
+
+

@@ -1,0 +1,81 @@
+syntax = "proto3";
+package  qstat_v3;
+message QSTAT {
+    message MsgQueueCounters {
+        message MsgQueueCounter {
+            uint32 Direction = 1;
+            bool Counting = 2;
+        }
+        repeated MsgQueueCounter QueueCounter = 1;
+    }
+    MsgQueueCounters QueueCounters = 1;
+    message MsgInterfaceStat {
+        message MsgStatistics {
+            uint32 IfIndex = 1;
+            uint32 Direction = 2;
+            uint64 PassPacket = 3;
+            uint64 PassByte = 4;
+            uint64 DropPacket = 5;
+            uint64 DropByte = 6;
+            uint64 AgingPacket = 7;
+            uint64 AgingByte = 8;
+            string IfName = 11;
+        }
+        repeated MsgStatistics Statistics = 1;
+    }
+    MsgInterfaceStat InterfaceStat = 2;
+    message MsgQueueStat {
+        message MsgStatistics {
+            uint32 IfIndex = 1;
+            uint32 Direction = 2;
+            uint32 QueueID = 3;
+            uint64 PassPkt = 4;
+            uint64 PassByte = 5;
+            uint64 DropPkt = 6;
+            uint64 DropByte = 7;
+            uint64 GreenPassPkt = 8;
+            uint64 GreenPassByte = 9;
+            uint64 GreenDropPkt = 10;
+            uint64 GreenDropByte = 11;
+            uint64 YellowPassPkt = 12;
+            uint64 YellowPassByte = 13;
+            uint64 YellowDropPkt = 14;
+            uint64 YellowDropByte = 15;
+            uint64 RedPassPkt = 16;
+            uint64 RedPassByte = 17;
+            uint64 RedDropPkt = 18;
+            uint64 RedDropByte = 19;
+            uint64 PacketRate = 20;
+            uint64 BitRate = 21;
+            uint64 PeakPacketRate = 22;
+            uint64 PeakBitRate = 23;
+            uint32 TotalQueLen = 24;
+            uint32 CurrQueLen = 25;
+            uint32 QueUseRatio = 27;
+            string IfName = 29;
+        }
+        repeated MsgStatistics Statistics = 1;
+    }
+    MsgQueueStat QueueStat = 3;
+    message MsgPacketCounters {
+        message MsgPacketCounter {
+            uint32 IfIndex = 1;
+            uint32 Direction = 2;
+            uint32 StatType = 3;
+        }
+        repeated MsgPacketCounter PacketCounter = 1;
+    }
+    MsgPacketCounters PacketCounters = 6;
+    message MsgPacketStat {
+        message MsgStatistics {
+            uint32 IfIndex = 1;
+            uint32 Direction = 2;
+            uint32 StatValue = 3;
+            uint64 Packets = 4;
+            uint64 Bytes = 5;
+            string IfName = 6;
+        }
+        repeated MsgStatistics Statistics = 1;
+    }
+    MsgPacketStat PacketStat = 7;
+}

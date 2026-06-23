@@ -1,0 +1,173 @@
+syntax = "proto3";
+package ifit_v3;
+message IFIT {
+    message MsgGlobal {
+        bool Enable = 1;
+        uint32 DeviceID = 2;
+        string DeviceIP = 3;
+        uint32 DyncAgeMulti = 4;
+        uint32 ThresholdPercent = 5;
+        string TechnicalStandard = 6;
+        string TracePerHopEnable = 7;
+        message MsgEncapsulations {
+            message MsgEncapsulation {
+                string NextHop = 1;
+            }
+            repeated MsgEncapsulation Encapsulation = 1;
+        }
+        MsgEncapsulations Encapsulations = 8;
+    }
+    MsgGlobal Global = 1;
+    message MsgAnalyzer {
+        bool Enable = 1;
+        uint32 ServiceType = 2;
+    }
+    MsgAnalyzer Analyzer = 2;
+    message MsgCollector {
+        bool Enable = 1;
+        uint32 ServiceType = 2;
+    }
+    MsgCollector Collector = 3;
+    message MsgInstances {
+        message MsgInstance {
+            string InstanceName = 1;
+            uint32 NetworkType = 2;
+            message MsgMeasure {
+                bool Enable = 1;
+                uint32 Mode = 2;
+                uint32 Period = 3;
+                bool Delay = 4;
+                bool Loss = 5;
+            }
+            MsgMeasure Measure = 3;
+            message MsgUniFlow {
+                uint32 AddrFamily = 1;
+                string SourceIP = 2;
+                uint32 SourceMask = 3;
+                string DestinationIP = 4;
+                uint32 DestinationMask = 5;
+                uint32 Protocol = 6;
+                uint32 SourcePort = 7;
+                uint32 DestinationPort = 8;
+                uint32 Dscp = 9;
+                string VRF = 10;
+                string NextHop = 11;
+                string VsiName = 12;
+                string XCGName = 13;
+                string ConnectionName = 14;
+                message MsgPeerLocator {
+                    string Prefix = 1;
+                    uint32 PrefixLength = 2;
+                }
+                MsgPeerLocator PeerLocator = 15;
+                string SourceMac = 16;
+                string DestinationMac = 17;
+                string Type = 18;
+                uint32 VlanID = 19;
+                uint32 VlanPri = 20;
+            }
+            MsgUniFlow UniFlow = 4;
+            message MsgBindInterfaces {
+                message MsgBindInterface {
+                    uint32 IfIndex = 1;
+                    string IfName = 2;
+                }
+                repeated MsgBindInterface BindInterface = 1;
+            }
+            MsgBindInterfaces BindInterfaces = 5;
+        }
+        repeated MsgInstance Instance = 1;
+    }
+    MsgInstances Instances = 4;
+    message MsgFlowStatistics {
+        message MsgFlowStatistic {
+            uint64 FlowID = 1;
+            message MsgUniFlow {
+                uint32 AddrFamily = 1;
+                string SourceIP = 2;
+                uint32 SourceMask = 3;
+                string DestinationIP = 4;
+                uint32 DestinationMask = 5;
+                uint32 Protocol = 6;
+                uint32 SourcePort = 7;
+                uint32 DestinationPort = 8;
+                uint32 Dscp = 9;
+                string VRF = 10;
+                string NextHop = 11;
+                string VsiName = 12;
+                string XCGName = 13;
+                string ConnectionName = 14;
+                message MsgPeerLocator {
+                    string Prefix = 1;
+                    uint32 PrefixLength = 2;
+                }
+                MsgPeerLocator PeerLocator = 15;
+                string SourceMac = 16;
+                string DestinationMac = 17;
+                string Type = 18;
+                uint32 VlanID = 19;
+                uint32 VlanPri = 20;
+            }
+            MsgUniFlow UniFlow = 2;
+            message MsgSeglistFlow {
+                uint32 ListID = 1;
+                uint32 Color = 2;
+                string Endpoint = 3;
+            }
+            MsgSeglistFlow SeglistFlow = 3;
+            message MsgStatisticDetails {
+                message MsgStatisticDetail {
+                    uint64 PeriodID = 1;
+                    uint32 IfIndex = 2;
+                    uint32 Direction = 3;
+                    string IfName = 4;
+                    uint32 Period = 5;
+                    uint64 PacketCount = 6;
+                    uint64 ByteCount = 7;
+                    uint64 TimestampSecond = 8;
+                    uint64 TimestampNanoSecond = 9;
+                    uint32 TTL = 10;
+                    uint32 ErrorInfo = 11;
+                    string IfAggName = 12;
+                }
+                repeated MsgStatisticDetail StatisticDetail = 1;
+            }
+            MsgStatisticDetails StatisticDetails = 4;
+        }
+        repeated MsgFlowStatistic FlowStatistic = 1;
+    }
+    MsgFlowStatistics FlowStatistics = 5;
+    message MsgFlowStatisticsAnalyses {
+        message MsgFlowStatisticsAnalysis {
+            uint64 FlowID = 1;
+            message MsgSeglistFlow {
+                uint32 ListID = 1;
+                uint32 Color = 2;
+                string Endpoint = 3;
+            }
+            MsgSeglistFlow SeglistFlow = 2;
+            message MsgOneWayDelays {
+                message MsgOneWayDelay {
+                    uint64 PeriodID = 1;
+                    uint64 ForwardDelay = 2;
+                    uint64 ForwardJitter = 3;
+                    uint32 ErrorInfo = 4;
+                }
+                repeated MsgOneWayDelay OneWayDelay = 1;
+            }
+            MsgOneWayDelays OneWayDelays = 3;
+            message MsgOneWayLosses {
+                message MsgOneWayLoss {
+                    uint64 PeriodID = 1;
+                    uint64 ForwardLossCnt = 2;
+                    uint64 ForwardLossRatio = 3;
+                    uint32 ErrorInfo = 4;
+                }
+                repeated MsgOneWayLoss OneWayLoss = 1;
+            }
+            MsgOneWayLosses OneWayLosses = 4;
+        }
+        repeated MsgFlowStatisticsAnalysis FlowStatisticsAnalysis = 1;
+    }
+    MsgFlowStatisticsAnalyses FlowStatisticsAnalyses = 6;
+}

@@ -1,0 +1,365 @@
+syntax = "proto3";
+package  device_v3;
+message Device {
+    message MsgTransceivers {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            string Name = 2;
+            string HardwareType = 3;
+            string TransceiverType = 4;
+            int32 WaveLength = 5;
+            string VendorName = 6;
+            string SerialNumber = 7;
+            int32 FiberDiameterType = 8;
+            int32 TransferDistance = 9;
+            int32 Diagnostic = 10;
+            int32 CurRxPower = 11;
+            int32 MaxRxPower = 12;
+            int32 MinRxPower = 13;
+            int32 CurTxPower = 14;
+            int32 MaxTxPower = 15;
+            int32 MinTxPower = 16;
+            int32 Temperature = 17;
+            int32 Voltage = 18;
+            int32 BiasCurrent = 19;
+            int32 TemperatureHiAlarm = 20;
+            int32 TemperatureLoAlarm = 21;
+            int32 TemperatureHiWarn = 22;
+            int32 TemperatureLoWarn = 23;
+            int32 VccHiAlarm = 24;
+            int32 VccLoAlarm = 25;
+            int32 VccHiWarn = 26;
+            int32 VccLoWarn = 27;
+            int32 BiasHiAlarm = 28;
+            int32 BiasLoAlarm = 29;
+            int32 BiasHiWarn = 30;
+            int32 BiasLoWarn = 31;
+            int32 PwrOutHiAlarm = 32;
+            int32 PwrOutLoAlarm = 33;
+            int32 PwrOutHiWarn = 34;
+            int32 PwrOutLoWarn = 35;
+            int32 RcvPwrHiAlarm = 36;
+            int32 RcvPwrLoAlarm = 37;
+            int32 RcvPwrHiWarn = 38;
+            int32 RcvPwrLoWarn = 39;
+            string TransceiverErrors = 40;
+            string VendorOUI = 41;
+            string RevisionNumber = 42;
+            int32 Frequency = 43;
+            uint32 ActiveITUChannel = 44;
+            int32 CurWaveErr = 45;
+            int32 WaveErrHiAlarm = 46;
+            int32 WaveErrLoAlarm = 47;
+            int32 CurFreqErr = 48;
+            int32 FreqErrHiAlarm = 49;
+            int32 FreqErrLoAlarm = 50;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgTransceivers Transceivers = 1;
+    message MsgSummerTime {
+        string Name = 1;
+        string AddTime = 2;
+        message MsgDateBased {
+            uint32 BeginMonth = 1;
+            uint32 BeginDay = 2;
+            uint32 BeginHour = 3;
+            uint32 BeginMinute = 4;
+            uint32 BeginSecond = 5;
+            uint32 EndMonth = 6;
+            uint32 EndDay = 7;
+            uint32 EndHour = 8;
+            uint32 EndMinute = 9;
+            uint32 EndSecond = 10;
+        }
+        MsgDateBased DateBased = 3;
+        message MsgWeekBased {
+            uint32 BeginMonth = 1;
+            uint32 BeginWeek = 2;
+            uint32 BeginWeekDay = 3;
+            uint32 BeginHour = 4;
+            uint32 BeginMinute = 5;
+            uint32 BeginSecond = 6;
+            uint32 EndMonth = 7;
+            uint32 EndWeek = 8;
+            uint32 EndWeekDay = 9;
+            uint32 EndHour = 10;
+            uint32 EndMinute = 11;
+            uint32 EndSecond = 12;
+        }
+        MsgWeekBased WeekBased = 4;
+    }
+    MsgSummerTime SummerTime = 2;
+    message MsgBase {
+        uint32 Uptime = 1;
+        string HostName = 2;
+        string HostOid = 3;
+        uint32 MinChassisNum = 4;
+        uint32 MaxChassisNum = 5;
+        uint32 MinSlotNum = 6;
+        uint32 MaxSlotNum = 7;
+        uint32 MinCPUIDNum = 8;
+        uint32 MaxCPUIDNum = 9;
+        string HostDescription = 10;
+        string LocalTime = 11;
+        message MsgTimeZone {
+            string Zone = 1;
+            string ZoneName = 2;
+        }
+        MsgTimeZone TimeZone = 12;
+        message MsgClockProtocol {
+            uint32 Protocol = 1;
+            uint32 MDCID = 2;
+        }
+        MsgClockProtocol ClockProtocol = 13;
+        string BridgeMAC = 14;
+        string LocalBridgeMAC = 15;
+        string VendorName = 16;
+        uint32 DeviceType = 17;
+        uint32 HardwareArchitecture = 18;
+    }
+    MsgBase Base = 3;
+    message MsgCPUs {
+        message MsgCPU {
+            uint32 PhysicalIndex = 1;
+            uint32 Chassis = 2;
+            uint32 Slot = 3;
+            uint32 CPUID = 4;
+            uint32 CPUUsage = 5;
+        }
+        repeated MsgCPU CPU = 1;
+    }
+    MsgCPUs CPUs = 4;
+    message MsgPhysicalEntities {
+        message MsgEntity {
+            uint32 PhysicalIndex = 1;
+            uint32 Chassis = 2;
+            uint32 Slot = 3;
+            uint32 SubSlot = 4;
+            string Description = 5;
+            string VendorType = 6;
+            uint32 ContainedIn = 7;
+            uint32 Class = 8;
+            int32 ParentRelPos = 9;
+            string Name = 10;
+            string HardwareRev = 11;
+            string FirmwareRev = 12;
+            string SoftwareRev = 13;
+            string SerialNumber = 14;
+            string MfgName = 15;
+            string Model = 16;
+            string Alias = 17;
+            string AssetID = 18;
+            bool FRU = 19;
+            string MfgDate = 20;
+            string Uris = 21;
+        }
+        repeated MsgEntity Entity = 1;
+    }
+    MsgPhysicalEntities PhysicalEntities = 5;
+    message MsgExtPhysicalEntities {
+        message MsgEntity {
+            uint32 PhysicalIndex = 1;
+            uint32 AdminState = 2;
+            uint32 OperState = 3;
+            uint32 StandbyState = 4;
+            uint32 AlarmLight = 5;
+            uint32 CpuUsage = 6;
+            uint32 CpuUsageThreshold = 7;
+            uint32 MemUsage = 8;
+            uint32 MemUsageThreshold = 9;
+            uint64 MemSize = 10;
+            uint32 Uptime = 11;
+            int32 Temperature = 12;
+            int32 TemperatureThreshold = 13;
+            uint32 Voltage = 14;
+            uint32 VoltageLowThreshold = 15;
+            uint32 VoltageHighThreshold = 16;
+            int32 TemperatureCriticalThreshold = 17;
+            string MAC = 18;
+            uint32 ErrorStatus = 19;
+            uint32 CpuMaxUsage = 20;
+            int32 TemperatureLowThreshold = 21;
+            int32 TemperatureShutdownThreshold = 22;
+            uint64 PhyMemSize = 23;
+            uint32 CpuFrequency = 24;
+            string FristUsedDate = 25;
+            uint32 CpuAvgUsage = 26;
+            uint32 MemAvgUsage = 27;
+            string MemType = 28;
+        }
+        repeated MsgEntity Entity = 1;
+    }
+    MsgExtPhysicalEntities ExtPhysicalEntities = 6;
+    message MsgPEXCapabilities {
+        message MsgPEX {
+            string Model = 1;
+        }
+        repeated MsgPEX PEX = 1;
+    }
+    MsgPEXCapabilities PEXCapabilities = 7;
+    message MsgBladeCapabilities {
+        message MsgBlade {
+            string Model = 1;
+        }
+        repeated MsgBlade Blade = 1;
+    }
+    MsgBladeCapabilities BladeCapabilities = 8;
+    message MsgBoards {
+        message MsgBoard {
+            message MsgDeviceNode {
+                uint32 Chassis = 1;
+                uint32 Slot = 2;
+                uint32 CPUID = 3;
+            }
+            MsgDeviceNode DeviceNode = 1;
+            uint32 PhysicalIndex = 2;
+            uint32 Status = 3;
+            uint32 Role = 4;
+        }
+        repeated MsgBoard Board = 1;
+    }
+    MsgBoards Boards = 9;
+    message MsgFans {
+        message MsgFan {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            uint32 Index = 3;
+            uint32 Status = 4;
+            uint32 Mode = 5;
+            uint32 CurrentSpeed = 6;
+            uint32 MaxSpeed = 7;
+            uint32 SpeedPercent = 8;
+            string SpeedPolicy = 9;
+            uint32 CurrentPower = 10;
+        }
+        repeated MsgFan Fan = 1;
+    }
+    MsgFans Fans = 10;
+    message MsgBlades {
+        message MsgBlade {
+            message MsgDeviceNode {
+                uint32 Chassis = 1;
+                uint32 Slot = 2;
+                uint32 CPUID = 3;
+            }
+            MsgDeviceNode DeviceNode = 1;
+            string Model = 2;
+        }
+        repeated MsgBlade Blade = 1;
+    }
+    MsgBlades Blades = 11;
+    message MsgPEXes {
+        message MsgPEX {
+            message MsgDeviceNode {
+                uint32 Chassis = 1;
+                uint32 Slot = 2;
+                uint32 CPUID = 3;
+            }
+            MsgDeviceNode DeviceNode = 1;
+            string Model = 2;
+        }
+        repeated MsgPEX PEX = 1;
+    }
+    MsgPEXes PEXes = 12;
+    message MsgMDCs {
+        uint32 MDCType = 1;
+        uint32 MDCID = 2;
+    }
+    MsgMDCs MDCs = 13;
+    message MsgFailoverGroupCapabilities {
+        bool FailoverGroupSupport = 1;
+    }
+    MsgFailoverGroupCapabilities FailoverGroupCapabilities = 14;
+    message MsgFailoverGroups {
+        message MsgFailoverGroup {
+            uint32 ID = 1;
+            string Name = 2;
+            message MsgPrimaryNode {
+                uint32 Chassis = 1;
+                uint32 Slot = 2;
+                uint32 CPUID = 3;
+            }
+            MsgPrimaryNode PrimaryNode = 3;
+            message MsgSecondaryNode {
+                uint32 Chassis = 1;
+                uint32 Slot = 2;
+                uint32 CPUID = 3;
+            }
+            MsgSecondaryNode SecondaryNode = 4;
+            uint32 State = 5;
+        }
+        repeated MsgFailoverGroup FailoverGroup = 1;
+    }
+    MsgFailoverGroups FailoverGroups = 15;
+    message MsgTransceiversITUChannels {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            uint32 ITUChannelIndex = 2;
+            int32 ITUChannelFrequency = 3;
+            int32 ITUChannelWaveLength = 4;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgTransceiversITUChannels TransceiversITUChannels = 16;
+    message MsgTemperatureSensors {
+        message MsgSensor {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            uint32 CPUID = 3;
+            uint32 SensorType = 4;
+            uint32 SensorIndex = 5;
+            string SensorStatus = 6;
+            int32 CurrentTemperature = 7;
+            int32 LowerLimit = 8;
+            int32 WarningLimit = 9;
+            int32 AlarmLimit = 10;
+            int32 ShutdownLimit = 11;
+        }
+        repeated MsgSensor Sensor = 1;
+    }
+    MsgTemperatureSensors TemperatureSensors = 17;
+    message MsgFanDirections {
+        message MsgFan {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            uint32 CPUID = 3;
+            uint32 Direction = 4;
+            uint32 DefaultDirection = 5;
+        }
+        repeated MsgFan Fan = 1;
+    }
+    MsgFanDirections FanDirections = 18;
+    message MsgTransceiversChannels {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            uint32 ChannelIndex = 2;
+            int32 ChannelCurTXPower = 3;
+            int32 ChannelCurRXPower = 4;
+            int32 ChannelTemperature = 5;
+            int32 ChannelBiasCurrent = 6;
+            string Name = 7;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgTransceiversChannels TransceiversChannels = 19;
+    message MsgPowerSupplys {
+        message MsgPowerSupply {
+            uint32 Chassis = 1;
+            uint32 Slot = 2;
+            uint32 Index = 3;
+            uint32 Type = 4;
+            uint32 Status = 5;
+            uint32 PowerSupplyType = 6;
+            uint32 NominalPower = 7;
+            uint32 InputPower = 8;
+            uint32 UsedPower = 9;
+            uint32 RemainingPower = 10;
+            uint32 InputVoltage = 11;
+            uint32 OutputVoltage = 12;
+            uint32 LoadFactor = 13;
+        }
+        repeated MsgPowerSupply PowerSupply = 1;
+    }
+    MsgPowerSupplys PowerSupplys = 20;
+}

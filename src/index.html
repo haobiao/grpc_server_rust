@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>gRPC Dialout Server</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top control bar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: #252526;
+            border-bottom: 1px solid #3c3c3c;
+            flex-wrap: wrap;
+        }
+        .toolbar label {
+            font-size: 13px;
+            color: #9cdcfe;
+        }
+        .toolbar select, .toolbar input {
+            background: #3c3c3c;
+            color: #d4d4d4;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+        .toolbar button {
+            background: #0e639c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toolbar button:hover { background: #1177bb; }
+        .toolbar button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .toolbar button.stop { background: #c72e0f; }
+        .toolbar button.stop:hover { background: #e04830; }
+
+        /* Log output area */
+        #log-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #1e1e1e;
+        }
+        #log-area .log-line {
+            border-bottom: 1px solid #2d2d2d;
+            padding: 2px 0;
+        }
+        #log-area .log-line.error { color: #f44747; }
+        #log-area .log-line.info { color: #d4d4d4; }
+        #log-area .log-line.warn { color: #cca700; }
+
+        /* Status bar */
+        .statusbar {
+            padding: 4px 16px;
+            background: #007acc;
+            color: #fff;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <label>模式:</label>
+        <select id="mode">
+            <option value="normal">gRPC 2-layer dial-out</option>
+            <option value="gpb">gRPC 3-layer dial-out</option>
+            <option value="gnmi">gRPC gNMI dialout</option>
+            <option value="udp">UDP 2-layer dialout</option>
+        </select>
+
+        <label>端口:</label>
+        <input type="number" id="port" value="50051" min="1" max="65535" style="width:80px" />
+
+        <label><input type="checkbox" id="tls" /> TLS</label>
+        <label><input type="checkbox" id="orignal" /> 原始消息</label>
+        <label><input type="checkbox" id="format" checked /> 格式化JSON</label>
+        <label><input type="checkbox" id="perf" /> 性能模式</label>
+
+        <button id="btn-start" onclick="startServer()">开始采集</button>
+        <button id="btn-stop" onclick="stopServer()" disabled>停止采集</button>
+        <button id="btn-clear" onclick="clearLog()">清空</button>
+    </div>
+
+    <div id="log-area"></div>
+
+    <div class="statusbar" id="statusbar">就绪</div>
+
+    <script>
+        const { invoke } = window.__TAURI__.core;
+        const { listen } = window.__TAURI__.event;
+
+        const logArea = document.getElementById('log-area');
+        const statusbar = document.getElementById('statusbar');
+        const MAX_LINES = 10000;
+
+        let logLines = [];
+
+        // Listen for log events from Rust backend
+        listen('log-line', (event) => {
+            appendLog(event.payload);
+        });
+
+        function appendLog(text) {
+            logLines.push(text);
+            if (logLines.length > MAX_LINES) {
+                logLines = logLines.slice(-MAX_LINES);
+                logArea.innerHTML = '';
+            }
+
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            // Classify by content
+            if (text.includes('ERROR') || text.includes('error')) {
+                div.classList.add('error');
+            } else if (text.includes('WARN') || text.includes('warn')) {
+                div.classList.add('warn');
+            }
+            div.textContent = text;
+            logArea.appendChild(div);
+
+            // Auto-scroll
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        async function startServer() {
+            const mode = document.getElementById('mode').value;
+            const port = parseInt(document.getElementById('port').value);
+            const tls = document.getElementById('tls').checked;
+            const orignal = document.getElementById('orignal').checked;
+            const format = document.getElementById('format').checked;
+            const perf = document.getElementById('perf').checked;
+
+            try {
+                await invoke('start_server', {
+                    config: { mode, port, tls, orignal, formatJson: format, performanceMode: perf }
+                });
+                document.getElementById('btn-start').disabled = true;
+                document.getElementById('btn-stop').disabled = false;
+                statusbar.textContent = `运行中 - ${mode} - 端口 ${port}`;
+            } catch (e) {
+                appendLog(`启动失败: ${e}`);
+            }
+        }
+
+        async function stopServer() {
+            try {
+                await invoke('stop_server');
+                document.getElementById('btn-start').disabled = false;
+                document.getElementById('btn-stop').disabled = true;
+                statusbar.textContent = '已停止';
+            } catch (e) {
+                appendLog(`停止失败: ${e}`);
+            }
+        }
+
+        function clearLog() {
+            logLines = [];
+            logArea.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

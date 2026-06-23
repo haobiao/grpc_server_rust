@@ -1,0 +1,10 @@
+[package]
+name = "grpc-server-rust"
+version = "3.0.7"
+edition = "2021"
+
+[workspace]
+members = ["src-tauri"]
+resolver = "2"
+
+[dependencies]

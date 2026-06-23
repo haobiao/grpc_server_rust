@@ -1,0 +1,48 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  ipfw;
+message IPFWIPStatistic {
+    message Statistic {
+        optional uint32 IfIndex = 1;
+        optional uint32 Type = 2;
+        optional string IfName = 3;
+        optional uint64 InPackets = 4;
+        optional uint64 InPacketsRate = 5;
+        optional uint64 InBytes = 6;
+        optional uint64 InBytesRate = 7;
+        optional uint64 InMcastPackets = 8;
+        optional uint64 InMcastBytes = 9;
+        optional uint64 InBcastPackets = 10;
+        optional uint64 OutPackets = 11;
+        optional uint64 OutPacketsRate = 12;
+        optional uint64 OutBytes = 13;
+        optional uint64 OutBytesRate = 14;
+        optional uint64 OutMcastPackets = 15;
+        optional uint64 OutMcastBytes = 16;
+        optional uint64 OutBcastPackets = 17;
+    }
+    repeated Statistic statistic = 1;
+}
+message IPFWIPFWSetStatistic {
+    message SetStatistic {
+        optional uint32 IfIndex = 1;
+        optional string IfName = 2;
+        optional uint32 Enable = 3;
+        optional uint32 Direct = 4;
+        optional uint32 InPktType = 5;
+        optional uint32 OutPktType = 6;
+    }
+    repeated SetStatistic setstatistic = 1;
+}
+message IPFWIPFWMTU {
+    message MTU {
+        optional string IfName = 1;
+        optional uint32 MTU = 2;
+    }
+    repeated MTU mtu = 1;
+}
+service IPFWService {
+    rpc GetJsonIPFWIPStatistic(IPFWIPStatistic) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIPFWIPFWSetStatistic(IPFWIPFWSetStatistic) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIPFWIPFWMTU(IPFWIPFWMTU) returns (grpc_service.GetJsonReply) {}
+}

@@ -1,0 +1,27 @@
+syntax = "proto3";
+package  logging_v3;
+message logging {
+    message Remote_servers {
+        message Remote_server {
+            string host = 1;
+            message Config {
+                string host = 1;
+                uint32 remote_port = 2;
+            }
+            Config config = 2;
+            message Selectors {
+                message Selector {
+                    uint32 facility = 1;
+                    message Config {
+                        uint32 facility = 1;
+                    }
+                    Config config = 2;
+                }
+                Selector selector = 1;
+            }
+            Selectors selectors = 3;
+        }
+        repeated Remote_server remote_server = 1;
+    }
+    Remote_servers remote_servers = 1;
+}

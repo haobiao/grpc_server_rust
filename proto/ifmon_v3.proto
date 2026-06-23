@@ -1,0 +1,94 @@
+syntax = "proto3";
+package  ifmon_v3;
+message Ifmon {
+    message MsgIfMonThresholdInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            message MsgInputUsage {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+            }
+            MsgInputUsage InputUsage = 2;
+            message MsgOutputUsage {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+            }
+            MsgOutputUsage OutputUsage = 3;
+            message MsgInputErrorAlarm {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+                bool EnableShutdown = 4;
+            }
+            MsgInputErrorAlarm InputErrorAlarm = 4;
+            message MsgOutputErrorAlarm {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+                bool EnableShutdown = 4;
+            }
+            MsgOutputErrorAlarm OutputErrorAlarm = 5;
+            message MsgSdhError {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+                bool EnableShutdown = 4;
+            }
+            MsgSdhError SdhError = 6;
+            message MsgSdhB1Error {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+                bool EnableShutdown = 4;
+            }
+            MsgSdhB1Error SdhB1Error = 7;
+            message MsgSdhB2Error {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+                bool EnableShutdown = 4;
+            }
+            MsgSdhB2Error SdhB2Error = 8;
+            message MsgCRCError {
+                uint32 Type = 1;
+                uint32 HighThres = 2;
+                uint32 LowThres = 3;
+                uint32 Interval = 4;
+                bool EnableShutdown = 5;
+            }
+            MsgCRCError CRCError = 9;
+            message MsgRxPauseFrame {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+            }
+            MsgRxPauseFrame RxPauseFrame = 10;
+            message MsgTxPauseFrame {
+                uint32 HighThres = 1;
+                uint32 LowThres = 2;
+                uint32 Interval = 3;
+                bool EnableShutdown = 4;
+            }
+            MsgTxPauseFrame TxPauseFrame = 11;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgIfMonThresholdInterfaces IfMonThresholdInterfaces = 1;
+    message MsgIfMonStatisticsInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            uint64 InputUsageStatistics = 2;
+            uint64 OutputUsageStatistics = 3;
+            uint64 InputErrorAlarmStatistics = 4;
+            uint64 OutputErrorAlarmStatistics = 5;
+            uint64 SdhErrorStatistics = 6;
+            uint64 SdhB1ErrorStatistics = 7;
+            uint64 SdhB2ErrorStatistics = 8;
+            uint64 CRCErrorStatistics = 9;
+            uint64 RxPauseFrameStatistics = 10;
+            uint64 TxPauseFrameStatistics = 11;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgIfMonStatisticsInterfaces IfMonStatisticsInterfaces = 2;
+}

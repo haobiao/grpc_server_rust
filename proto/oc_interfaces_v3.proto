@@ -1,0 +1,59 @@
+syntax = "proto3";
+import "oc_switched_vlan_v3.proto";
+import "oc_routed_vlan_v3.proto";
+import "oc_lagg_v3.proto";
+import "oc_ipv4_v3.proto";
+import "oc_ipv6_v3.proto";
+package  interfaces_v3;
+message interfaces {
+    message Interface {
+        string name = 1;
+        message Config {
+            string name = 1;
+            uint32 type = 2;
+            uint32 mtu = 3;
+            string description = 4;
+            bool enabled = 5;
+        }
+        Config config = 2;
+        message State {
+            string name = 1;
+            string description = 2;
+            string admin_status = 3;
+            string oper_status = 4;
+        }
+        State state = 3;
+        message Subinterfaces {
+            message Subinterface {
+                string index = 1;
+                message Config {
+                    string index = 1;
+                    string name = 2;
+                    string description = 3;
+                    bool enabled = 4;
+                }
+                Config config = 2;
+                ipv4_v3.ipv4 ipv4 = 3;
+                ipv6_v3.ipv6 ipv6 = 4;
+            }
+            repeated Subinterface subinterface = 1;
+        }
+        Subinterfaces subinterfaces = 4;
+        routed_vlan_v3.routed_vlan routed_vlan = 5;
+        message Ethernet {
+            switched_vlan_v3.switched_vlan switched_vlan = 1;
+            message Config {
+                uint32 aggregate_id = 1;
+            }
+            repeated Config config = 2;
+            message State {
+                string negotiated_port_speed = 1;
+                string port_speed = 2;
+            }
+            State state = 3;
+        }
+        Ethernet ethernet = 6;
+        aggregation_v3.aggregation aggregation = 7;
+    }
+    repeated Interface interface = 1;
+}

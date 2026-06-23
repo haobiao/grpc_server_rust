@@ -1,0 +1,11 @@
+syntax = "proto3";
+package  switched_vlan_v3;
+message switched_vlan {
+    message Config {
+        string interface_mode = 1;
+        uint32 native_vlan = 2;
+        uint32 access_vlan = 3;
+        string trunk_vlans = 4;
+    }
+    Config config = 1;
+}

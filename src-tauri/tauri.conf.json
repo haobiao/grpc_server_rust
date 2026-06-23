@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicegui-dev/nicegui/main/packages/tauri-plugin/v2/schemas/tauri.config.schema.json",
+  "productName": "gRPC Dialout Server",
+  "version": "3.0.7",
+  "identifier": "com.grpc-server-rust.app",
+  "build": {
+    "frontendDist": "../src",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "gRPC Dialout Server v3.0.7",
+        "width": 960,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "minWidth": 800,
+        "minHeight": 450
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "proto/*",
+      "tls/*"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": true
+      }
+    }
+  }
+}

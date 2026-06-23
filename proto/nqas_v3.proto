@@ -1,0 +1,47 @@
+syntax = "proto3";
+package  nqas_v3;
+message NQAS {
+    message MsgServerStatus {
+        string Enable = 1;
+    }
+    MsgServerStatus ServerStatus = 1;
+    message MsgServers {
+        message MsgServer {
+            uint32 Type = 1;
+            string IPAddr = 2;
+            uint32 Port = 3;
+            string VRF = 4;
+            bool HighPerformance = 5;
+            uint32 ToS = 6;
+        }
+        repeated MsgServer Server = 1;
+    }
+    MsgServers Servers = 2;
+    message MsgTwamplightResponder {
+        string ResponderEnable = 1;
+    }
+    MsgTwamplightResponder TwamplightResponder = 3;
+    message MsgTwamplightRespSessions {
+        message MsgTwamplightRespSession {
+            uint32 SessionID = 1;
+            string SrcInterface = 2;
+            uint32 ServiceID = 3;
+            string SrcIpAddress = 4;
+            string DstIpAddress = 5;
+            uint32 SrcPortNumber = 6;
+            uint32 DstPortNumber = 7;
+            string VRF = 8;
+            string Description = 9;
+            string DesMacAddress = 10;
+            string SrcMacAddress = 11;
+            uint32 TimestampFormat = 12;
+            message MsgVLANID {
+                uint32 Service = 1;
+                uint32 Customer = 2;
+            }
+            MsgVLANID VLANID = 13;
+        }
+        repeated MsgTwamplightRespSession TwamplightRespSession = 1;
+    }
+    MsgTwamplightRespSessions TwamplightRespSessions = 4;
+}

@@ -1,0 +1,702 @@
+syntax = "proto3";
+package nqa_v3;
+message NQA {
+    message MsgTemplates {
+        message MsgTemplate {
+            string Name = 1;
+            uint32 Type = 2;
+            string Description = 3;
+            uint32 Frequency = 4;
+            uint32 ProbeTimeout = 5;
+            uint32 TTL = 6;
+            uint32 ToS = 7;
+            string VRF = 8;
+            string URL = 9;
+            string DstIP = 10;
+            uint32 DstPort = 11;
+            string SrcIP = 12;
+            uint32 SrcPort = 13;
+            string NextHop = 14;
+            uint32 TriggerPassCount = 15;
+            uint32 TriggerFailCount = 16;
+            bool TriggerPerProbe = 17;
+            string TestDestination = 18;
+        }
+        repeated MsgTemplate Template = 1;
+    }
+    MsgTemplates Templates = 1;
+    message MsgIcmpEchoTemplates {
+        message MsgIcmpEchoTemplate {
+            string Name = 1;
+            string DataFill = 2;
+            uint32 DataSize = 3;
+            string SrcIf = 4;
+        }
+        repeated MsgIcmpEchoTemplate IcmpEchoTemplate = 1;
+    }
+    MsgIcmpEchoTemplates IcmpEchoTemplates = 2;
+    message MsgTcpTemplates {
+        message MsgTcpTemplate {
+            string Name = 1;
+            string DataFill = 2;
+            message MsgExpectData {
+                string Data = 1;
+                uint32 Offset = 2;
+            }
+            MsgExpectData ExpectData = 3;
+        }
+        repeated MsgTcpTemplate TcpTemplate = 1;
+    }
+    MsgTcpTemplates TcpTemplates = 3;
+    message MsgUdpEchoTemplates {
+        message MsgUdpEchoTemplate {
+            string Name = 1;
+            string DataFill = 2;
+            uint32 DataSize = 3;
+            message MsgExpectData {
+                string Data = 1;
+                uint32 Offset = 2;
+            }
+            MsgExpectData ExpectData = 4;
+        }
+        repeated MsgUdpEchoTemplate UdpEchoTemplate = 1;
+    }
+    MsgUdpEchoTemplates UdpEchoTemplates = 4;
+    message MsgFtpTemplates {
+        message MsgFtpTemplate {
+            string Name = 1;
+            uint32 Operation = 2;
+            string UserName = 3;
+            string FileName = 4;
+            uint32 Mode = 5;
+        }
+        repeated MsgFtpTemplate FtpTemplate = 1;
+    }
+    MsgFtpTemplates FtpTemplates = 5;
+    message MsgHttpTemplates {
+        message MsgHttpTemplate {
+            string Name = 1;
+            string UserName = 2;
+            uint32 Operation = 3;
+            uint32 Version = 4;
+            string RawContent = 5;
+            string ExpectStatus = 6;
+            message MsgExpectData {
+                string Data = 1;
+                uint32 Offset = 2;
+            }
+            MsgExpectData ExpectData = 7;
+            string SslClientPolicy = 8;
+        }
+        repeated MsgHttpTemplate HttpTemplate = 1;
+    }
+    MsgHttpTemplates HttpTemplates = 6;
+    message MsgDnsTemplates {
+        message MsgDnsTemplate {
+            string Name = 1;
+            string ResolveTarget = 2;
+            uint32 ResolveType = 3;
+            string ExpectIP = 4;
+        }
+        repeated MsgDnsTemplate DnsTemplate = 1;
+    }
+    MsgDnsTemplates DnsTemplates = 7;
+    message MsgRadiusTemplates {
+        message MsgRadiusTemplate {
+            string Name = 1;
+            string UserName = 2;
+        }
+        repeated MsgRadiusTemplate RadiusTemplate = 1;
+    }
+    MsgRadiusTemplates RadiusTemplates = 8;
+    message MsgSslTemplates {
+        message MsgSslTemplate {
+            string Name = 1;
+            string ClientPolicy = 2;
+        }
+        repeated MsgSslTemplate SslTemplate = 1;
+    }
+    MsgSslTemplates SslTemplates = 9;
+    message MsgImapTemplates {
+        message MsgImapTemplate {
+            string Name = 1;
+            string UserName = 2;
+            string Mailbox = 3;
+        }
+        repeated MsgImapTemplate ImapTemplate = 1;
+    }
+    MsgImapTemplates ImapTemplates = 10;
+    message MsgPop3Templates {
+        message MsgPop3Template {
+            string Name = 1;
+            string UserName = 2;
+        }
+        repeated MsgPop3Template Pop3Template = 1;
+    }
+    MsgPop3Templates Pop3Templates = 11;
+    message MsgSnmpTemplates {
+        message MsgSnmpTemplate {
+            string Name = 1;
+        }
+        repeated MsgSnmpTemplate SnmpTemplate = 1;
+    }
+    MsgSnmpTemplates SnmpTemplates = 12;
+    message MsgHistories {
+        message MsgHistory {
+            string AdminName = 1;
+            string OperationTag = 2;
+            message MsgHistoryRecords {
+                uint32 Index = 1;
+                uint32 TTL = 2;
+                uint32 Response = 3;
+                string HopIP = 4;
+                uint32 Status = 5;
+                string Time = 6;
+            }
+            repeated MsgHistoryRecords HistoryRecords = 3;
+        }
+        repeated MsgHistory History = 1;
+    }
+    MsgHistories Histories = 13;
+    message MsgEntries {
+        message MsgEntry {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 Type = 3;
+            string Description = 4;
+            string DstIP = 5;
+            uint32 DstPort = 6;
+            string HistoryEnable = 7;
+            uint32 HistoryHoldTime = 8;
+            uint32 HistoryNumber = 9;
+            uint32 Frequency = 10;
+            string NextHop = 11;
+            uint32 ProbeCount = 12;
+            uint32 ProbeTimeout = 13;
+            string BypassRouteEnable = 14;
+            string SrcIP = 15;
+            uint32 SrcPort = 16;
+            uint32 StatHoldTime = 17;
+            uint32 StatInterval = 18;
+            uint32 StatMaxGroup = 19;
+            uint32 TTL = 20;
+            uint32 ToS = 21;
+            string VRF = 22;
+            string URL = 23;
+        }
+        repeated MsgEntry Entry = 1;
+    }
+    MsgEntries Entries = 14;
+    message MsgIcmpEchoEntries {
+        message MsgIcmpEchoEntry {
+            string AdminName = 1;
+            string OperationTag = 2;
+            string DataFill = 3;
+            uint32 DataSize = 4;
+            string SrcIf = 5;
+            string OutIf = 6;
+        }
+        repeated MsgIcmpEchoEntry IcmpEchoEntry = 1;
+    }
+    MsgIcmpEchoEntries IcmpEchoEntries = 15;
+    message MsgSchedules {
+        message MsgSchedule {
+            string AdminName = 1;
+            string OperationTag = 2;
+            message MsgStartTime {
+                bool StartNow = 1;
+                string Time = 2;
+            }
+            MsgStartTime StartTime = 3;
+            message MsgLifetime {
+                bool Forever = 1;
+                uint32 Duration = 2;
+            }
+            MsgLifetime Lifetime = 4;
+            string Recurring = 5;
+        }
+        repeated MsgSchedule Schedule = 1;
+    }
+    MsgSchedules Schedules = 16;
+    message MsgReactionTriggerFailItems {
+        message MsgReactionTriggerFailItem {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 ItemNumber = 3;
+            uint32 Occurrences = 4;
+        }
+        repeated MsgReactionTriggerFailItem ReactionTriggerFailItem = 1;
+    }
+    MsgReactionTriggerFailItems ReactionTriggerFailItems = 17;
+    message MsgIcmpJitterEntries {
+        message MsgIcmpJitterEntry {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 PktInterval = 3;
+            uint32 PktNumber = 4;
+            uint32 PktTimeout = 5;
+        }
+        repeated MsgIcmpJitterEntry IcmpJitterEntry = 1;
+    }
+    MsgIcmpJitterEntries IcmpJitterEntries = 18;
+    message MsgUdpJitterEntries {
+        message MsgUdpJitterEntry {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 PktInterval = 3;
+            uint32 PktNumber = 4;
+            uint32 PktTimeout = 5;
+            string DataFill = 6;
+            uint32 DataSize = 7;
+            string OutIf = 8;
+            bool HighPerformance = 9;
+            message MsgMplsSimulation {
+                bool Enable = 1;
+                uint32 Exp = 2;
+            }
+            MsgMplsSimulation MplsSimulation = 10;
+        }
+        repeated MsgUdpJitterEntry UdpJitterEntry = 1;
+    }
+    MsgUdpJitterEntries UdpJitterEntries = 19;
+    message MsgReactions {
+        message MsgReaction {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 ItemNumber = 3;
+            uint32 CheckedElement = 4;
+            message MsgThresholdType {
+                uint32 Type = 1;
+                uint32 Occurrences = 2;
+            }
+            MsgThresholdType ThresholdType = 5;
+            message MsgThresholdValue {
+                uint32 UpperLimit = 1;
+                uint32 LowerLimit = 2;
+            }
+            MsgThresholdValue ThresholdValue = 6;
+            uint32 ActionType = 7;
+        }
+        repeated MsgReaction Reaction = 1;
+    }
+    MsgReactions Reactions = 20;
+    message MsgResults {
+        message MsgResult {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 SendTimes = 3;
+            uint32 ReceiveTimes = 4;
+            uint32 MinRtt = 5;
+            uint32 MaxRtt = 6;
+            uint32 AvgRtt = 7;
+            uint64 SquareSumRtt = 8;
+            string LastSuccProbeTime = 9;
+            uint32 LossRatio = 10;
+            uint32 TimeOut = 11;
+            uint32 Disconnect = 12;
+            uint32 NoConnection = 13;
+            uint32 InternalError = 14;
+            uint32 OtherErrors = 15;
+        }
+        repeated MsgResult Result = 1;
+    }
+    MsgResults Results = 21;
+    message MsgJitterResults {
+        message MsgJitterResult {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 SendTimes = 3;
+            uint32 ReceiveTimes = 4;
+            uint32 MinRtt = 5;
+            uint32 MaxRtt = 6;
+            uint32 AvgRtt = 7;
+            uint64 SquareSumRtt = 8;
+            string LastReceivedTime = 9;
+            uint32 LossRatio = 10;
+            uint32 TimeOut = 11;
+            uint32 InternalError = 12;
+            uint32 OtherErrors = 13;
+            uint32 OutSequenceTimes = 14;
+            uint32 ArrivedLate = 15;
+            message MsgJitter {
+                uint32 RttNum = 1;
+                uint32 MinPosSD = 2;
+                uint32 MaxPosSD = 3;
+                uint32 PosNumSD = 4;
+                uint32 PosSumSD = 5;
+                uint32 PosAvgSD = 6;
+                uint32 PosSquareSumSD = 7;
+                uint32 MinNegSD = 8;
+                uint32 MaxNegSD = 9;
+                uint32 NegNumSD = 10;
+                uint32 NegSumSD = 11;
+                uint32 NegAvgSD = 12;
+                uint32 NegSquareSumSD = 13;
+                uint32 AvgSD = 14;
+                uint32 MinPosDS = 15;
+                uint32 MaxPosDS = 16;
+                uint32 PosNumDS = 17;
+                uint32 PosSumDS = 18;
+                uint32 PosAvgDS = 19;
+                uint32 PosSquareSumDS = 20;
+                uint32 MinNegDS = 21;
+                uint32 MaxNegDS = 22;
+                uint32 NegNumDS = 23;
+                uint32 NegSumDS = 24;
+                uint32 NegAvgDS = 25;
+                uint32 NegSquareSumDS = 26;
+                uint32 AvgDS = 27;
+            }
+            MsgJitter Jitter = 16;
+            message MsgOneWay {
+                uint32 MaxDelaySD = 1;
+                uint32 MinDelaySD = 2;
+                uint32 NumOfDelaySD = 3;
+                uint32 SumOfDelaySD = 4;
+                uint32 SquareSumOfDelaySD = 5;
+                uint32 LostPacketSD = 6;
+                uint32 MaxDelayDS = 7;
+                uint32 MinDelayDS = 8;
+                uint32 NumOfDelayDS = 9;
+                uint32 SumOfDelayDS = 10;
+                uint32 SquareSumOfDelayDS = 11;
+                uint32 LostPacketsDS = 12;
+                uint32 UnknownLostPackets = 13;
+            }
+            MsgOneWay OneWay = 17;
+        }
+        repeated MsgJitterResult JitterResult = 1;
+    }
+    MsgJitterResults JitterResults = 22;
+    message MsgY1564Results {
+        message MsgY1564Result {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 ResultIndex = 3;
+            uint32 Status = 4;
+            uint32 LastCompletedTest = 5;
+            uint32 EstimatedTotalTime = 6;
+            uint32 ActualTestTimeUsed = 7;
+            message MsgDetailResults {
+                message MsgDetailResult {
+                    uint32 TestType = 1;
+                    uint32 Index = 2;
+                    string StartTime = 3;
+                    string EndTime = 4;
+                    uint32 SendSpeed = 5;
+                    uint32 Status = 6;
+                    message MsgIR {
+                        uint32 MinValue = 1;
+                        uint32 MaxValue = 2;
+                        uint32 AvgValue = 3;
+                    }
+                    MsgIR IR = 7;
+                    message MsgFTD {
+                        uint32 MinValue = 1;
+                        uint32 MaxValue = 2;
+                        uint32 AvgValue = 3;
+                    }
+                    MsgFTD FTD = 8;
+                    message MsgFDV {
+                        uint32 MinValue = 1;
+                        uint32 MaxValue = 2;
+                        uint32 AvgValue = 3;
+                    }
+                    MsgFDV FDV = 9;
+                    uint64 FLcount = 10;
+                    string FLR = 11;
+                    uint64 PacketsOutOfOrder = 12;
+                    uint32 SeverelyErrSecs = 13;
+                    string AVAIL = 14;
+                }
+                repeated MsgDetailResult DetailResult = 1;
+            }
+            MsgDetailResults DetailResults = 8;
+        }
+        repeated MsgY1564Result Y1564Result = 1;
+    }
+    MsgY1564Results Y1564Results = 23;
+    message MsgTwamplightLossStats {
+        message MsgTwamplightLossStat {
+            uint32 Session = 1;
+            message MsgSumLossCount {
+                uint32 MinValue = 1;
+                uint32 MaxValue = 2;
+                uint32 AvgValue = 3;
+                uint32 LossCount = 4;
+                uint32 SendCount = 5;
+            }
+            MsgSumLossCount SumLossCount = 2;
+            message MsgSumLossRatio {
+                string MinValue = 1;
+                string MaxValue = 2;
+                string AvgValue = 3;
+            }
+            MsgSumLossRatio SumLossRatio = 3;
+            message MsgSumErrorCount {
+                uint32 MinValue = 1;
+                uint32 MaxValue = 2;
+                uint32 AvgValue = 3;
+            }
+            MsgSumErrorCount SumErrorCount = 4;
+            message MsgSumErrorRatio {
+                string MinValue = 1;
+                string MaxValue = 2;
+                string AvgValue = 3;
+            }
+            MsgSumErrorRatio SumErrorRatio = 5;
+            message MsgDetailStats {
+                message MsgDetailStat {
+                    uint32 Index = 1;
+                    uint32 LossCount = 2;
+                    string LossRatio = 3;
+                    uint32 ErrorCount = 4;
+                    string ErrorRatio = 5;
+                    uint32 SendCount = 6;
+                }
+                repeated MsgDetailStat DetailStat = 1;
+            }
+            MsgDetailStats DetailStats = 16;
+        }
+        repeated MsgTwamplightLossStat TwamplightLossStat = 1;
+    }
+    MsgTwamplightLossStats TwamplightLossStats = 24;
+    message MsgTwamplightDelayStats {
+        message MsgTwamplightDelayStat {
+            uint32 Session = 1;
+            message MsgAverageDelay {
+                uint32 MinValue = 1;
+                uint32 MaxValue = 2;
+                uint32 AvgValue = 3;
+            }
+            MsgAverageDelay AverageDelay = 2;
+            message MsgAverageJitter {
+                uint32 MinValue = 1;
+                uint32 MaxValue = 2;
+                uint32 AvgValue = 3;
+            }
+            MsgAverageJitter AverageJitter = 3;
+            message MsgSDJitter {
+                uint32 MinValue = 1;
+                uint32 MaxValue = 2;
+                uint32 AvgValue = 3;
+            }
+            MsgSDJitter SDJitter = 4;
+            message MsgDSJitter {
+                uint32 MinValue = 1;
+                uint32 MaxValue = 2;
+                uint32 AvgValue = 3;
+            }
+            MsgDSJitter DSJitter = 5;
+            message MsgDetailStats {
+                message MsgDetailStat {
+                    uint32 Index = 1;
+                    uint32 Delay = 2;
+                    uint32 MinDelay = 3;
+                    uint32 MaxDelay = 4;
+                    uint32 Jitter = 5;
+                    uint32 MinJitter = 6;
+                    uint32 MaxJitter = 7;
+                    uint32 SDJitter = 8;
+                    uint32 MinSDJitter = 9;
+                    uint32 MaxSDJitter = 10;
+                    uint32 DSJitter = 11;
+                    uint32 MinDSJitter = 12;
+                    uint32 MaxDSJitter = 13;
+                }
+                repeated MsgDetailStat DetailStat = 1;
+            }
+            MsgDetailStats DetailStats = 14;
+        }
+        repeated MsgTwamplightDelayStat TwamplightDelayStat = 1;
+    }
+    MsgTwamplightDelayStats TwamplightDelayStats = 25;
+    message MsgFrameLossResults {
+        message MsgFrameLossResult {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 ResultIndex = 3;
+            uint32 InitialSpeed = 4;
+            uint32 ProbeDuration = 5;
+            uint32 ProbeInterval = 6;
+            message MsgDetailResults {
+                message MsgDetailResult {
+                    uint32 FrameSize = 1;
+                    uint32 CurrentSpeed = 2;
+                    string FrameLoss = 3;
+                    uint32 Status = 4;
+                    string OperateTime = 5;
+                }
+                repeated MsgDetailResult DetailResult = 1;
+            }
+            MsgDetailResults DetailResults = 7;
+        }
+        repeated MsgFrameLossResult FrameLossResult = 1;
+    }
+    MsgFrameLossResults FrameLossResults = 26;
+    message MsgThroughputResults {
+        message MsgThroughputResult {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 ResultIndex = 3;
+            uint32 InitialSpeed = 4;
+            uint32 SpeedGranularity = 5;
+            uint32 ProbeDuration = 6;
+            uint32 ProbeInterval = 7;
+            string AllowedLossRatio = 8;
+            message MsgDetailResults {
+                message MsgDetailResult {
+                    uint32 FrameSize = 1;
+                    uint32 CurrentSpeed = 2;
+                    uint32 FrameLossCnt = 3;
+                    uint32 FrameSent = 4;
+                    uint32 Status = 5;
+                    string OperateTime = 6;
+                }
+                repeated MsgDetailResult DetailResult = 1;
+            }
+            MsgDetailResults DetailResults = 9;
+        }
+        repeated MsgThroughputResult ThroughputResult = 1;
+    }
+    MsgThroughputResults ThroughputResults = 27;
+    message MsgLatencyResults {
+        message MsgLatencyResult {
+            string AdminName = 1;
+            string OperationTag = 2;
+            uint32 ResultIndex = 3;
+            uint32 InitialSpeed = 4;
+            uint32 ProbeDuration = 5;
+            uint32 ProbeInterval = 6;
+            message MsgDetailResults {
+                message MsgDetailResult {
+                    uint32 FrameSize = 1;
+                    message MsgLatency {
+                        uint32 MinValue = 1;
+                        uint32 MaxValue = 2;
+                        uint32 AvgValue = 3;
+                    }
+                    MsgLatency Latency = 2;
+                    message MsgJitter {
+                        uint32 MinValue = 1;
+                        uint32 MaxValue = 2;
+                        uint32 AvgValue = 3;
+                    }
+                    MsgJitter Jitter = 3;
+                    uint64 SentPackets = 4;
+                    uint64 ReceivedPackets = 5;
+                    uint32 Status = 6;
+                    string OperateTime = 7;
+                }
+                repeated MsgDetailResult DetailResult = 1;
+            }
+            MsgDetailResults DetailResults = 7;
+        }
+        repeated MsgLatencyResult LatencyResult = 1;
+    }
+    MsgLatencyResults LatencyResults = 28;
+    message MsgTwamplightClients {
+        message MsgTwamplightClient {
+            uint32 SessionID = 1;
+            uint32 Status = 2;
+            uint32 SessionType = 3;
+            string SrcInterface = 4;
+            uint32 ServiceInstance = 5;
+            string SrcIpAddress = 6;
+            string DesIpAddress = 7;
+            uint32 SrcPortNumber = 8;
+            uint32 DesPortNumber = 9;
+            string SrcMacAddress = 10;
+            string DesMacAddress = 11;
+            uint32 VLANID = 12;
+            uint32 ServiceVLANID = 13;
+            uint32 CustomerVLANID = 14;
+            uint32 ToS = 15;
+            uint32 Priority8021p = 16;
+            uint32 PaddingLength = 17;
+            uint32 TimeStampFormat = 18;
+            string VRF = 19;
+            string LastStartTimeStamp = 20;
+            string LastStopTimeStamp = 21;
+            uint32 PacketInterval = 22;
+            uint32 Timeout = 23;
+            uint32 Duration = 24;
+            uint32 PacketsSentCnt = 25;
+            uint32 StatisticsInterval = 26;
+            uint32 MonitorTime = 27;
+            uint32 DelayMonitorTime = 28;
+            uint32 JitterMonitorTime = 29;
+            uint32 LossMonitorTime = 30;
+            string Description = 31;
+            bool AdjustChecksum = 32;
+        }
+        repeated MsgTwamplightClient TwamplightClient = 1;
+    }
+    MsgTwamplightClients TwamplightClients = 29;
+    message MsgTwamplightClientEnable {
+        string ClientEnable = 1;
+    }
+    MsgTwamplightClientEnable TwamplightClientEnable = 30;
+    message MsgTwamplightClientSessions {
+        message MsgTwamplightClientSession {
+            uint32 SessionID = 1;
+            string SrcIpAddress = 2;
+            string DstIpAddress = 3;
+            uint32 SrcPortNumber = 4;
+            uint32 DstPortNumber = 5;
+            string VRF = 6;
+            uint32 DscpValue = 7;
+            string Description = 8;
+            uint32 PaddingLength = 9;
+            message MsgDataFill {
+                string Data = 1;
+                bool HexFlag = 2;
+            }
+            MsgDataFill DataFill = 10;
+            string SrcInterface = 11;
+            uint32 ServiceID = 12;
+            string DesMacAddress = 13;
+            string SrcMacAddress = 14;
+            uint32 TimestampFormat = 15;
+            message MsgVLANID {
+                uint32 Service = 1;
+                uint32 Customer = 2;
+            }
+            MsgVLANID VLANID = 16;
+            uint32 Priority8021p = 17;
+            string BindInterface = 18;
+            message MsgReactionEntries {
+                message MsgReactionEntry {
+                    uint32 ItemNumber = 1;
+                    uint32 CheckedElement = 2;
+                    message MsgThresholdValue {
+                        uint32 UpperLimit = 1;
+                        uint32 LowerLimit = 2;
+                    }
+                    MsgThresholdValue ThresholdValue = 3;
+                    uint32 ActionType = 4;
+                }
+                repeated MsgReactionEntry ReactionEntry = 1;
+            }
+            MsgReactionEntries ReactionEntries = 21;
+            bool AdjustChecksum = 22;
+        }
+        repeated MsgTwamplightClientSession TwamplightClientSession = 1;
+    }
+    MsgTwamplightClientSessions TwamplightClientSessions = 31;
+    message MsgTwamplightSenderEnable {
+        string SenderEnable = 1;
+    }
+    MsgTwamplightSenderEnable TwamplightSenderEnable = 32;
+    message MsgTwamplightSenderSessions {
+        message MsgTwamplightSenderSession {
+            uint32 SessionID = 1;
+            uint32 Timeout = 2;
+            uint32 TxInterval = 3;
+            uint32 StatisticsInterval = 4;
+            uint32 MonitorTime = 5;
+        }
+        repeated MsgTwamplightSenderSession TwamplightSenderSession = 1;
+    }
+    MsgTwamplightSenderSessions TwamplightSenderSessions = 33;
+}

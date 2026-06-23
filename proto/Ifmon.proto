@@ -1,0 +1,144 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  ifmon;
+message IfmonIfMonThresholdInterfaces {
+    message IfMonThresholdInterfaces {
+        optional uint32 IfIndex = 1;
+        message InputUsage {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+        }
+        repeated InputUsage inputusage = 2;
+        message OutputUsage {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+        }
+        repeated OutputUsage outputusage = 3;
+        message InputErrorAlarm {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+            optional bool EnableShutdown = 4;
+        }
+        repeated InputErrorAlarm inputerroralarm = 4;
+        message OutputErrorAlarm {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+            optional bool EnableShutdown = 4;
+        }
+        repeated OutputErrorAlarm outputerroralarm = 5;
+        message SdhError {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+            optional bool EnableShutdown = 4;
+        }
+        repeated SdhError sdherror = 6;
+        message SdhB1Error {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+            optional bool EnableShutdown = 4;
+        }
+        repeated SdhB1Error sdhb1error = 7;
+        message SdhB2Error {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+            optional bool EnableShutdown = 4;
+        }
+        repeated SdhB2Error sdhb2error = 8;
+        message CRCError {
+            optional uint32 Type = 1;
+            optional uint32 HighThres = 2;
+            optional uint32 LowThres = 3;
+            optional uint32 Interval = 4;
+            optional bool EnableShutdown = 5;
+        }
+        repeated CRCError crcerror = 9;
+        message RxPauseFrame {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+        }
+        repeated RxPauseFrame rxpauseframe = 10;
+        message TxPauseFrame {
+            optional uint32 HighThres = 1;
+            optional uint32 LowThres = 2;
+            optional uint32 Interval = 3;
+        }
+        repeated TxPauseFrame txpauseframe = 11;
+    }
+    repeated IfMonThresholdInterfaces ifmonthresholdinterfaces = 1;
+}
+message IfmonIfMonStatisticsInterfaces {
+    message IfMonStatisticsInterfaces {
+        optional uint32 IfIndex = 1;
+        optional uint64 InputUsageStatistics = 2;
+        optional uint64 OutputUsageStatistics = 3;
+        optional uint64 InputErrorAlarmStatistics = 4;
+        optional uint64 OutputErrorAlarmStatistics = 5;
+        optional uint64 SdhErrorStatistics = 6;
+        optional uint64 SdhB1ErrorStatistics = 7;
+        optional uint64 SdhB2ErrorStatistics = 8;
+        optional uint64 CRCErrorStatistics = 9;
+        optional uint64 RxPauseFrameStatistics = 10;
+        optional uint64 TxPauseFrameStatistics = 11;
+    }
+    repeated IfMonStatisticsInterfaces ifmonstatisticsinterfaces = 1;
+}
+message IfmonIfMonPmStatisticsInterfaces {
+    message Interface {
+        optional uint32 IfIndex = 1;
+        optional string TaskName = 2;
+        optional uint32 DataIndex = 3;
+        optional string IfName = 4;
+        optional string Timestamp = 5;
+        message InSpeedBit {
+            optional uint32 ValidFlag = 1;
+            optional uint64 PeakValue = 2;
+            optional string PeakTimestamp = 3;
+            optional uint64 ValleyValue = 4;
+            optional string ValleyTimestamp = 5;
+            optional uint64 AverageValue = 6;
+        }
+        repeated InSpeedBit inspeedbit = 6;
+        message OutSpeedBit {
+            optional uint32 ValidFlag = 1;
+            optional uint64 PeakValue = 2;
+            optional string PeakTimestamp = 3;
+            optional uint64 ValleyValue = 4;
+            optional string ValleyTimestamp = 5;
+            optional uint64 AverageValue = 6;
+        }
+        repeated OutSpeedBit outspeedbit = 7;
+    }
+    repeated Interface interface = 1;
+}
+message IfmonStatisticsEvent {
+    message Interface {
+        optional int32 IfIndex = 1;
+        optional string TaskName = 2;
+        message Measure {
+            optional string MeasureName = 1;
+            optional uint64 PeakValue = 2;
+            optional string PeakTimeStamp = 3;
+            optional uint64 VallyValue = 4;
+            optional string VallyTimeStamp = 5;
+            optional uint64 AverageValue = 6;
+        }
+        repeated Measure measure = 3;
+    }
+    repeated Interface interface = 1;
+}
+message EventStream {
+    optional string stream_name = 1;
+}
+service IfmonService {
+    rpc GetJsonIfmonIfMonThresholdInterfaces(IfmonIfMonThresholdInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIfmonIfMonStatisticsInterfaces(IfmonIfMonStatisticsInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIfmonIfMonPmStatisticsInterfaces(IfmonIfMonPmStatisticsInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc SubscribeIfmonStatisticsEvent(IfmonStatisticsEvent) returns (grpc_service.SubscribeReply) {}
+    rpc SubscribeEventStream(EventStream) returns (grpc_service.SubscribeReply) {}
+}

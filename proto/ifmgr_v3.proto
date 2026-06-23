@@ -1,0 +1,450 @@
+syntax = "proto3";
+package  ifmgr_v3;
+message Ifmgr {
+    message MsgInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            string Name = 2;
+            string AbbreviatedName = 3;
+            uint32 PortIndex = 4;
+            uint32 ifTypeExt = 5;
+            uint32 ifType = 6;
+            string Description = 7;
+            uint32 AdminStatus = 8;
+            uint32 OperStatus = 9;
+            uint64 ConfigSpeed = 10;
+            uint64 ActualSpeed = 11;
+            uint32 ConfigDuplex = 12;
+            uint32 ActualDuplex = 13;
+            uint32 PortLayer = 14;
+            uint32 LinkType = 15;
+            uint32 PVID = 16;
+            string InetAddressIPV4 = 17;
+            string InetAddressIPV4Mask = 18;
+            uint32 PhysicalIndex = 19;
+            string MAC = 20;
+            uint32 ForwardingAttributes = 21;
+            uint32 Loopback = 22;
+            uint32 MDI = 23;
+            uint32 ConfigMTU = 24;
+            uint32 ActualMTU = 25;
+            uint64 ConfigBandwidth = 26;
+            uint64 ActualBandwidth = 27;
+            bool SubPort = 28;
+            uint32 Interval = 29;
+            bool ForceUP = 30;
+            uint64 Actual64Bandwidth = 31;
+            message MsgLinkDelay {
+                uint32 UpTime = 1;
+                uint32 DownTime = 2;
+            }
+            MsgLinkDelay LinkDelay = 32;
+            uint32 KeepAlive = 33;
+            uint32 KeepAliveRetry = 34;
+            string DefaultMac = 35;
+            string LastChange = 36;
+            string PhyLastChange = 37;
+            string TrafficStatisticsEnable = 38;
+            string SubIfRateStatisticsEnable = 39;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgInterfaces Interfaces = 1;
+    message MsgStatistics {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            string Name = 2;
+            string AbbreviatedName = 3;
+            uint64 InOctets = 4;
+            uint64 InUcastPkts = 5;
+            uint64 InNUcastPkts = 6;
+            uint64 InDiscards = 7;
+            uint64 InErrors = 8;
+            uint64 InUnknownProtos = 9;
+            uint64 InRate = 10;
+            uint64 OutOctets = 11;
+            uint64 OutUcastPkts = 12;
+            uint64 OutNUcastPkts = 13;
+            uint64 OutDiscards = 14;
+            uint64 OutErrors = 15;
+            uint64 OutRate = 16;
+            string LastClear = 17;
+            uint64 InPkts = 18;
+            uint64 OutPkts = 19;
+            uint64 InPktRate = 20;
+            uint64 OutPktRate = 21;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgStatistics Statistics = 2;
+    message MsgTrafficStatistics {
+        message MsgInterfaces {
+            message MsgInterface {
+                uint32 IfIndex = 1;
+                string Name = 2;
+                uint32 Interval = 3;
+                uint64 InPkts = 4;
+                uint64 OutPkts = 5;
+                uint64 InOctets = 6;
+                uint64 OutOctets = 7;
+                uint64 InBits = 8;
+                uint64 OutBits = 9;
+            }
+            repeated MsgInterface Interface = 1;
+        }
+        MsgInterfaces Interfaces = 1;
+        message MsgInterval {
+            bool Configurable = 1;
+            uint32 Interval = 2;
+        }
+        MsgInterval Interval = 2;
+    }
+    MsgTrafficStatistics TrafficStatistics = 3;
+    message MsgPorts {
+        message MsgPort {
+            uint32 PortIndex = 1;
+            string Name = 2;
+            uint32 IfIndex = 3;
+        }
+        repeated MsgPort Port = 1;
+    }
+    MsgPorts Ports = 4;
+    message MsgInterfaceCapabilities {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            bool Configurable = 2;
+            bool Shutdown = 3;
+            uint64 Speed = 4;
+            uint64 AutoSpeed = 5;
+            uint32 Duplex = 6;
+            bool PortLayer = 7;
+            bool Loopback = 8;
+            uint32 MDI = 9;
+            bool Bandwidth = 10;
+            uint32 MinMTU = 11;
+            uint32 MaxMTU = 12;
+            uint32 MinSubNum = 13;
+            uint32 MaxSubNum = 14;
+            uint32 MaxCreateSubNum = 15;
+            uint32 ContextAllocType = 16;
+            bool Removable = 17;
+            bool Interval = 18;
+            bool ForceUP = 19;
+            bool LoopbackAutoStop = 20;
+            bool MAC = 21;
+            bool TrafficStatisticsEnable = 22;
+            bool SubIfRateStatisticsEnable = 23;
+            string IfName = 24;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgInterfaceCapabilities InterfaceCapabilities = 5;
+    message MsgTypeCapabilities {
+        message MsgCapability {
+            uint32 IfTypeExt = 1;
+            uint32 MinNum = 2;
+            uint32 MaxNum = 3;
+            uint32 MinSubNum = 4;
+            uint32 MaxSubNum = 5;
+            uint32 MaxCreateNum = 6;
+            uint32 MaxCreateSubNum = 7;
+            bool MAC = 8;
+            bool VlanTm = 9;
+        }
+        repeated MsgCapability Capability = 1;
+    }
+    MsgTypeCapabilities TypeCapabilities = 6;
+    message MsgEthInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            uint32 Combo = 2;
+            uint32 FlowControl = 3;
+            bool AutoPowerDown = 4;
+            uint32 Jumboframe = 5;
+            message MsgBroadcastSuppression {
+                uint32 ConfigValue = 1;
+                uint32 ActualValue = 2;
+                uint32 Unit = 3;
+            }
+            MsgBroadcastSuppression BroadcastSuppression = 6;
+            message MsgMulticastSuppression {
+                uint32 ConfigValue = 1;
+                uint32 ActualValue = 2;
+                uint32 Unit = 3;
+                uint32 Flag = 4;
+            }
+            MsgMulticastSuppression MulticastSuppression = 7;
+            message MsgUnknownUnicastSuppression {
+                uint32 ConfigValue = 1;
+                uint32 ActualValue = 2;
+                uint32 Unit = 3;
+            }
+            MsgUnknownUnicastSuppression UnknownUnicastSuppression = 8;
+            bool BPDUDrop = 9;
+            bool EEE = 10;
+            uint32 ConnectMode = 11;
+            string IfName = 12;
+            uint32 FiberOrCopper = 13;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgEthInterfaces EthInterfaces = 7;
+    message MsgEthInterfaceCapabilities {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            bool Combo = 2;
+            bool StormConstrain = 3;
+            bool FlowControl = 4;
+            bool AutoPowerDown = 5;
+            uint32 MinJumboframe = 6;
+            uint32 MaxJumboframe = 7;
+            bool BPDUDrop = 8;
+            bool EEE = 9;
+            bool ConnectMode = 10;
+            string IfName = 11;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgEthInterfaceCapabilities EthInterfaceCapabilities = 8;
+    message MsgStormConstrain {
+        message MsgInterfaces {
+            message MsgInterface {
+                uint32 IfIndex = 1;
+                uint32 CtlMode = 2;
+                bool Trap = 3;
+                bool Log = 4;
+                message MsgBroadcast {
+                    uint32 Upper = 1;
+                    uint32 Lower = 2;
+                    uint32 Unit = 3;
+                    uint32 Forward = 4;
+                    uint32 SwitchNum = 5;
+                }
+                MsgBroadcast Broadcast = 5;
+                message MsgMulticast {
+                    uint32 Upper = 1;
+                    uint32 Lower = 2;
+                    uint32 Unit = 3;
+                    uint32 Forward = 4;
+                    uint32 SwitchNum = 5;
+                }
+                MsgMulticast Multicast = 6;
+                message MsgUnknownUnicast {
+                    uint32 Upper = 1;
+                    uint32 Lower = 2;
+                    uint32 Unit = 3;
+                    uint32 Forward = 4;
+                    uint32 SwitchNum = 5;
+                }
+                MsgUnknownUnicast UnknownUnicast = 7;
+                message MsgKnownUnicast {
+                    uint32 Upper = 1;
+                    uint32 Lower = 2;
+                    uint32 Unit = 3;
+                    uint32 Forward = 4;
+                    uint32 SwitchNum = 5;
+                }
+                MsgKnownUnicast KnownUnicast = 8;
+                string IfName = 9;
+            }
+            repeated MsgInterface Interface = 1;
+        }
+        MsgInterfaces Interfaces = 1;
+        message MsgInterval {
+            uint32 Interval = 1;
+        }
+        MsgInterval Interval = 2;
+    }
+    MsgStormConstrain StormConstrain = 9;
+    message MsgPortIsolation {
+        message MsgGroups {
+            message MsgGroup {
+                uint32 IsolatedGroupID = 1;
+                string InterfaceList = 2;
+            }
+            repeated MsgGroup Group = 1;
+        }
+        MsgGroups Groups = 1;
+        message MsgInterfaces {
+            message MsgInterface {
+                uint32 IfIndex = 1;
+                uint32 IsolatedGroupID = 2;
+                string IfName = 3;
+            }
+            repeated MsgInterface Interface = 1;
+        }
+        MsgInterfaces Interfaces = 2;
+        message MsgCapabilities {
+            uint32 MaxGroupNum = 1;
+        }
+        MsgCapabilities Capabilities = 3;
+    }
+    MsgPortIsolation PortIsolation = 10;
+    message MsgIfHistoryTrafficStatistics {
+        message MsgTrafficStatistics {
+            uint32 IfIndex = 1;
+            uint32 Interval = 2;
+            string TimeStamp = 3;
+            uint64 InOctets = 4;
+            uint64 OutOctets = 5;
+            string IfName = 6;
+        }
+        repeated MsgTrafficStatistics TrafficStatistics = 1;
+    }
+    MsgIfHistoryTrafficStatistics IfHistoryTrafficStatistics = 11;
+    message MsgAllHistoryTrafficStatistics {
+        message MsgTrafficStatistics {
+            uint32 Interval = 1;
+            string TimeStamp = 2;
+            uint64 InOctets = 3;
+            uint64 OutOctets = 4;
+        }
+        repeated MsgTrafficStatistics TrafficStatistics = 1;
+    }
+    MsgAllHistoryTrafficStatistics AllHistoryTrafficStatistics = 12;
+    message MsgDeviceCapabilities {
+        bool HistoryTrafficStatistic = 1;
+        bool ManualNoLoopBack = 2;
+        bool DefaultShutdown = 3;
+    }
+    MsgDeviceCapabilities DeviceCapabilities = 13;
+    message MsgNewSubInterfaces {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            uint32 SubNum = 2;
+            string IfName = 3;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgNewSubInterfaces NewSubInterfaces = 14;
+    message MsgReserveVlanInterface {
+        message MsgVlanInterface {
+            uint32 Type = 1;
+            string VlanList = 2;
+        }
+        repeated MsgVlanInterface VlanInterface = 1;
+    }
+    MsgReserveVlanInterface ReserveVlanInterface = 15;
+    message MsgDataBuffer {
+        message MsgIfBuffer {
+            message MsgInterface {
+                uint32 IfIndex = 1;
+                uint32 FreeBuf = 2;
+                uint32 InitBuf = 3;
+                uint32 MinBuf = 4;
+                uint64 MissPkts = 5;
+                string IfName = 6;
+            }
+            repeated MsgInterface Interface = 1;
+        }
+	MsgIfBuffer IfBuffer = 1;
+    }
+    MsgDataBuffer DataBuffer = 16;
+    message MsgEthPortStatistics {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            string Name = 2;
+            uint64 InBytes = 3;
+            uint64 InPkts = 4;
+            uint64 InUcastPkts = 5;
+            uint64 InBrdcastPkts = 6;
+            uint64 InMulticastPkts = 7;
+            uint64 InPauses = 8;
+            uint64 InNormalBytes = 9;
+            uint64 InNormalUnicastBytes = 10;
+            uint64 InNormalBrdcastBytes = 11;
+            uint64 InNormalMulticastBytes = 12;
+            uint64 InUnknownUnicastBytes = 13;
+            uint64 InNormalPkts = 14;
+            uint64 InNormalUnicastPkts = 15;
+            uint64 InNormalBrdcastPkts = 16;
+            uint64 InNormalMulticastPkts = 17;
+            uint64 InUnknownUnicastPkts = 18;
+            uint64 InNormalPauses = 19;
+            uint64 InErrorPkts = 20;
+            uint64 InPktSpeed = 21;
+            uint64 InByteSpeed = 22;
+            uint64 InBrdcastPktSpeed = 23;
+            uint64 InMulticastPktSpeed = 24;
+            uint64 InRunts = 25;
+            uint64 InGiants = 26;
+            uint64 InThrottles = 27;
+            uint64 InErrCRCFrames = 28;
+            uint64 InErrFrames = 29;
+            uint64 InOverrunDropPkts = 30;
+            uint64 InAbortPkts = 31;
+            uint64 InIgnoreDropFrames = 32;
+            uint64 InParityErrFrames = 33;
+            uint64 InSpeedPeakBytes = 34;
+            string InSpeedPeakTime = 35;
+            uint64 OutBytes = 36;
+            uint64 OutPkts = 37;
+            uint64 OutUcastPkts = 38;
+            uint64 OutBrdcastPkts = 39;
+            uint64 OutMulticastPkts = 40;
+            uint64 OutPauses = 41;
+            uint64 OutNormalBytes = 42;
+            uint64 OutNormalUnicastBytes = 43;
+            uint64 OutNormalBrdcastBytes = 44;
+            uint64 OutNormalMulticastBytes = 45;
+            uint64 OutUnknownUnicastBytes = 46;
+            uint64 OutNormalPkts = 47;
+            uint64 OutNormalUnicastPkts = 48;
+            uint64 OutNormalBrdcastPkts = 49;
+            uint64 OutNormalMulticastPkts = 50;
+            uint64 OutUnknownUnicastPkts = 51;
+            uint64 OutNormalPauses = 52;
+            uint64 OutErrorPkts = 53;
+            uint64 OutPktSpeed = 54;
+            uint64 OutByteSpeed = 55;
+            uint64 OutBrdcastPktSpeed = 56;
+            uint64 OutMulticastPktSpeed = 57;
+            uint64 OutUnderRunDropPkts = 58;
+            uint64 OutBuffFailDropPkts = 59;
+            uint64 OutAbortPkts = 60;
+            uint64 OutDeferedFrames = 61;
+            uint64 OutCollisionFrames = 62;
+            uint64 OutLateCollisionFrames = 63;
+            uint64 OutLostCarriers = 64;
+            uint64 OutNoCarriers = 65;
+            uint64 OutSpeedPeakBytes = 66;
+            string OutSpeedPeakTime = 67;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgEthPortStatistics EthPortStatistics = 17;
+    message MsgShutdownInterval {
+        uint32 Interval = 1;
+    }
+    MsgShutdownInterval ShutdownInterval = 18;
+    message MsgIfPacketDropStatistics {
+        message MsgInterface {
+            uint32 IfIndex = 1;
+            uint64 InsufficientBandDrop = 2;
+            uint64 FFPDrop = 3;
+            uint64 STPDrop = 4;
+            uint64 RateLimitDrop = 5;
+            uint64 BroadcastBuppressionDrop = 6;
+            uint64 UnicastBuppressionDrop = 7;
+            uint64 MulticastSuppressionDrop = 8;
+            uint64 TxDrop = 9;
+            uint64 InsufficientBuffInDrop = 10;
+            uint64 InsufficientBuffOutDrop = 11;
+        }
+        repeated MsgInterface Interface = 1;
+    }
+    MsgIfPacketDropStatistics IfPacketDropStatistics = 19;
+    message MsgGlobalPacketDropStatistics {
+        uint64 InsufficientBandDrop = 1;
+        uint64 FFPDrop = 2;
+        uint64 STPDrop = 3;
+        uint64 RateLimitDrop = 4;
+        uint64 BroadcastBuppressionDrop = 5;
+        uint64 UnicastBuppressionDrop = 6;
+        uint64 MulticastSuppressionDrop = 7;
+        uint64 TxDrop = 8;
+        uint64 InsufficientBuffInDrop = 9;
+        uint64 InsufficientBuffOutDrop = 10;
+    }
+    MsgGlobalPacketDropStatistics GlobalPacketDropStatistics = 20;
+}

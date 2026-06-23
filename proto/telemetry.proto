@@ -1,0 +1,31 @@
+syntax = "proto3";
+package telemetry;
+
+message Telemetry {
+    string producer_name = 1;//Device producer_name
+    string node_id_str = 2;//Device name
+    string product_name = 3;
+    string subscription_id_str = 15;
+    string sensor_path = 16;
+    uint64 collection_id = 17;//标识采样轮次
+    uint64 collection_start_time = 18;
+    uint64 msg_timestamp = 19;
+    uint64 collection_end_time = 20;
+    uint32 current_period = 21;
+    string except_desc = 22;
+    enum Encoding {
+        Encoding_JSON = 0;
+        Encoding_GPB = 1;
+        };
+    Encoding encoding = 23;
+    string data_str = 24;
+    TelemetryGPBTable data_gpb = 25;    
+}
+message TelemetryGPBTable {
+    repeated TelemetryRowGPB row = 1;
+}
+message TelemetryRowGPB {
+    uint64 timestamp = 1;
+    bytes keys = 10;
+    bytes content = 11;
+}

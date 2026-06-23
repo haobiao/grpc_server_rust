@@ -1,0 +1,14 @@
+syntax = "proto3";
+package  vlans_v3;
+message vlans {
+    message Vlan {
+        uint32 vlan_id = 1;
+        message Config {
+            uint32 vlan_id = 1;
+            string name = 2;
+            uint32 tpid = 3;
+        }
+        Config config = 2;
+    }
+    repeated Vlan vlan = 1;
+}

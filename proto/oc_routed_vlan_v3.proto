@@ -1,0 +1,8 @@
+syntax = "proto3";
+import "oc_ipv4_v3.proto";
+import "oc_ipv6_v3.proto";
+package  routed_vlan_v3;
+message routed_vlan {
+    ipv4_v3.ipv4 ipv4 = 1;
+    ipv6_v3.ipv6 ipv6 = 2;
+}

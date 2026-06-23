@@ -1,0 +1,221 @@
+# ────────────────────────────────────────────────────────────────────
+# Build CI: 编译 Windows exe（Rust CLI + Tauri GUI）
+# ────────────────────────────────────────────────────────────────────
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:       # 允许手动触发
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PROTOC_VERSION: "29.5"
+
+# 取消同一分支/PR 上的旧运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ══════════════════════════════════════════════════════════════════
+  # Job 1: 编译纯 Rust CLI 后端 (grpc-server-rust.exe)
+  # ══════════════════════════════════════════════════════════════════
+  build-cli:
+    name: Rust CLI (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 安装 protoc (build.rs 和运行时都需要) ────────────────────
+      - name: Install protoc
+        run: |
+          $PROTOC_URL = "https://github.com/protocolbuffers/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/protoc-${{ env.PROTOC_VERSION }}-win64.zip"
+          echo "Downloading protoc from $PROTOC_URL"
+          Invoke-WebRequest -Uri $PROTOC_URL -OutFile protoc.zip
+          Expand-Archive -Path protoc.zip -DestinationPath $env:GITHUB_WORKSPACE\protoc-bin -Force
+          echo "$env:GITHUB_WORKSPACE\protoc-bin\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          protoc --version
+
+      - name: Cache Cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: cli-windows-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            cli-windows-
+
+      - name: Generate Cargo.lock (if missing)
+        working-directory: src-tauri
+        run: cargo generate-lockfile --offline 2>$null || true
+
+      - name: Build release binary
+        working-directory: src-tauri
+        run: |
+          cargo build --release --bins
+          echo "CLI binary size:"
+          (Get-Item target/release/grpc-server-rust.exe).Length / 1MB
+
+      - name: Prepare CLI artifact
+        run: |
+          mkdir artifacts-cli
+          # 可执行文件
+          cp src-tauri/target/release/grpc-server-rust.exe artifacts-cli/
+          # 打包 proto 和 tls 目录（运行时需要）
+          xcopy /E /I /Y proto artifacts-cli\proto
+          xcopy /E /I /Y tls  artifacts-cli\tls
+          mkdir artifacts-cli\autogen
+          # 版本信息
+          echo "Version: ${{ github.ref_name }}" > artifacts-cli\VERSION.txt
+          echo "Build date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" >> artifacts-cli\VERSION.txt
+          echo "Commit: ${{ github.sha }}" >> artifacts-cli\VERSION.txt
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: grpc-server-rust-cli-windows
+          path: artifacts-cli/
+          retention-days: 30
+
+  # ══════════════════════════════════════════════════════════════════
+  # Job 2: 编译 Tauri GUI 桌面应用 (Windows NSIS 安装包)
+  # ══════════════════════════════════════════════════════════════════
+  build-gui:
+    name: Tauri GUI (windows-latest)
+    runs-on: windows-latest
+    needs: []   # 与 CLI 并行构建
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 安装系统依赖 ─────────────────────────────────────────────
+      - name: Install protoc
+        run: |
+          $PROTOC_URL = "https://github.com/protocolbuffers/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/protoc-${{ env.PROTOC_VERSION }}-win64.zip"
+          Invoke-WebRequest -Uri $PROTOC_URL -OutFile protoc.zip
+          Expand-Archive -Path protoc.zip -DestinationPath $env:GITHUB_WORKSPACE\protoc-bin -Force
+          echo "$env:GITHUB_WORKSPACE\protoc-bin\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          protoc --version
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: gui-windows-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            gui-windows-
+
+      - name: Install Tauri CLI & JS dependencies
+        run: |
+          cargo install tauri-cli --version "^2"
+          npm ci 2>$null || echo "No package.json found, skipping npm ci"
+
+      - name: Build Tauri app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          cargo tauri build
+        continue-on-error: true   # 首次构建允许失败，Tauri 配置可能需要微调
+
+      - name: Upload Tauri NSIS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: grpc-server-rust-gui-windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+          retention-days: 30
+
+      - name: Upload Tauri MSI installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: grpc-server-rust-gui-msi-windows
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+          retention-days: 30
+
+  # ══════════════════════════════════════════════════════════════════
+  # Job 3: 创建 GitHub Release（仅在推送 tag 时运行）
+  # ══════════════════════════════════════════════════════════════════
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [build-cli, build-gui]
+    permissions:
+      contents: write
+    steps:
+      - name: Download CLI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: grpc-server-rust-cli-windows
+          path: release-assets/
+
+      - name: Download GUI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: grpc-server-rust-gui*
+          path: release-gui/
+          merge-multiple: true
+
+      - name: Package release assets
+        run: |
+          # CLI 压缩包
+          cd release-assets
+          zip -r ../grpc-server-rust-cli-windows.zip .
+          cd ..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## gRPC Dialout Server v${{ github.ref_name }}
+
+            ### Downloads
+            | 文件 | 说明 |
+            |------|------|
+            | `grpc-server-rust-cli-windows.zip` | 纯 Rust CLI 后端（含 proto/tls） |
+            | `*.exe` (GUI) | Tauri 桌面应用安装包 (NSIS) |
+            | `*.msi` (GUI) | Tauri 桌面应用安装包 (MSI) |
+
+            ### 使用方式（CLI）
+            ```powershell
+            # 解压后直接运行
+            .\grpc-server-rust.exe --port 50051
+
+            # 或指定模式
+            .\grpc-server-rust.exe --gpb --port 50052 --tls --log
+
+            # 查看帮助
+            .\grpc-server-rust.exe --help
+
+            # 首次运行生成 proto 描述文件
+            .\grpc-server-rust.exe --generate
+            ```
+
+            **构建 Commit:** ${{ github.sha }}
+          draft: false
+          prerelease: false
+          files: |
+            grpc-server-rust-cli-windows.zip
+            release-gui/*

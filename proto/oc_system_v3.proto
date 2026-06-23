@@ -1,0 +1,17 @@
+syntax = "proto3";
+import "oc_logging_v3.proto";
+package  system_v3;
+message system {
+    message Config {
+        string hostname = 1;
+    }
+    Config config = 1;
+    message Clock {
+        message Config {
+            string timezone_name = 1;
+        }
+        Config config = 1;
+    }
+    Clock clock = 2;
+    logging_v3.logging logging = 3;
+}

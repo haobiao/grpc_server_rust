@@ -1,0 +1,36 @@
+syntax = "proto3";
+package  arp_v3;
+message ARP {
+    message MsgArpTable {
+        message MsgArpEntry {
+            uint32 IfIndex = 1;
+            string Ipv4Address = 2;
+            string IfName = 3;
+            string MacAddress = 4;
+            uint32 VLANID = 5;
+            uint32 VXLANID = 6;
+            uint32 PortIndex = 7;
+            string PortIfName = 8;
+            uint32 VrfIndex = 9;
+            uint32 ArpType = 10;
+        }
+        repeated MsgArpEntry ArpEntry = 1;
+    }
+    MsgArpTable ArpTable = 1;
+    message MsgArpTableEvent {
+        message MsgArpTable {
+            uint32 EventType = 1;
+            uint32 IfIndex = 2;
+            string Ipv4Address = 3;
+            string MacAddress = 4;
+            uint32 VLANID = 5;
+            uint32 VXLANID = 6;
+            uint32 PortIndex = 7;
+            uint32 VrfIndex = 8;
+            uint32 ArpType = 9;
+            uint32 Sequence = 10;
+        }
+        repeated MsgArpTable ArpTable = 1;
+    }
+    MsgArpTableEvent ArpTableEvent = 2;
+}

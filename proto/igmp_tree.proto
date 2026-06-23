@@ -1,0 +1,56 @@
+syntax = "proto2";
+import "grpc_service.proto";
+package  igmp;
+message IGMPInterfaces {
+    message Interface {
+        optional uint32 IfIndex = 1;
+        optional bool Enabled = 2;
+        optional uint32 Version = 3;
+        optional bool AuthEnabled = 4;
+        optional uint32 JoinBySession = 5;
+        optional uint32 UserAggOuterVlan = 6;
+        optional uint32 UserAggInnerVlan = 7;
+        optional uint32 DynamicVlan = 8;
+    }
+    repeated Interface interface = 1;
+}
+message IGMPGroups {
+    message Group {
+        optional uint32 IfIndex = 1;
+        optional string GroupAddr = 2;
+        optional uint32 Uptime = 3;
+        optional uint32 Expires = 4;
+    }
+    repeated Group group = 1;
+}
+message IGMPSrcList {
+    message Src {
+        optional uint32 IfIndex = 1;
+        optional string GroupAddr = 2;
+        optional string SourceAddr = 3;
+        optional uint32 Uptime = 4;
+        optional uint32 Expires = 5;
+    }
+    repeated Src src = 1;
+}
+message IGMPHostInterfaces {
+    message Interface {
+        optional uint32 IfIndex = 1;
+        optional bool Enabled = 2;
+    }
+    repeated Interface interface = 1;
+}
+message IGMPUserProfiles {
+    message UserProfile {
+        optional string UserProfileName = 1;
+        optional uint32 AccessPolicy = 2;
+    }
+    repeated UserProfile userprofile = 1;
+}
+service IGMPService {
+    rpc GetJsonIGMPInterfaces(IGMPInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIGMPGroups(IGMPGroups) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIGMPSrcList(IGMPSrcList) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIGMPHostInterfaces(IGMPHostInterfaces) returns (grpc_service.GetJsonReply) {}
+    rpc GetJsonIGMPUserProfiles(IGMPUserProfiles) returns (grpc_service.GetJsonReply) {}
+}

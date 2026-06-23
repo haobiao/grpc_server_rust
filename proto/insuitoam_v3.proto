@@ -1,0 +1,72 @@
+syntax = "proto3";
+package  insuitoam_v3;
+
+message FlowInfo {
+    message FlowEntry {
+        uint32 FlowNodeID = 1;
+        uint32 FlowMonID = 2;
+        enum AddrFamily {
+                IPv4 = 0;
+                IPv6 = 1;
+        };
+        AddrFamily addrFamily = 3;
+        string SourceIP = 4;
+        uint32 SourceMask = 5;
+        string DestinationIP = 6;
+        uint32 DestinationMask = 7;
+        uint32 SourcePort = 8;
+        uint32 DestinationPort = 9;
+        uint32 Protocol = 10;
+        string BindingIfName = 11;
+        string VRF = 12;
+        uint32 Dscp = 13;
+    }
+    repeated FlowEntry flowentry = 1;
+}
+message MeasureReport {
+    message Report {
+        uint32 FlowNodeID = 1;
+        uint32 FlowMonID = 2;
+        enum Direction {
+                Ingress = 0;
+                TransInput = 1;
+                TransOutput = 2;
+                Egress = 3;
+        };
+        Direction direction = 3;
+        string IfName = 4;
+        uint32 PeriodID = 5;
+        enum Period {
+                Period_1Sec = 0;
+                Period_10Secs = 1;
+                Period_30Secs = 2;
+                Period_60Secs = 3;
+                Period_300Secs = 4;
+        };
+        Period period = 6;
+        uint64 PacketCount = 7;
+        uint64 TimestampSecond = 8;
+        uint64 TimestampNanoSecond = 9;
+        string trunkIfName = 10;
+        uint32 ErrorInfo = 11;
+    }
+    repeated Report reportEntry = 1;
+}
+message L3PeerLocatorFlowInfo {
+    message L3PeerLocatorFlowEntry {
+        uint32 FlowNodeID = 1;
+        uint32 FlowMonID = 2;
+        enum AddrFamily {
+                UnSpecific = 0;
+                IPv4 = 1;
+                IPv6 = 2;
+        };
+        AddrFamily addrFamily = 3;
+        string VRF = 4;
+        string PeerLocator = 5;
+        uint32 Mask = 6;
+        string BindingIfName = 7;
+
+    }
+    repeated L3PeerLocatorFlowEntry l3peerlocatorflowentry = 1;
+}
