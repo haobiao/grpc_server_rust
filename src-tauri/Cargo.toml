@@ -40,7 +40,16 @@ gui = ["tauri", "tauri-build"]
 
 [profile.release]
 opt-level = 3
-lto = true
-codegen-units = 1
+lto = "thin"
+codegen-units = 16
 strip = true
 panic = "abort"
+
+# CI 快速构建 profile：关闭 LTO，最大化并行编译单元
+[profile.ci]
+inherits = "release"
+lto = false
+codegen-units = 16
+opt-level = 2
+debug = false
+strip = true
