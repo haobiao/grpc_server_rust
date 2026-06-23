@@ -106,7 +106,7 @@ async fn run_udp_listener(
 ) {
     let mut buf = BytesMut::with_capacity(UDP_MAX_SIZE);
     let mut count: u64 = 0;
-    let mut chunk_data: BytesMut::new();
+    let mut chunk_data = BytesMut::new();
 
     loop {
         tokio::select! {
