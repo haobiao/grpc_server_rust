@@ -27,7 +27,7 @@ tracing-appender = "0.2"
 memmap2 = "0.9"
 prost-reflect = "0.14"
 chrono = "0.4"
-tokio_stream = "1"
+tokio-stream = "1"
 
 # ── Tauri (桌面 GUI 框架) ──────────────────────────────────────────
 # 仅在 GUI 构建时启用；CLI 单独构建时不依赖 Tauri
