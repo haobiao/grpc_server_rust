@@ -23,7 +23,7 @@ pub mod proto {
         tonic::include_proto!("gnmi");
     }
     pub mod gnmi_sonic {
-        tonic::include_proto!("gnmi_sonic");
+        tonic::include_proto!("gnmi.sonic");
     }
 }
 
