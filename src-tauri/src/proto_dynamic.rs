@@ -13,9 +13,7 @@ use std::process::Command;
 
 use crate::error::{AppError, Result};
 use prost::Message;
-use prost_reflect::{
-    DescriptorPool, DynamicMessage, FileDescriptor, MessageDescriptor,
-};
+use prost_reflect::{DescriptorPool, MessageDescriptor};
 
 /// File extension for compiled descriptor sets.
 const DESC_EXT: &str = ".desc";
@@ -118,11 +116,7 @@ impl ProtoDynamicRegistry {
         let mut pool = DescriptorPool::new();
 
         for file_proto in &descriptor_set.file {
-            let file_bytes = file_proto
-                .encode_to_vec()
-                .map_err(|e| AppError::ProtoParse(format!("Failed to encode file descriptor: {}", e)))?;
-
-            pool.add_file_descriptor_bytes(&file_bytes)
+            pool.add_file_descriptor_proto(file_proto.clone())
                 .map_err(|e| AppError::ProtoReflect(format!("Failed to add file descriptor to pool: {}", e)))?;
 
             let file_name = file_proto.name().to_owned();
@@ -133,14 +127,20 @@ impl ProtoDynamicRegistry {
         for file_proto in &descriptor_set.file {
             let package = file_proto.package();
             for msg in &file_proto.message_type {
-                let full_name = msg.name();
-                let short_name = full_name
+                // msg.name() is the relative name; build the fully-qualified name.
+                let relative_name = msg.name();
+                let full_name = if package.is_empty() {
+                    relative_name.to_owned()
+                } else {
+                    format!("{}.{}", package, relative_name)
+                };
+                let short_name = relative_name
                     .rsplit('.')
                     .next()
-                    .unwrap_or(full_name)
+                    .unwrap_or(relative_name)
                     .to_owned();
 
-                if let Ok(desc) = pool.get_message_by_name(full_name) {
+                if let Some(desc) = pool.get_message_by_name(&full_name) {
                     self.message_by_name.insert(short_name, desc);
                 }
             }

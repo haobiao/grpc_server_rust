@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
 use bytes::Bytes;
+use prost::Message;
 use tonic::{Request, Response, Status, Streaming};
 
 use crate::chunk::ChunkRecords;
@@ -106,8 +107,8 @@ impl GrpcDialout for DialoutService {
             }
 
             // Process chunk assembly
-            let sensor_path = msg.sensor_path.clone().unwrap_or_default();
-            let json_data = Bytes::from(msg.json_data.clone().unwrap_or_default());
+            let sensor_path = msg.sensor_path.clone();
+            let json_data = Bytes::from(msg.json_data.clone());
 
             let device_msg_bytes = if let Some(ref dm) = msg.device_msg {
                 dm.encode_to_vec().into()

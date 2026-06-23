@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use bytes::{Bytes, BytesMut};
+use prost::Message;
 use tokio::net::UdpSocket;
 use tokio::sync::watch;
 
@@ -245,9 +246,10 @@ fn deserialize_and_print(
     match DialoutMsg::decode(data.as_ref()) {
         Ok(msg) => {
             let sensor_path = msg.sensor_path.clone();
-            let json_data = &msg.json_data.unwrap_or_default();
+            let json_data = msg.json_data.clone();
+            let json_bytes = json_data.as_bytes();
 
-            match serde_json::from_str::<serde_json::Value>(json_data) {
+            match serde_json::from_str::<serde_json::Value>(json_bytes) {
                 Ok(val) => {
                     let data_fmt = if config.format_json {
                         serde_json::to_string_pretty(&val)

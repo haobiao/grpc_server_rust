@@ -80,19 +80,17 @@ impl Server {
             let tls_config = self.load_tls_config()?;
             let tls = ServerTlsConfig::new()
                 .identity(tls_config.identity)
-                .client_ca_optional(tls_config.ca);
+                .client_ca_root(tls_config.ca);
             TonicServer::builder()
                 .tls_config(tls)?
-                .max_frame_size(MAX_MESSAGE_SIZE)
-                .max_message_size(MAX_MESSAGE_SIZE)
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
                 .add_service(service)
                 .serve(addr)
                 .await
                 .map_err(Into::into)
         } else {
             TonicServer::builder()
-                .max_frame_size(MAX_MESSAGE_SIZE)
-                .max_message_size(MAX_MESSAGE_SIZE)
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
                 .add_service(service)
                 .serve(addr)
                 .await
@@ -139,19 +137,17 @@ impl Server {
             let tls_config = self.load_tls_config()?;
             let tls = ServerTlsConfig::new()
                 .identity(tls_config.identity)
-                .client_ca_optional(tls_config.ca);
+                .client_ca_root(tls_config.ca);
             TonicServer::builder()
                 .tls_config(tls)?
-                .max_frame_size(MAX_MESSAGE_SIZE)
-                .max_message_size(MAX_MESSAGE_SIZE)
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
                 .add_service(service)
                 .serve(addr)
                 .await
                 .map_err(Into::into)
         } else {
             TonicServer::builder()
-                .max_frame_size(MAX_MESSAGE_SIZE)
-                .max_message_size(MAX_MESSAGE_SIZE)
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
                 .add_service(service)
                 .serve(addr)
                 .await
@@ -180,19 +176,17 @@ impl Server {
             let tls_config = self.load_tls_config()?;
             let tls = ServerTlsConfig::new()
                 .identity(tls_config.identity)
-                .client_ca_optional(tls_config.ca);
+                .client_ca_root(tls_config.ca);
             TonicServer::builder()
                 .tls_config(tls)?
-                .max_frame_size(MAX_MESSAGE_SIZE)
-                .max_message_size(MAX_MESSAGE_SIZE)
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
                 .add_service(service)
                 .serve(addr)
                 .await
                 .map_err(Into::into)
         } else {
             TonicServer::builder()
-                .max_frame_size(MAX_MESSAGE_SIZE)
-                .max_message_size(MAX_MESSAGE_SIZE)
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
                 .add_service(service)
                 .serve(addr)
                 .await

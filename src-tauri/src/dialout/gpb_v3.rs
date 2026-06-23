@@ -7,6 +7,8 @@
 use std::sync::Arc;
 
 use bytes::{Bytes, BytesMut};
+use prost::Message;
+use prost_reflect::ReflectMessage;
 use tonic::{Request, Response, Status, Streaming};
 
 use crate::error::Result;
@@ -26,7 +28,7 @@ use proto::grpc_dialout_v3::{
     g_rpc_dialout_v3_server::{GRpcDialoutV3, GRpcDialoutV3Server},
     DialoutV3Args,
 };
-use proto::telemetry::{Telemetry, TelemetryRowGpb};
+use proto::telemetry::Telemetry;
 
 /// gRPC 3-layer dialout service.
 pub struct DialoutV3Service {
@@ -62,7 +64,7 @@ impl DialoutV3Service {
 
         if total_size == 0 {
             // No chunking
-            return Some(BytesMut::from(r.data.clone()));
+            return Some(BytesMut::from(&r.data[..]));
         }
 
         let mut combined = chunk_data.clone();
@@ -322,7 +324,7 @@ impl DialoutV3Service {
                     line.push_str("<empty>");
                 } else {
                     // Use prost-reflect to dynamically decode
-                    match prost_reflect::DynamicMessage::decode(module.clone(), &row.content) {
+                    match prost_reflect::DynamicMessage::decode(module.clone(), &row.content[..]) {
                         Ok(dynamic_msg) => {
                             // Convert to JSON via prost-reflect's text format
                             // For proper JSON output, we use serde_json::Value
@@ -398,12 +400,18 @@ fn dynamic_message_to_json(msg: &prost_reflect::DynamicMessage) -> std::result::
         let kind = field.kind();
 
         let json_val: serde_json::Value = if field.is_list() {
-            // Repeated field
-            let rep = msg.get_field(&field).into_list();
-            let values: Vec<serde_json::Value> = rep
-                .map(|item| field_value_to_json(&item, &kind))
-                .collect();
-            serde_json::Value::Array(values)
+            // Repeated field: Value::List(Vec<Value>)
+            let val = msg.get_field(&field);
+            match val.as_list() {
+                Some(items) => {
+                    let values: Vec<serde_json::Value> = items
+                        .iter()
+                        .map(|item| field_value_to_json(item, &kind))
+                        .collect();
+                    serde_json::Value::Array(values)
+                }
+                None => serde_json::Value::Array(vec![]),
+            }
         } else if field.is_map() {
             // Map field — serialize as JSON object
             let map_val = serde_json::Map::new();
@@ -439,6 +447,21 @@ fn field_value_to_json(val: &prost_reflect::Value, kind: &prost_reflect::Kind) -
         }
         prost_reflect::Value::Message(m) => {
             dynamic_message_to_json(m).unwrap_or(serde_json::Value::Null)
+        }
+        prost_reflect::Value::List(items) => {
+            serde_json::Value::Array(
+                items
+                    .iter()
+                    .map(|item| field_value_to_json(item, kind))
+                    .collect(),
+            )
+        }
+        prost_reflect::Value::Map(map) => {
+            let mut obj = serde_json::Map::new();
+            for (k, v) in map.iter() {
+                obj.insert(format!("{}", k), field_value_to_json(v, kind));
+            }
+            serde_json::Value::Object(obj)
         }
         _ => match kind {
             prost_reflect::Kind::Bool => serde_json::Value::Bool(false),

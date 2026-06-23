@@ -68,10 +68,11 @@ impl GnmiDialoutService {
 
 #[tonic::async_trait]
 impl proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
+    type PublishStream = std::pin::Pin<Box<dyn tokio_stream::Stream<Item = std::result::Result<PublishResponse, Status>> + Send>>;
     async fn publish(
         &self,
         request: Request<Streaming<SubscribeResponse>>,
-    ) -> std::result::Result<Response<Streaming<PublishResponse>>, Status> {
+    ) -> std::result::Result<Response<Self::PublishStream>, Status> {
         let peer = request
             .remote_addr()
             .map(|a| a.to_string())
@@ -128,9 +129,9 @@ impl proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutServi
         tracing::info!("A client disconnected. (gNMI) source addr: {}", peer);
 
         // Final response
-        let _ = tx.send(Ok(PublishResponse::default())).await;
         let response_stream = tokio_stream::wrappers::ReceiverStream::new(rx);
-        Ok(Response::new(Box::pin(response_stream)))
+        let stream: Self::PublishStream = Box::pin(response_stream);
+        Ok(Response::new(stream))
     }
 }
 
