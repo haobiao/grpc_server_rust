@@ -3,13 +3,6 @@ use std::path::PathBuf;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proto_root = PathBuf::from("../proto");
 
-    // All protos compiled together. prost-build generates one .rs file per
-    // PACKAGE name (dots → underscores). So:
-    //   gnmi_ext     (package gnmi_ext)     → gnmi_ext.rs
-    //   gnmi         (package gnmi)         → gnmi.rs
-    //   gnmi_sonic   (package gnmi.sonic)   → gnmi_sonic.rs  ← dial_out.proto!
-    //   grpc_dialout (package grpc_dialout) → grpc_dialout.rs
-    //   etc.
     let core_protos = [
         "grpc_dialout.proto",
         "grpc_dialout_v3.proto",
@@ -43,19 +36,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build_client(false)
         .compile_protos(&proto_files, &protos_include)?;
 
-    // Debug: list generated files using cargo:warning (shows in CI logs)
-    if let Ok(out_dir) = std::env::var("OUT_DIR") {
-        let out_path = PathBuf::from(&out_dir);
-        if let Ok(entries) = std::fs::read_dir(&out_path) {
-            println!("cargo:warning=== Generated proto files in {} ===", out_dir);
-            for entry in entries.flatten() {
-                let name = entry.file_name();
-                println!("cargo:warning=  {}", name.to_string_lossy());
-            }
-        }
-    }
-
-    // Tauri mobile build hook (no-op when Tauri is not enabled)
     #[cfg(feature = "gui")]
     {
         tauri_build::build();
