@@ -1,3 +1,21 @@
 [workspace]
 members = ["src-tauri"]
 resolver = "2"
+
+# ── 全局 profile 配置（必须在 workspace root 定义）──────────────
+# CI 快速构建 profile：关闭 LTO，最大化并行编译单元
+[profile.ci]
+inherits = "release"
+lto = false
+codegen-units = 16
+opt-level = 2
+debug = false
+strip = true
+
+# 正式发布 profile：使用 thin LTO 平衡性能与编译速度
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 16
+strip = true
+panic = "abort"
