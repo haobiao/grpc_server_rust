@@ -25,8 +25,8 @@ pub mod proto {
 
 // Import types from the generated proto code.
 // dial_out.proto: package gnmi.sonic → merged into gnmi module tree
-use proto::gnmi::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
-use proto::gnmi::gnmi::sonic::PublishResponse;
+use proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOutServer;
+use proto::gnmi::sonic::PublishResponse;
 // SubscribeResponse comes from gnmi.proto (package gnmi)
 use proto::gnmi::SubscribeResponse;
 // Oneof enum types for accessing nested fields
@@ -56,7 +56,7 @@ impl GnmiDialoutService {
 }
 
 #[tonic::async_trait]
-impl proto::gnmi::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
+impl proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutService {
     async fn publish(
         &self,
         request: Request<Streaming<SubscribeResponse>>,

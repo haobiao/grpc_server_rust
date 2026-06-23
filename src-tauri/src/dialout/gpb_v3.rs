@@ -23,7 +23,7 @@ pub mod proto {
 }
 
 use proto::grpc_dialout_v3::{
-    grpc_dialout_v3_server::{GrpcDialoutV3, GrpcDialoutV3Server},
+    g_rpc_dialout_v3_server::{GrpcDialoutV3, GrpcDialoutV3Server},
     DialoutV3Args,
 };
 use proto::telemetry::{Telemetry, TelemetryRowGpb};
@@ -380,13 +380,6 @@ fn encoding_name(encoding: i32) -> &'static str {
 fn dynamic_msg_to_json_value(
     msg: &prost_reflect::DynamicMessage,
 ) -> std::result::Result<serde_json::Value, String> {
-    // Use prost-reflect's JSON serialization capabilities
-    let json_str = msg
-        .serialize_to_string()
-        .map_err(|e| format!("Failed to serialize dynamic message: {}", e))?;
-    // prost-reflect text format is close to JSON but not exactly.
-    // For a proper JSON conversion, parse it back.
-    // Actually, let's use a custom approach:
     dynamic_message_to_json(msg)
 }
 
@@ -401,122 +394,57 @@ fn dynamic_message_to_json(msg: &prost_reflect::DynamicMessage) -> std::result::
         }
 
         let field_name = field.name().to_string();
-        let json_val = match field.kind() {
-            prost_reflect::FieldKind::Message(_) => {
-                let nested = msg.get_field(&field)
-                    .and_then(|v| v.message())
-                    .ok_or_else(|| format!("Failed to get message field: {}", field_name))?;
-                dynamic_message_to_json(&nested)?
-            }
-            prost_reflect::FieldKind::Singular(ty) => {
-                match ty {
-                    prost_reflect::Kind::Bool => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.bool())
-                            .map(serde_json::Value::Bool)
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::I32 | prost_reflect::Kind::Sint32 | prost_reflect::Kind::Sfixed32 => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.i32())
-                            .map(|n| serde_json::Value::Number(n.into()))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::I64 | prost_reflect::Kind::Sint64 | prost_reflect::Kind::Sfixed64 => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.i64())
-                            .map(|n| serde_json::json!(n))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::U32 | prost_reflect::Kind::Fixed32 => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.u32())
-                            .map(|n| serde_json::Value::Number(n.into()))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::U64 | prost_reflect::Kind::Fixed64 => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.u64())
-                            .map(|n| serde_json::json!(n))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::F32 => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.f32())
-                            .map(|n| serde_json::json!(n))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::F64 => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.f64())
-                            .map(|n| serde_json::json!(n))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::String => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.string())
-                            .map(|s| serde_json::Value::String(s.to_owned()))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::Bytes => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.bytes())
-                            .map(|b| {
-                                // Try to decode as UTF-8, otherwise hex
-                                String::from_utf8(b.to_vec())
-                                    .map(serde_json::Value::String)
-                                    .unwrap_or_else(|_| {
-                                        serde_json::json!(hex::encode(b))
-                                    })
-                            })
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    prost_reflect::Kind::Enum(_) => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.enum_value())
-                            .map(|ev| serde_json::Value::String(ev.name().to_owned()))
-                            .unwrap_or(serde_json::Value::Null)
-                    }
-                    _ => serde_json::Value::Null,
-                }
-            }
-            prost_reflect::FieldKind::Repeated(_) | prost_reflect::FieldKind::Map(_, _) => {
-                // Handle repeated fields
-                let values: Vec<serde_json::Value> = match field.kind() {
-                    prost_reflect::FieldKind::Repeated(ty) => {
-                        msg.get_field(&field)
-                            .and_then(|v| v.repeated())
-                            .map(|rep| {
-                                rep.iter()
-                                    .map(|item| {
-                                        match ty {
-                                            prost_reflect::Kind::Message(_) => {
-                                                item.message()
-                                                    .map(|m| dynamic_message_to_json(&m).unwrap_or(serde_json::Value::Null))
-                                                    .unwrap_or(serde_json::Value::Null)
-                                            }
-                                            prost_reflect::Kind::String => {
-                                                item.string()
-                                                    .map(|s| serde_json::Value::String(s.to_owned()))
-                                                    .unwrap_or(serde_json::Value::Null)
-                                            }
-                                            _ => serde_json::Value::Null,
-                                        }
-                                    })
-                                    .collect()
-                            })
-                            .unwrap_or_default()
-                    }
-                    _ => Vec::new(),
-                };
-                serde_json::Value::Array(values)
-            }
+        let kind = field.kind();
+
+        let json_val: serde_json::Value = if field.is_list() {
+            // Repeated field
+            let rep = msg.get_field(&field).into_list();
+            let values: Vec<serde_json::Value> = rep
+                .map(|item| field_value_to_json(&item, &kind))
+                .collect();
+            serde_json::Value::Array(values)
+        } else if field.is_map() {
+            // Map field — serialize as JSON object
+            let map_val = serde_json::Map::new();
+            serde_json::Value::Object(map_val)
+        } else {
+            // Singular field
+            let val = msg.get_field(&field);
+            field_value_to_json(&val, &kind)
         };
 
         map.insert(field_name, json_val);
     }
 
     Ok(serde_json::Value::Object(map))
+}
+
+/// Convert a single prost_reflect Value to serde_json::Value.
+fn field_value_to_json(val: &prost_reflect::Value, kind: &prost_reflect::Kind) -> serde_json::Value {
+    match val {
+        prost_reflect::Value::Bool(b) => serde_json::Value::Bool(*b),
+        prost_reflect::Value::I32(n) => serde_json::json!(n),
+        prost_reflect::Value::I64(n) => serde_json::json!(n),
+        prost_reflect::Value::U32(n) => serde_json::json!(n),
+        prost_reflect::Value::U64(n) => serde_json::json!(n),
+        prost_reflect::Value::F32(n) => serde_json::json!(n),
+        prost_reflect::Value::F64(n) => serde_json::json!(n),
+        prost_reflect::Value::String(s) => serde_json::Value::String(s.clone()),
+        prost_reflect::Value::Bytes(b) => {
+            serde_json::Value::String(String::from_utf8_lossy(b).into_owned())
+        }
+        prost_reflect::Value::EnumNumber(n) => {
+            serde_json::json!(n)
+        }
+        prost_reflect::Value::Message(m) => {
+            dynamic_message_to_json(m).unwrap_or(serde_json::Value::Null)
+        }
+        _ => match kind {
+            prost_reflect::Kind::Bool => serde_json::Value::Bool(false),
+            prost_reflect::Kind::String => serde_json::Value::String(String::new()),
+            _ => serde_json::Value::Null,
+        },
+    }
 }
 
 // Helper for hex encoding without additional crate dependency
