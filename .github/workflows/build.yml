@@ -52,15 +52,14 @@ jobs:
             cli-windows-
 
       - name: Generate Cargo.lock (if missing)
-        working-directory: src-tauri
-        run: cargo generate-lockfile --offline 2>$null || true
+        run: |
+          cargo generate-lockfile --manifest-path src-tauri/Cargo.toml 2>$null || cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
 
       - name: Build release binary
-        working-directory: src-tauri
         run: |
-          cargo build --release --bins
+          cargo build --release --bins --manifest-path src-tauri/Cargo.toml
           echo "CLI binary size:"
-          (Get-Item target/release/grpc-server-rust.exe).Length / 1MB
+          (Get-Item src-tauri/target/release/grpc-server-rust.exe).Length / 1MB
 
       - name: Prepare CLI artifact
         run: |
@@ -124,15 +123,14 @@ jobs:
 
       - name: Install Tauri CLI & JS dependencies
         run: |
-          cargo install tauri-cli --version "^2"
+          cargo install tauri-cli --version "^2" --locked 2>$null || cargo install tauri-cli --version "^2"
           npm ci 2>$null || echo "No package.json found, skipping npm ci"
 
       - name: Build Tauri app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: |
-          cargo tauri build
+        run: cargo tauri build --manifest-path src-tauri/tauri.conf.json
         continue-on-error: true   # 首次构建允许失败，Tauri 配置可能需要微调
 
       - name: Upload Tauri NSIS installer
