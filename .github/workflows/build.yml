@@ -123,7 +123,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: cd src-tauri && cargo build --features gui --profile ci
-        continue-on-error: true   # Tauri GUI 构建非阻断，仅作为预览
 
       - name: Upload GUI standalone exe
         if: always()
