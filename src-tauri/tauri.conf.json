@@ -28,7 +28,7 @@
     "active": true,
     "targets": ["nsis", "msi"],
     "icon": [
-      "icons/icon.ico"
+      "../ico/grpc.ico"
     ],
     "resources": [
       "../proto/*",

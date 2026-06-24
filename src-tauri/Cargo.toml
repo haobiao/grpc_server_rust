@@ -40,3 +40,5 @@ default = []
 # The 'gui' feature enables both the runtime tauri dependency and
 # the build-time tauri-build dependency.
 gui = ["tauri", "dep:tauri-build"]
+
+[package.metadata.tauri]
