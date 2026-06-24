@@ -40,7 +40,7 @@ impl Server {
         Self { config }
     }
 
-    /// Start the server based on the configured mode.
+    /// Start the server based on the configured mode (CLI entry point).
     pub fn start(&mut self) -> Result<()> {
         let rt = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
@@ -48,14 +48,42 @@ impl Server {
             .build()
             .map_err(|e| AppError::Config(format!("Failed to create tokio runtime: {}", e)))?;
 
+        rt.block_on(async { self.start_inner().await })
+    }
+
+    /// Start the server with an external stop signal (GUI entry point).
+    ///
+    /// When `stop_rx` receives a value, the runtime is torn down, aborting all
+    /// running tasks (gRPC serve futures / UDP listener tasks).
+    pub fn start_with_stop(
+        &mut self,
+        mut stop_rx: tokio::sync::watch::Receiver<bool>,
+    ) -> Result<()> {
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .worker_threads(4)
+            .build()
+            .map_err(|e| AppError::Config(format!("Failed to create tokio runtime: {}", e)))?;
+
         rt.block_on(async {
-            match self.config.mode {
-                DialoutMode::Normal => self.start_normal().await,
-                DialoutMode::Gpb => self.start_gpb_v3().await,
-                DialoutMode::Gnmi => self.start_gnmi().await,
-                DialoutMode::Udp => self.start_udp().await,
+            tokio::select! {
+                result = self.start_inner() => result,
+                _ = stop_rx.changed() => {
+                    tracing::info!("Server stopped by user");
+                    Ok(())
+                }
             }
         })
+    }
+
+    /// Dispatch to the appropriate dialout service based on the configured mode.
+    async fn start_inner(&self) -> Result<()> {
+        match self.config.mode {
+            DialoutMode::Normal => self.start_normal().await,
+            DialoutMode::Gpb => self.start_gpb_v3().await,
+            DialoutMode::Gnmi => self.start_gnmi().await,
+            DialoutMode::Udp => self.start_udp().await,
+        }
     }
 
     /// Start gRPC 2-layer dial-out (Normal mode).

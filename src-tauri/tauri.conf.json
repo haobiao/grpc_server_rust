@@ -9,6 +9,7 @@
     "beforeBuildCommand": ""
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "gRPC Dialout Server v3.0.7",

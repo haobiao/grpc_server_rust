@@ -3,6 +3,9 @@
 //! Production-grade Rust implementation with zero-copy strategies
 //! to address high memory usage from the original Python version.
 
+// In GUI mode, hide the Windows console window on release builds.
+#![cfg_attr(all(feature = "gui", not(debug_assertions)), windows_subsystem = "windows")]
+
 #![allow(dead_code, unused_imports)]
 
 mod chunk;
@@ -15,13 +18,30 @@ mod proto_dynamic;
 mod server;
 mod udp_header;
 
+#[cfg(feature = "gui")]
+mod gui;
+
 use clap::Parser;
 use config::CliArgs;
-use error::AppError;
 use server::Server;
 use tracing_subscriber::EnvFilter;
 
 fn main() {
+    #[cfg(feature = "gui")]
+    {
+        gui::run();
+        return;
+    }
+
+    #[cfg(not(feature = "gui"))]
+    {
+        run_cli();
+    }
+}
+
+/// CLI entry point (default build, no `gui` feature).
+#[cfg(not(feature = "gui"))]
+fn run_cli() {
     // 初始化日志：支持 -d debug / -d info 控制日志级别
     let log_level = std::env::args()
         .position(|a| a == "-d" || a == "--debug")
