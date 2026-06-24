@@ -131,8 +131,8 @@ jobs:
         with:
           name: grpc-server-rust-gui-windows
           path: |
-            src-tauri/target/ci/bundle/nsis/*.exe
-            src-tauri/target/release/bundle/nsis/*.exe
+            target/ci/bundle/nsis/*.exe
+            target/release/bundle/nsis/*.exe
           retention-days: 30
 
       - name: Upload Tauri MSI installer
@@ -141,8 +141,8 @@ jobs:
         with:
           name: grpc-server-rust-gui-msi-windows
           path: |
-            src-tauri/target/ci/bundle/msi/*.msi
-            src-tauri/target/release/bundle/msi/*.msi
+            target/ci/bundle/msi/*.msi
+            target/release/bundle/msi/*.msi
           retention-days: 30
 
   # ══════════════════════════════════════════════════════════════════
