@@ -29,6 +29,7 @@ memmap2 = "0.9"
 prost-reflect = "0.14"
 chrono = "0.4"
 tokio-stream = "0.1"
+protox = "0.7"
 
 # ── Tauri (桌面 GUI 框架) ──────────────────────────────────────────
 # 仅在 GUI 构建时启用；CLI 单独构建时不依赖 Tauri
