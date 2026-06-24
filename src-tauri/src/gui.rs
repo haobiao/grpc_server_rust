@@ -4,7 +4,8 @@
 //! frontend and forwards all tracing logs to the webview via the `log-line`
 //! event.
 
-use std::sync::Mutex;
+use std::io::Write;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
@@ -26,7 +27,18 @@ pub struct GuiConfig {
     pub format_json: bool,
     #[serde(rename = "performanceMode")]
     pub performance_mode: bool,
+    #[serde(rename = "logOutput", default)]
+    pub log_output: bool,
+    #[serde(rename = "onlyLogFile", default)]
+    pub only_log_file: bool,
+    #[serde(rename = "logfileSize", default = "default_logfile_size")]
+    pub logfile_size: usize,
+    #[serde(rename = "logfileNum", default = "default_logfile_num")]
+    pub logfile_num: usize,
 }
+
+fn default_logfile_size() -> usize { 100 }
+fn default_logfile_num() -> usize { 50 }
 
 impl GuiConfig {
     fn dialout_mode(&self) -> Result<DialoutMode, String> {
@@ -50,10 +62,10 @@ impl GuiConfig {
             performance_mode: self.performance_mode,
             debug: "error".into(),
             trace: None,
-            log_output: false,
-            logfile_num: 50,
-            logfile_size: 50,
-            only_log_file: false,
+            log_output: self.log_output,
+            logfile_num: self.logfile_num,
+            logfile_size: self.logfile_size,
+            only_log_file: self.only_log_file,
         }
     }
 }
@@ -68,17 +80,34 @@ pub struct StatsResponse {
 }
 
 /// Holds the background server thread plus the stop sender.
-#[derive(Default)]
 pub struct AppState {
     server_thread: Mutex<Option<std::thread::JoinHandle<()>>>,
     stop_tx: Mutex<Option<tokio::sync::watch::Sender<bool>>>,
     start_time: Mutex<Option<Instant>>,
+    /// Shared log file writer — `None` when file logging is disabled.
+    file_writer: SharedFileWriter,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            server_thread: Mutex::new(None),
+            stop_tx: Mutex::new(None),
+            start_time: Mutex::new(None),
+            file_writer: Arc::new(Mutex::new(None)),
+        }
+    }
 }
 
 // ── tracing → frontend bridge ─────────────────────────────────────────
 
+/// Shared file writer for optional log-to-file.
+/// When `Some`, every log event is also appended to the file.
+pub type SharedFileWriter = Arc<Mutex<Option<std::fs::File>>>;
+
 struct TauriLogLayer {
     app: tauri::AppHandle,
+    file_writer: SharedFileWriter,
 }
 
 impl<S> Layer<S> for TauriLogLayer
@@ -93,13 +122,23 @@ where
         let mut visitor = LogVisitor::default();
         event.record(&mut visitor);
 
+        let level = event.metadata().level();
         let msg = if visitor.message.is_empty() {
-            format!("{}", event.metadata().level())
+            format!("{}", level)
         } else {
-            format!("{}: {}", event.metadata().level(), visitor.message)
+            format!("{}: {}", level, visitor.message)
         };
 
-        let _ = self.app.emit("log-line", msg);
+        // Emit to frontend
+        let _ = self.app.emit("log-line", &msg);
+
+        // Optionally write to file
+        if let Ok(mut fw) = self.file_writer.lock() {
+            if let Some(ref mut file) = *fw {
+                let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+                let _ = writeln!(file, "{} {}", timestamp, msg);
+            }
+        }
     }
 }
 
@@ -122,12 +161,12 @@ impl Visit for LogVisitor {
     }
 }
 
-fn install_global_logger(app: &tauri::AppHandle) {
+fn install_global_logger(app: &tauri::AppHandle, file_writer: SharedFileWriter) {
     use tracing_subscriber::layer::SubscriberExt;
     let subscriber = tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new("info"))
         .with(tracing_subscriber::fmt::layer().with_target(false))
-        .with(TauriLogLayer { app: app.clone() });
+        .with(TauriLogLayer { app: app.clone(), file_writer });
 
     let _ = tracing::subscriber::set_global_default(subscriber);
 }
@@ -154,6 +193,23 @@ async fn start_server(
     // Reset global counters
     models::reset_global_stats();
     *state.start_time.lock().unwrap() = Some(Instant::now());
+
+    // Setup log file if requested
+    {
+        let mut fw = state.file_writer.lock().unwrap();
+        *fw = None; // clear previous
+    }
+
+    if config.log_output {
+        match open_log_file(&config) {
+            Ok(file) => {
+                *state.file_writer.lock().unwrap() = Some(file);
+            }
+            Err(e) => {
+                let _ = app.emit("log-line", format!("WARNING: Failed to open log file: {}", e));
+            }
+        }
+    }
 
     let mode = config.dialout_mode()?;
     let server_config = config.to_server_config(mode);
@@ -198,6 +254,9 @@ async fn stop_server(state: State<'_, AppState>) -> Result<(), String> {
 
     *state.start_time.lock().unwrap() = None;
 
+    // Close log file
+    *state.file_writer.lock().unwrap() = None;
+
     Ok(())
 }
 
@@ -224,11 +283,43 @@ async fn get_stats(state: State<'_, AppState>) -> Result<StatsResponse, String> 
 
 // ── entry point ────────────────────────────────────────────────────────
 
+/// Open (or create) a log file under `./logs/` with mode+port+timestamp name.
+fn open_log_file(config: &GuiConfig) -> std::io::Result<std::fs::File> {
+    let log_dir = std::env::current_dir()?.join("logs");
+    if !log_dir.exists() {
+        std::fs::create_dir_all(&log_dir)?;
+    }
+
+    let mode_name = match config.mode.as_str() {
+        "normal" => "grpc_2_layer",
+        "gpb" => "grpc_3_layer",
+        "gnmi" => "grpc_gnmi",
+        "udp" => "udp_2_layer",
+        _ => "server",
+    };
+
+    let timestamp = chrono::Local::now().format("%Y%m%d%H%M%S");
+    let filename = format!("{}_server_{}_{}.log", mode_name, config.port, timestamp);
+    let filepath = log_dir.join(&filename);
+
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&filepath)?;
+
+    // Emit a notice to frontend
+    // (file_writer not yet set at this point, so just emit)
+    tracing::info!("Log file: {}", filepath.display());
+
+    Ok(file)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(AppState::default())
         .setup(|app| {
-            install_global_logger(app.handle());
+            let state: tauri::State<AppState> = app.state();
+            install_global_logger(app.handle(), state.file_writer.clone());
             let _ = app.emit("log-line", "gRPC Dialout Server GUI ready".to_string());
             Ok(())
         })

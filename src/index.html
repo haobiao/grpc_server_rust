@@ -615,6 +615,30 @@
                     </label>
                 </div>
             </div>
+
+            <div class="field">
+                <span class="field__label">日志文件</span>
+                <div class="chips">
+                    <label class="chip" data-active="false">
+                        <input type="checkbox" id="log-file"> 保存日志
+                    </label>
+                    <label class="chip" data-active="false" id="chip-onlylog" style="opacity:0.4;pointer-events:none">
+                        <input type="checkbox" id="only-log"> 仅文件
+                    </label>
+                    <select class="select" id="log-size" style="min-width:auto;font-size:12px;padding:6px 8px;" title="单个日志文件最大大小">
+                        <option value="50">50 MB</option>
+                        <option value="100" selected>100 MB</option>
+                        <option value="200">200 MB</option>
+                        <option value="500">500 MB</option>
+                    </select>
+                    <select class="select" id="log-num" style="min-width:auto;font-size:12px;padding:6px 8px;" title="最大日志文件数量">
+                        <option value="10">10 个</option>
+                        <option value="50" selected>50 个</option>
+                        <option value="100">100 个</option>
+                        <option value="200">200 个</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div class="actions">
@@ -698,6 +722,10 @@
             orignal: document.getElementById('orignal'),
             format: document.getElementById('format'),
             perf: document.getElementById('perf'),
+            logFile: document.getElementById('log-file'),
+            onlyLog: document.getElementById('only-log'),
+            logSize: document.getElementById('log-size'),
+            logNum: document.getElementById('log-num'),
             btnStart: document.getElementById('btn-start'),
             btnStop: document.getElementById('btn-stop'),
             btnClear: document.getElementById('btn-clear'),
@@ -719,6 +747,20 @@
             const sync = () => { chip.dataset.active = input.checked; };
             sync();
             input.addEventListener('change', sync);
+        });
+
+        // ── Log file toggle enables/disables "仅文件" ──
+        els.logFile.addEventListener('change', () => {
+            const chipOnlyLog = document.getElementById('chip-onlylog');
+            if (els.logFile.checked) {
+                chipOnlyLog.style.opacity = '1';
+                chipOnlyLog.style.pointerEvents = 'auto';
+            } else {
+                chipOnlyLog.style.opacity = '0.4';
+                chipOnlyLog.style.pointerEvents = 'none';
+                els.onlyLog.checked = false;
+                chipOnlyLog.dataset.active = 'false';
+            }
         });
 
         // ── Theme toggle ──
@@ -843,10 +885,19 @@
             const orignal = els.orignal.checked;
             const format = els.format.checked;
             const perf = els.perf.checked;
+            const logFile = els.logFile.checked;
+            const onlyLog = els.onlyLog.checked;
+            const logSize = parseInt(els.logSize.value);
+            const logNum = parseInt(els.logNum.value);
 
             try {
                 await invoke('start_server', {
-                    config: { mode, port, tls, orignal, formatJson: format, performanceMode: perf }
+                    config: {
+                        mode, port, tls, orignal,
+                        formatJson: format, performanceMode: perf,
+                        logOutput: logFile, onlyLogFile: onlyLog,
+                        logfileSize: logSize, logfileNum: logNum
+                    }
                 });
                 isRunning = true;
                 msgCount = 0;
