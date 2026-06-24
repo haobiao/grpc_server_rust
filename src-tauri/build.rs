@@ -36,7 +36,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure()
         .build_server(true)
         .build_client(false)
-        .compile_fds(file_descriptor_set);
+        .compile_fds(file_descriptor_set)
+        .map_err(|e| format!("tonic_build compile_fds failed: {}", e))?;
 
     // Tauri mobile build hook (no-op when Tauri is not enabled)
     #[cfg(feature = "gui")]
