@@ -5,110 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>gRPC Dialout Server</title>
     <style>
-        /* ═══════════════════════════════════════════════════════════
-           Design Tokens — CSS Variables
-           ═══════════════════════════════════════════════════════════ */
+        /* ═══ Design Tokens ═══ */
         :root {
-            /* Typography */
             --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
-
-            /* Spacing (8pt grid) */
-            --space-1: 4px;
-            --space-2: 8px;
-            --space-3: 12px;
-            --space-4: 16px;
-            --space-5: 20px;
-            --space-6: 24px;
-            --space-8: 32px;
-
-            /* Radius */
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --radius-full: 9999px;
-
-            /* Motion */
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+            --space-5: 20px; --space-6: 24px; --space-8: 32px;
+            --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-full: 9999px;
             --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --dur-fast: 150ms;
-            --dur-med: 300ms;
-
-            /* Status colors */
-            --color-success: #16A34A;
-            --color-warn: #F59E0B;
-            --color-error: #EF4444;
-            --color-info: #3B82F6;
+            --dur-fast: 150ms; --dur-med: 250ms;
         }
 
-        /* ── Dark Theme (Tokyo Night inspired) ── */
-        [data-theme="dark"] {
-            --bg-base: #1A1B26;
-            --bg-surface: #16161E;
-            --bg-elevated: #24283B;
-            --bg-hover: #292E42;
-            --border: rgba(255, 255, 255, 0.06);
-            --border-strong: rgba(255, 255, 255, 0.12);
-            --text-primary: #C0CAF5;
-            --text-secondary: #9AA5CE;
-            --text-tertiary: #565F89;
-            --accent: #7AA2F7;
-            --accent-hover: #89B4FA;
-            --accent-subtle: rgba(122, 162, 247, 0.12);
-            --accent-secondary: #BB9AF7;
-            --accent-warm: #FF9E64;
-            --danger: #F7768E;
-            --success: #9ECE6A;
-            --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.4);
-            --statusbar-bg: #7AA2F7;
-            --statusbar-fg: #16161E;
-            --log-bg: #13141F;
-            --log-error: #F7768E;
-            --log-warn: #FF9E64;
-            --log-info: #C0CAF5;
-            --log-debug: #7DCFFF;
-            --log-timestamp: #565F89;
-        }
-
-        /* ── Light Theme (Arctic Glass inspired) ── */
+        /* ── Light Theme (Apple HIG) ── */
         [data-theme="light"] {
-            --bg-base: #F8FAFC;
+            --bg-base: #F2F2F7;
             --bg-surface: #FFFFFF;
-            --bg-elevated: #F1F5F9;
-            --bg-hover: #E2E8F0;
-            --border: rgba(15, 23, 42, 0.08);
-            --border-strong: rgba(15, 23, 42, 0.15);
-            --text-primary: #0F172A;
-            --text-secondary: #475569;
-            --text-tertiary: #94A3B8;
-            --accent: #0EA5E9;
-            --accent-hover: #0284C7;
-            --accent-subtle: rgba(14, 165, 233, 0.08);
-            --accent-secondary: #8B5CF6;
-            --accent-warm: #F59E0B;
-            --danger: #EF4444;
-            --success: #22C55E;
-            --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
-            --shadow-hover: 0 8px 32px rgba(0,0,0,0.10);
-            --statusbar-bg: #0EA5E9;
-            --statusbar-fg: #FFFFFF;
-            --log-bg: #FAFBFC;
-            --log-error: #DC2626;
-            --log-warn: #D97706;
-            --log-info: #334155;
-            --log-debug: #0284C7;
-            --log-timestamp: #94A3B8;
+            --bg-elevated: #F2F2F7;
+            --bg-hover: #E5E5EA;
+            --bg-input: rgba(118, 118, 128, 0.12);
+            --border: rgba(60, 60, 67, 0.12);
+            --text-primary: #000000;
+            --text-secondary: rgba(60, 60, 67, 0.6);
+            --text-tertiary: rgba(60, 60, 67, 0.3);
+            --accent: #007AFF;
+            --accent-hover: #0066D6;
+            --accent-light: rgba(0, 122, 255, 0.1);
+            --accent-secondary: #5856D6;
+            --green: #34C759;
+            --orange: #FF9500;
+            --red: #FF3B30;
+            --yellow: #FFCC00;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+            --log-bg: #FFFFFF;
+            --log-error: #FF3B30;
+            --log-warn: #FF9500;
+            --log-info: #1C1C1E;
+            --log-debug: #007AFF;
+            --log-time: rgba(60, 60, 67, 0.3);
+            --tab-active-bg: #FFFFFF;
+            --tab-inactive: rgba(60, 60, 67, 0.3);
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           Reset & Base
-           ═══════════════════════════════════════════════════════════ */
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ── Dark Theme (Apple HIG Dark) ── */
+        [data-theme="dark"] {
+            --bg-base: #000000;
+            --bg-surface: #1C1C1E;
+            --bg-elevated: #2C2C2E;
+            --bg-hover: #3A3A3C;
+            --bg-input: rgba(118, 118, 128, 0.24);
+            --border: rgba(84, 84, 88, 0.65);
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(235, 235, 245, 0.6);
+            --text-tertiary: rgba(235, 235, 245, 0.3);
+            --accent: #0A84FF;
+            --accent-hover: #409CFF;
+            --accent-light: rgba(10, 132, 255, 0.15);
+            --accent-secondary: #5E5CE6;
+            --green: #30D158;
+            --orange: #FF9F0A;
+            --red: #FF453A;
+            --yellow: #FFD60A;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+            --log-bg: #1C1C1E;
+            --log-error: #FF453A;
+            --log-warn: #FF9F0A;
+            --log-info: #E5E5EA;
+            --log-debug: #64D2FF;
+            --log-time: rgba(235, 235, 245, 0.3);
+            --tab-active-bg: #2C2C2E;
+            --tab-inactive: rgba(235, 235, 245, 0.3);
         }
+
+        /* ═══ Reset ═══ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: var(--font-display);
@@ -121,517 +94,616 @@
             transition: background var(--dur-med) var(--ease-standard),
                         color var(--dur-med) var(--ease-standard);
             -webkit-font-smoothing: antialiased;
+            user-select: none;
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           Top Bar
-           ═══════════════════════════════════════════════════════════ */
-        .topbar {
+        /* ═══ Nav Bar (Apple segmented control style) ═══ */
+        .navbar {
             display: flex;
             align-items: center;
-            gap: var(--space-5);
-            padding: var(--space-3) var(--space-6);
+            justify-content: space-between;
+            padding: var(--space-2) var(--space-4);
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            z-index: 10;
         }
 
-        .brand {
+        .navbar__left {
             display: flex;
             align-items: center;
             gap: var(--space-3);
+        }
+
+        .brand-icon {
+            width: 28px; height: 28px;
+            background: var(--accent);
+            border-radius: var(--radius-sm);
+            display: grid; place-items: center;
+        }
+        .brand-icon svg { width: 16px; height: 16px; }
+
+        .brand-text {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        /* Segmented Control (Apple style tabs) */
+        .segmented {
+            display: flex;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            padding: 2px;
+            gap: 0;
+        }
+
+        .seg-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-4);
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font-display);
+            border-radius: calc(var(--radius-sm) - 2px);
+            cursor: pointer;
+            transition: all var(--dur-fast) var(--ease-standard);
+            white-space: nowrap;
+        }
+
+        .seg-btn.active {
+            background: var(--tab-active-bg);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .seg-btn svg { width: 14px; height: 14px; }
+
+        .navbar__right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .theme-btn {
+            width: 32px; height: 32px;
+            border-radius: var(--radius-full);
+            background: var(--bg-input);
+            border: none;
+            display: grid; place-items: center;
+            cursor: pointer;
+            transition: all var(--dur-fast) var(--ease-standard);
+        }
+        .theme-btn:hover { background: var(--bg-hover); }
+        .theme-btn svg { width: 16px; height: 16px; color: var(--text-secondary); }
+
+        /* ═══ Tab Panels ═══ */
+        .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .tab-panel.active { display: flex; }
+
+        /* ═══ Tab 1: Collector ═══ */
+        .collector-panel {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Control bar */
+        .control-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
         }
 
-        .brand__icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            border-radius: var(--radius-md);
-            display: grid;
-            place-items: center;
-            font-size: 18px;
-            color: white;
-            box-shadow: 0 2px 8px var(--accent-subtle);
-        }
-
-        .brand__title {
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            color: var(--text-primary);
-        }
-
-        .brand__subtitle {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            font-weight: 500;
-        }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex;
-            align-items: center;
-            gap: var(--space-4);
-            flex-wrap: wrap;
-            flex: 1;
-        }
-
-        .field {
+        .input-group {
             display: flex;
             flex-direction: column;
-            gap: var(--space-1);
+            gap: 3px;
         }
 
-        .field__label {
-            font-size: 11px;
+        .input-label {
+            font-size: 10px;
             font-weight: 600;
             color: var(--text-tertiary);
-            letter-spacing: 0.04em;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding-left: 2px;
         }
 
-        .select, .input-port {
-            background: var(--bg-elevated);
+        .apple-select, .apple-input {
+            background: var(--bg-input);
             color: var(--text-primary);
-            border: 1px solid var(--border-strong);
+            border: none;
             border-radius: var(--radius-sm);
             padding: var(--space-2) var(--space-3);
             font-size: 13px;
             font-family: var(--font-display);
             font-weight: 500;
-            transition: all var(--dur-fast) var(--ease-standard);
             outline: none;
+            transition: all var(--dur-fast);
         }
-
-        .select { cursor: pointer; min-width: 160px; }
-        .select:focus, .input-port:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-subtle);
+        .apple-select { cursor: pointer; min-width: 150px; }
+        .apple-input { width: 80px; }
+        .apple-select:focus, .apple-input:focus {
+            box-shadow: 0 0 0 3px var(--accent-light);
         }
-
-        .input-port { width: 90px; }
-
-        /* Toggle chips */
-        .chips {
-            display: flex;
-            gap: var(--space-2);
-            flex-wrap: wrap;
-        }
-
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-1);
-            padding: var(--space-2) var(--space-3);
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-full);
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            user-select: none;
-            transition: all var(--dur-fast) var(--ease-standard);
-        }
-
-        .chip:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent);
-            color: var(--text-primary);
-        }
-
-        .chip[data-active="true"] {
-            background: var(--accent-subtle);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .chip input { display: none; }
 
         /* Action buttons */
-        .actions {
-            display: flex;
-            gap: var(--space-2);
-            flex-shrink: 0;
-        }
+        .btn-group { display: flex; gap: var(--space-2); margin-left: auto; }
 
-        .btn {
+        .apple-btn {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: var(--space-2);
-            height: 38px;
-            padding: 0 var(--space-5);
-            border-radius: var(--radius-sm);
+            height: 32px;
+            padding: 0 var(--space-4);
+            border-radius: var(--radius-full);
             font-size: 13px;
             font-weight: 600;
-            letter-spacing: -0.01em;
             border: none;
             cursor: pointer;
             transition: all var(--dur-fast) var(--ease-standard);
-            white-space: nowrap;
+            font-family: var(--font-display);
         }
+        .apple-btn:active:not(:disabled) { transform: scale(0.96); }
+        .apple-btn svg { width: 14px; height: 14px; }
 
-        .btn:active:not(:disabled) { transform: scale(0.97); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
 
-        .btn--primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            color: white;
-            box-shadow: 0 2px 8px var(--accent-subtle);
-        }
-        .btn--primary:hover:not(:disabled) {
-            filter: brightness(1.1);
-            box-shadow: 0 4px 16px var(--accent-subtle);
-        }
+        .btn-danger { background: var(--red); color: #fff; }
+        .btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
 
-        .btn--danger {
-            background: var(--danger);
-            color: white;
-        }
-        .btn--danger:hover:not(:disabled) { filter: brightness(1.1); }
+        .apple-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-        .btn--ghost {
-            background: var(--bg-elevated);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-strong);
-        }
-        .btn--ghost:hover:not(:disabled) {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* Theme toggle */
-        .theme-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: var(--radius-sm);
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-strong);
-            display: grid;
-            place-items: center;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all var(--dur-fast) var(--ease-standard);
-            flex-shrink: 0;
-        }
-        .theme-btn:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent);
-            transform: rotate(15deg);
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           Stats Row
-           ═══════════════════════════════════════════════════════════ */
-        .stats {
+        /* Stats row */
+        .stats-row {
             display: flex;
-            gap: var(--space-3);
-            padding: var(--space-3) var(--space-6);
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: var(--bg-base);
             flex-shrink: 0;
+            overflow-x: auto;
         }
+        .stats-row::-webkit-scrollbar { display: none; }
 
-        .stat-card {
+        .stat-pill {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-3) var(--space-4);
-            background: var(--bg-elevated);
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-surface);
             border-radius: var(--radius-md);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
             min-width: 0;
-            transition: border-color var(--dur-fast);
         }
 
-        .stat-card:hover {
-            border-color: var(--accent);
-        }
-
-        .stat-card__icon {
-            width: 36px;
-            height: 36px;
+        .stat-pill__icon {
+            width: 28px; height: 28px;
             border-radius: var(--radius-sm);
-            display: grid;
-            place-items: center;
-            font-size: 16px;
+            display: grid; place-items: center;
             flex-shrink: 0;
         }
+        .stat-pill__icon svg { width: 14px; height: 14px; }
+        .stat-pill__icon--status { background: var(--accent-light); color: var(--accent); }
+        .stat-pill__icon--msg { background: rgba(88,86,214,0.12); color: var(--accent-secondary); }
+        .stat-pill__icon--time { background: rgba(52,199,89,0.12); color: var(--green); }
+        .stat-pill__icon--addr { background: rgba(255,149,0,0.12); color: var(--orange); }
 
-        .stat-card__icon--msg { background: rgba(122,162,247,0.12); }
-        .stat-card__icon--time { background: rgba(187,154,247,0.12); }
-        .stat-card__icon--addr { background: rgba(157,206,106,0.12); }
-        .stat-card__icon--status { background: rgba(255,158,100,0.12); }
-
-        .stat-card__info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
-        }
-
-        .stat-card__label {
-            font-size: 10px;
-            font-weight: 600;
+        .stat-pill__info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+        .stat-pill__label {
+            font-size: 9px; font-weight: 600;
             color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+            text-transform: uppercase; letter-spacing: 0.05em;
         }
-
-        .stat-card__value {
-            font-size: 16px;
-            font-weight: 700;
+        .stat-pill__value {
+            font-size: 13px; font-weight: 700;
             color: var(--text-primary);
             font-variant-numeric: tabular-nums;
-            letter-spacing: -0.02em;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           Log Area
-           ═══════════════════════════════════════════════════════════ */
-        .log-container {
+        /* Status indicator */
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--text-tertiary);
+            transition: background var(--dur-med);
+        }
+        .status-dot.running {
+            background: var(--green);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Log area */
+        .log-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             background: var(--log-bg);
-            border-top: 1px solid var(--border);
         }
 
-        .log-header {
+        .log-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: var(--space-2) var(--space-6);
-            background: var(--bg-surface);
+            padding: var(--space-2) var(--space-4);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
         }
 
-        .log-header__title {
+        .log-toolbar__left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
             font-size: 12px;
             font-weight: 600;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+            color: var(--text-secondary);
         }
 
-        .log-header__actions {
-            display: flex;
-            gap: var(--space-2);
-            align-items: center;
-        }
+        .log-toolbar__right { display: flex; gap: var(--space-2); align-items: center; }
 
-        .log-search {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-full);
+        .log-search-input {
+            background: var(--bg-input);
+            border: none;
+            border-radius: var(--radius-sm);
             padding: var(--space-1) var(--space-3);
             color: var(--text-primary);
             font-size: 12px;
             font-family: var(--font-display);
             outline: none;
-            width: 180px;
+            width: 160px;
             transition: all var(--dur-fast);
         }
-
-        .log-search:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-subtle);
-        }
+        .log-search-input:focus { box-shadow: 0 0 0 3px var(--accent-light); }
 
         .icon-btn {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-strong);
+            width: 26px; height: 26px;
             border-radius: var(--radius-sm);
-            width: 28px;
-            height: 28px;
-            display: grid;
-            place-items: center;
+            background: var(--bg-input);
+            border: none;
+            display: grid; place-items: center;
             cursor: pointer;
-            font-size: 13px;
-            color: var(--text-secondary);
             transition: all var(--dur-fast);
         }
-
-        .icon-btn:hover {
-            background: var(--bg-hover);
-            color: var(--accent);
-        }
+        .icon-btn:hover { background: var(--bg-hover); }
+        .icon-btn svg { width: 13px; height: 13px; color: var(--text-secondary); }
+        .icon-btn.off svg { opacity: 0.35; }
 
         .log-output {
             flex: 1;
             overflow-y: auto;
             padding: var(--space-2) 0;
             font-family: var(--font-mono);
-            font-size: 12.5px;
-            line-height: 1.6;
-            scroll-behavior: smooth;
+            font-size: 11.5px;
+            line-height: 1.55;
         }
-
-        .log-output::-webkit-scrollbar { width: 8px; }
+        .log-output::-webkit-scrollbar { width: 6px; }
         .log-output::-webkit-scrollbar-track { background: transparent; }
-        .log-output::-webkit-scrollbar-thumb {
-            background: var(--border-strong);
-            border-radius: var(--radius-full);
-        }
-        .log-output::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+        .log-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
         .log-line {
             display: flex;
             gap: var(--space-2);
-            padding: 1px var(--space-6);
-            transition: background var(--dur-fast);
+            padding: 0 var(--space-4);
+            transition: background 80ms;
         }
-
-        .log-line:hover { background: var(--accent-subtle); }
+        .log-line:hover { background: var(--bg-input); }
 
         .log-line__time {
-            color: var(--log-timestamp);
+            color: var(--log-time);
             flex-shrink: 0;
-            font-size: 11px;
-            width: 60px;
+            font-size: 10px;
+            width: 52px;
         }
-
         .log-line__level {
             flex-shrink: 0;
             font-weight: 700;
-            font-size: 10px;
-            width: 40px;
+            font-size: 9px;
+            width: 34px;
             text-align: center;
-            border-radius: var(--radius-sm);
-            padding: 0 2px;
         }
-
         .log-line--INFO .log-line__level { color: var(--log-info); }
         .log-line--WARN .log-line__level { color: var(--log-warn); }
         .log-line--ERROR .log-line__level { color: var(--log-error); }
         .log-line--DEBUG .log-line__level { color: var(--log-debug); }
-
         .log-line__text {
             color: var(--log-info);
             word-break: break-all;
             white-space: pre-wrap;
         }
-
         .log-line--ERROR .log-line__text { color: var(--log-error); }
         .log-line--WARN .log-line__text { color: var(--log-warn); }
-        .log-line--DEBUG .log-line__text { color: var(--log-debug); }
 
-        /* ═══════════════════════════════════════════════════════════
-           Status Bar
-           ═══════════════════════════════════════════════════════════ */
-        .statusbar {
+        /* ═══ Tab 2 & 3: Settings (Apple grouped table style) ═══ */
+        .settings-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+        }
+
+        .settings-group {
+            background: var(--bg-surface);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: var(--space-4);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .settings-group__header {
+            padding: var(--space-3) var(--space-4) var(--space-1);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .settings-item {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-2) var(--space-6);
-            background: var(--statusbar-bg);
-            color: var(--statusbar-fg);
+            justify-content: space-between;
+            padding: var(--space-3) var(--space-4);
+            border-bottom: 1px solid var(--border);
+            min-height: 44px;
+        }
+        .settings-item:last-child { border-bottom: none; }
+
+        .settings-item__label {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+        .settings-item__desc {
             font-size: 12px;
-            font-weight: 500;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Apple Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 26px;
             flex-shrink: 0;
         }
+        .toggle input { opacity: 0; width: 0; height: 0; }
 
-        .statusbar__dot {
-            width: 8px;
-            height: 8px;
+        .toggle__slider {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-input);
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: background var(--dur-fast) var(--ease-standard);
+        }
+        .toggle__slider::before {
+            content: '';
+            position: absolute;
+            width: 22px; height: 22px;
+            left: 2px; top: 2px;
+            background: #fff;
             border-radius: 50%;
-            background: currentColor;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform var(--dur-fast) var(--ease-standard);
+        }
+        .toggle input:checked + .toggle__slider { background: var(--green); }
+        .toggle input:checked + .toggle__slider::before { transform: translateX(18px); }
+        .toggle input:disabled + .toggle__slider { opacity: 0.4; cursor: not-allowed; }
+
+        /* Select in settings */
+        .settings-select {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: var(--space-1) var(--space-3);
+            font-size: 13px;
+            font-family: var(--font-display);
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
         }
 
-        .statusbar__dot--running {
-            animation: pulse-dot 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           Responsive
-           ═══════════════════════════════════════════════════════════ */
-        @media (max-width: 840px) {
-            .stats { overflow-x: auto; padding: var(--space-2) var(--space-4); }
-            .stat-card { flex-shrink: 0; }
-            .log-search { width: 100px; }
-            .toolbar { gap: var(--space-2); }
+        /* Footer */
+        .footer-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-4);
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
         }
     </style>
 </head>
 <body data-theme="light">
 
-    <!-- ═══ Top Bar ═══ -->
-    <div class="topbar">
-        <div class="brand">
-            <div class="brand__icon">◈</div>
-            <div>
-                <div class="brand__title">gRPC Dialout Server</div>
-                <div class="brand__subtitle">v3.0.7 Telemetry Collector</div>
+    <!-- ═══ Navbar ═══ -->
+    <nav class="navbar">
+        <div class="navbar__left">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
             </div>
+            <span class="brand-text">gRPC Dialout</span>
         </div>
 
-        <div class="toolbar">
-            <div class="field">
-                <span class="field__label">模式</span>
-                <select class="select" id="mode">
-                    <option value="normal">gRPC 2-layer (JSON)</option>
-                    <option value="gpb">gRPC 3-layer (GPB)</option>
-                    <option value="gnmi">gRPC gNMI</option>
-                    <option value="udp">UDP 2-layer</option>
-                </select>
+        <div class="segmented" role="tablist">
+            <button class="seg-btn active" data-tab="collector" role="tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+                采集
+            </button>
+            <button class="seg-btn" data-tab="logfile" role="tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                日志文件
+            </button>
+            <button class="seg-btn" data-tab="advanced" role="tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                高级
+            </button>
+        </div>
+
+        <div class="navbar__right">
+            <button class="theme-btn" id="theme-toggle" title="切换主题">
+                <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══ Tab 1: Collector ═══ -->
+    <div class="tab-panel active" id="tab-collector">
+        <div class="collector-panel">
+            <!-- Control bar -->
+            <div class="control-bar">
+                <div class="input-group">
+                    <span class="input-label">模式</span>
+                    <select class="apple-select" id="mode">
+                        <option value="normal">gRPC 2-layer</option>
+                        <option value="gpb">gRPC 3-layer (GPB)</option>
+                        <option value="gnmi">gRPC gNMI</option>
+                        <option value="udp">UDP 2-layer</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <span class="input-label">端口</span>
+                    <input type="number" class="apple-input" id="port" value="50051" min="1" max="65535" />
+                </div>
+
+                <div class="btn-group">
+                    <button class="apple-btn btn-primary" id="btn-start">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        开始采集
+                    </button>
+                    <button class="apple-btn btn-danger" id="btn-stop" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                        停止
+                    </button>
+                </div>
             </div>
 
-            <div class="field">
-                <span class="field__label">端口</span>
-                <input type="number" class="input-port" id="port" value="50051" min="1" max="65535" />
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-pill">
+                    <div class="stat-pill__icon stat-pill__icon--status">
+                        <div class="status-dot" id="status-dot"></div>
+                    </div>
+                    <div class="stat-pill__info">
+                        <span class="stat-pill__label">状态</span>
+                        <span class="stat-pill__value" id="stat-status">就绪</span>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill__icon stat-pill__icon--msg">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <div class="stat-pill__info">
+                        <span class="stat-pill__label">消息</span>
+                        <span class="stat-pill__value" id="stat-msg-count">0</span>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill__icon stat-pill__icon--time">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="stat-pill__info">
+                        <span class="stat-pill__label">运行</span>
+                        <span class="stat-pill__value" id="stat-uptime">00:00:00</span>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill__icon stat-pill__icon--addr">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                    </div>
+                    <div class="stat-pill__info">
+                        <span class="stat-pill__label">地址</span>
+                        <span class="stat-pill__value" id="stat-addr">—</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="field">
-                <span class="field__label">选项</span>
-                <div class="chips">
-                    <label class="chip" data-active="false">
-                        <input type="checkbox" id="tls"> TLS
+            <!-- Log -->
+            <div class="log-section">
+                <div class="log-toolbar">
+                    <div class="log-toolbar__left">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span>日志输出</span>
+                    </div>
+                    <div class="log-toolbar__right">
+                        <input type="text" class="log-search-input" id="log-search" placeholder="搜索…" />
+                        <button class="icon-btn" id="btn-scroll" title="自动滚动">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <button class="icon-btn" id="btn-clear" title="清空">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="log-output" id="log-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Tab 2: Log File ═══ -->
+    <div class="tab-panel" id="tab-logfile">
+        <div class="settings-panel">
+            <div class="settings-group__header">日志文件配置</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-item__label">保存日志到文件</div>
+                        <div class="settings-item__desc">将日志输出到 logs/ 目录下的文件</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="log-file">
+                        <span class="toggle__slider"></span>
                     </label>
-                    <label class="chip" data-active="false">
-                        <input type="checkbox" id="orignal"> 原始消息
-                    </label>
-                    <label class="chip" data-active="true">
-                        <input type="checkbox" id="format" checked> 格式化
-                    </label>
-                    <label class="chip" data-active="false">
-                        <input type="checkbox" id="perf"> 性能模式
+                </div>
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-item__label">仅文件模式</div>
+                        <div class="settings-item__desc">不输出到窗口，仅写入文件</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="only-log" disabled>
+                        <span class="toggle__slider"></span>
                     </label>
                 </div>
             </div>
 
-            <div class="field">
-                <span class="field__label">日志文件</span>
-                <div class="chips">
-                    <label class="chip" data-active="false">
-                        <input type="checkbox" id="log-file"> 保存日志
-                    </label>
-                    <label class="chip" data-active="false" id="chip-onlylog" style="opacity:0.4;pointer-events:none">
-                        <input type="checkbox" id="only-log"> 仅文件
-                    </label>
-                    <select class="select" id="log-size" style="min-width:auto;font-size:12px;padding:6px 8px;" title="单个日志文件最大大小">
+            <div class="settings-group__header">文件轮转</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div class="settings-item__label">单个文件大小</div>
+                    <select class="settings-select" id="log-size">
                         <option value="50">50 MB</option>
                         <option value="100" selected>100 MB</option>
                         <option value="200">200 MB</option>
                         <option value="500">500 MB</option>
                     </select>
-                    <select class="select" id="log-num" style="min-width:auto;font-size:12px;padding:6px 8px;" title="最大日志文件数量">
+                </div>
+                <div class="settings-item">
+                    <div class="settings-item__label">最大文件数量</div>
+                    <select class="settings-select" id="log-num">
                         <option value="10">10 个</option>
                         <option value="50" selected>50 个</option>
                         <option value="100">100 个</option>
@@ -640,64 +712,68 @@
                 </div>
             </div>
         </div>
-
-        <div class="actions">
-            <button class="btn btn--primary" id="btn-start">▶ 开始采集</button>
-            <button class="btn btn--danger" id="btn-stop" disabled>■ 停止</button>
-        </div>
-
-        <button class="theme-btn" id="theme-toggle" title="切换主题">☀️</button>
     </div>
 
-    <!-- ═══ Stats Row ═══ -->
-    <div class="stats">
-        <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--status" id="stat-status-icon">⏸</div>
-            <div class="stat-card__info">
-                <span class="stat-card__label">状态</span>
-                <span class="stat-card__value" id="stat-status">就绪</span>
+    <!-- ═══ Tab 3: Advanced ═══ -->
+    <div class="tab-panel" id="tab-advanced">
+        <div class="settings-panel">
+            <div class="settings-group__header">协议选项</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-item__label">TLS 加密</div>
+                        <div class="settings-item__desc">启用 TLS 安全传输（UDP 不支持）</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="tls">
+                        <span class="toggle__slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-item__label">原始消息</div>
+                        <div class="settings-item__desc">输出未解析的原始 protobuf 消息</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="orignal">
+                        <span class="toggle__slider"></span>
+                    </label>
+                </div>
             </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--msg">📩</div>
-            <div class="stat-card__info">
-                <span class="stat-card__label">消息总数</span>
-                <span class="stat-card__value" id="stat-msg-count">0</span>
+
+            <div class="settings-group__header">数据格式</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-item__label">格式化 JSON</div>
+                        <div class="settings-item__desc">使用缩进美化 JSON 输出</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="format" checked>
+                        <span class="toggle__slider"></span>
+                    </label>
+                </div>
             </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--time">⏱</div>
-            <div class="stat-card__info">
-                <span class="stat-card__label">运行时间</span>
-                <span class="stat-card__value" id="stat-uptime">00:00:00</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--addr">📡</div>
-            <div class="stat-card__info">
-                <span class="stat-card__label">监听地址</span>
-                <span class="stat-card__value" id="stat-addr">—</span>
+
+            <div class="settings-group__header">性能</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-item__label">性能模式</div>
+                        <div class="settings-item__desc">仅统计消息数量，不解析内容</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="perf">
+                        <span class="toggle__slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ═══ Log Area ═══ -->
-    <div class="log-container">
-        <div class="log-header">
-            <span class="log-header__title">日志输出</span>
-            <div class="log-header__actions">
-                <input type="text" class="log-search" id="log-search" placeholder="搜索日志…" />
-                <button class="icon-btn" id="btn-scroll" title="自动滚动">▼</button>
-                <button class="icon-btn" id="btn-clear" title="清空日志">✕</button>
-            </div>
-        </div>
-        <div class="log-output" id="log-area"></div>
-    </div>
-
-    <!-- ═══ Status Bar ═══ -->
-    <div class="statusbar" id="statusbar">
-        <span class="statusbar__dot" id="status-dot"></span>
-        <span id="status-text">就绪</span>
+    <!-- ═══ Footer ═══ -->
+    <div class="footer-bar">
+        <span id="footer-text">就绪</span>
     </div>
 
     <script>
@@ -709,72 +785,59 @@
         const MAX_LINES = 5000;
         let logLines = [];
         let autoScroll = true;
-        let isRunning = false;
-        let startTime = null;
-        let uptimeTimer = null;
         let msgCount = 0;
 
-        // ── DOM refs ──
+        // ── DOM ──
+        const $ = id => document.getElementById(id);
         const els = {
-            mode: document.getElementById('mode'),
-            port: document.getElementById('port'),
-            tls: document.getElementById('tls'),
-            orignal: document.getElementById('orignal'),
-            format: document.getElementById('format'),
-            perf: document.getElementById('perf'),
-            logFile: document.getElementById('log-file'),
-            onlyLog: document.getElementById('only-log'),
-            logSize: document.getElementById('log-size'),
-            logNum: document.getElementById('log-num'),
-            btnStart: document.getElementById('btn-start'),
-            btnStop: document.getElementById('btn-stop'),
-            btnClear: document.getElementById('btn-clear'),
-            btnScroll: document.getElementById('btn-scroll'),
-            themeToggle: document.getElementById('theme-toggle'),
-            logSearch: document.getElementById('log-search'),
-            statStatus: document.getElementById('stat-status'),
-            statStatusIcon: document.getElementById('stat-status-icon'),
-            statMsgCount: document.getElementById('stat-msg-count'),
-            statUptime: document.getElementById('stat-uptime'),
-            statAddr: document.getElementById('stat-addr'),
-            statusDot: document.getElementById('status-dot'),
-            statusText: document.getElementById('status-text'),
+            mode: $('mode'), port: $('port'),
+            tls: $('tls'), orignal: $('orignal'), format: $('format'), perf: $('perf'),
+            logFile: $('log-file'), onlyLog: $('only-log'),
+            logSize: $('log-size'), logNum: $('log-num'),
+            btnStart: $('btn-start'), btnStop: $('btn-stop'),
+            btnClear: $('btn-clear'), btnScroll: $('btn-scroll'),
+            themeToggle: $('theme-toggle'), iconSun: $('icon-sun'),
+            logSearch: $('log-search'),
+            statStatus: $('stat-status'), statMsgCount: $('stat-msg-count'),
+            statUptime: $('stat-uptime'), statAddr: $('stat-addr'),
+            statusDot: $('status-dot'), footerText: $('footer-text'),
         };
 
-        // ── Chip toggle ──
-        document.querySelectorAll('.chip input').forEach(input => {
-            const chip = input.closest('.chip');
-            const sync = () => { chip.dataset.active = input.checked; };
-            sync();
-            input.addEventListener('change', sync);
+        // ── Tab switching ──
+        document.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                $('tab-' + btn.dataset.tab).classList.add('active');
+            });
         });
 
-        // ── Log file toggle enables/disables "仅文件" ──
-        els.logFile.addEventListener('change', () => {
-            const chipOnlyLog = document.getElementById('chip-onlylog');
-            if (els.logFile.checked) {
-                chipOnlyLog.style.opacity = '1';
-                chipOnlyLog.style.pointerEvents = 'auto';
-            } else {
-                chipOnlyLog.style.opacity = '0.4';
-                chipOnlyLog.style.pointerEvents = 'none';
-                els.onlyLog.checked = false;
-                chipOnlyLog.dataset.active = 'false';
-            }
-        });
-
-        // ── Theme toggle ──
+        // ── Theme ──
         els.themeToggle.addEventListener('click', () => {
             const cur = document.body.dataset.theme;
             const next = cur === 'dark' ? 'light' : 'dark';
             document.body.dataset.theme = next;
-            els.themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            // Swap icon
+            if (next === 'dark') {
+                els.iconSun.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+            } else {
+                els.iconSun.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+            }
+            els.iconSun.setAttribute('fill', next === 'dark' ? 'currentColor' : 'none');
+            els.iconSun.setAttribute('stroke', 'currentColor');
+            els.iconSun.setAttribute('stroke-width', '2');
         });
 
-        // ── Auto-scroll toggle ──
+        // ── Log file toggle ──
+        els.logFile.addEventListener('change', () => {
+            els.onlyLog.disabled = !els.logFile.checked;
+        });
+
+        // ── Auto scroll ──
         els.btnScroll.addEventListener('click', () => {
             autoScroll = !autoScroll;
-            els.btnScroll.style.opacity = autoScroll ? '1' : '0.4';
+            els.btnScroll.classList.toggle('off', !autoScroll);
         });
 
         // ── Log rendering ──
@@ -785,171 +848,101 @@
             return 'INFO';
         }
 
-        function formatTime() {
-            const d = new Date();
-            return d.toLocaleTimeString('zh-CN', { hour12: false });
+        function now() {
+            return new Date().toLocaleTimeString('zh-CN', { hour12: false });
         }
 
         function appendLog(text) {
             const level = parseLogLevel(text);
-            const time = formatTime();
-
+            const time = now();
             logLines.push({ time, level, text });
-
             if (logLines.length > MAX_LINES) {
                 logLines = logLines.slice(-MAX_LINES);
-                renderAllLogs();
+                renderAll();
             } else {
-                appendLogDom(time, level, text);
+                appendDom(time, level, text);
             }
-
-            // Extract message count from log content
-            const countMatch = text.match(/count:\s*(\d+)/i);
-            if (countMatch) {
-                msgCount = Math.max(msgCount, parseInt(countMatch[1]));
-            }
-
-            if (autoScroll) {
-                logArea.scrollTop = logArea.scrollHeight;
-            }
+            if (autoScroll) logArea.scrollTop = logArea.scrollHeight;
         }
 
-        function appendLogDom(time, level, text) {
+        function appendDom(time, level, text) {
             const filter = els.logSearch.value.trim().toLowerCase();
             if (filter && !text.toLowerCase().includes(filter)) return;
-
             const div = document.createElement('div');
             div.className = `log-line log-line--${level}`;
-
-            const timeEl = document.createElement('span');
-            timeEl.className = 'log-line__time';
-            timeEl.textContent = time;
-
-            const levelEl = document.createElement('span');
-            levelEl.className = 'log-line__level';
-            levelEl.textContent = level;
-
-            const textEl = document.createElement('span');
-            textEl.className = 'log-line__text';
-            textEl.textContent = text;
-
-            div.append(timeEl, levelEl, textEl);
+            div.innerHTML = `<span class="log-line__time">${time}</span><span class="log-line__level">${level}</span><span class="log-line__text"></span>`;
+            div.querySelector('.log-line__text').textContent = text;
             logArea.appendChild(div);
         }
 
-        function renderAllLogs() {
+        function renderAll() {
             logArea.innerHTML = '';
-            for (const entry of logLines) {
-                appendLogDom(entry.time, entry.level, entry.text);
-            }
-            if (autoScroll) {
-                logArea.scrollTop = logArea.scrollHeight;
-            }
+            logLines.forEach(e => appendDom(e.time, e.level, e.text));
+            if (autoScroll) logArea.scrollTop = logArea.scrollHeight;
         }
 
-        // ── Search filter ──
-        els.logSearch.addEventListener('input', () => renderAllLogs());
+        els.logSearch.addEventListener('input', renderAll);
 
-        // ── Clear ──
         els.btnClear.addEventListener('click', () => {
-            logLines = [];
-            msgCount = 0;
+            logLines = []; msgCount = 0;
             els.statMsgCount.textContent = '0';
             logArea.innerHTML = '';
         });
 
-        // ── Uptime ──
-        function startUptime() {
-            startTime = Date.now();
-            uptimeTimer = setInterval(() => {
-                const secs = Math.floor((Date.now() - startTime) / 1000);
-                const h = String(Math.floor(secs / 3600)).padStart(2, '0');
-                const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
-                const s = String(secs % 60).padStart(2, '0');
-                els.statUptime.textContent = `${h}:${m}:${s}`;
-            }, 1000);
-        }
-
-        function stopUptime() {
-            if (uptimeTimer) {
-                clearInterval(uptimeTimer);
-                uptimeTimer = null;
-            }
-        }
-
-        // ── Server controls ──
+        // ── Server control ──
         els.btnStart.addEventListener('click', async () => {
             const mode = els.mode.value;
             const port = parseInt(els.port.value);
-            const tls = els.tls.checked;
-            const orignal = els.orignal.checked;
-            const format = els.format.checked;
-            const perf = els.perf.checked;
-            const logFile = els.logFile.checked;
-            const onlyLog = els.onlyLog.checked;
-            const logSize = parseInt(els.logSize.value);
-            const logNum = parseInt(els.logNum.value);
-
             try {
                 await invoke('start_server', {
                     config: {
-                        mode, port, tls, orignal,
-                        formatJson: format, performanceMode: perf,
-                        logOutput: logFile, onlyLogFile: onlyLog,
-                        logfileSize: logSize, logfileNum: logNum
+                        mode, port,
+                        tls: els.tls.checked, orignal: els.orignal.checked,
+                        formatJson: els.format.checked, performanceMode: els.perf.checked,
+                        logOutput: els.logFile.checked, onlyLogFile: els.onlyLog.checked,
+                        logfileSize: parseInt(els.logSize.value), logfileNum: parseInt(els.logNum.value)
                     }
                 });
-                isRunning = true;
                 msgCount = 0;
                 els.btnStart.disabled = true;
                 els.btnStop.disabled = false;
                 els.statStatus.textContent = '运行中';
-                els.statStatusIcon.textContent = '▶';
+                els.statusDot.classList.add('running');
                 els.statAddr.textContent = `0.0.0.0:${port}`;
-                els.statusDot.classList.add('statusbar__dot--running');
-                els.statusText.textContent = `运行中 — ${mode.toUpperCase()} — :${port}`;
-                startUptime();
+                els.footerText.textContent = `运行中 — ${mode.toUpperCase()} — :${port}`;
             } catch (e) {
                 appendLog(`启动失败: ${e}`);
                 els.statStatus.textContent = '错误';
-                els.statStatusIcon.textContent = '⚠';
             }
         });
 
         els.btnStop.addEventListener('click', async () => {
             try {
                 await invoke('stop_server');
-                isRunning = false;
                 els.btnStart.disabled = false;
                 els.btnStop.disabled = true;
                 els.statStatus.textContent = '已停止';
-                els.statStatusIcon.textContent = '⏸';
-                els.statusDot.classList.remove('statusbar__dot--running');
-                els.statusText.textContent = '已停止';
-                stopUptime();
-            } catch (e) {
-                appendLog(`停止失败: ${e}`);
-            }
+                els.statusDot.classList.remove('running');
+                els.footerText.textContent = '已停止';
+            } catch (e) { appendLog(`停止失败: ${e}`); }
         });
 
-        // ── Poll stats every 2s ──
+        // ── Stats polling ──
         setInterval(async () => {
             try {
-                const stats = await invoke('get_stats');
-                els.statMsgCount.textContent = stats.message_count.toLocaleString();
-                if (stats.is_running) {
-                    const h = String(Math.floor(stats.uptime_secs / 3600)).padStart(2, '0');
-                    const m = String(Math.floor((stats.uptime_secs % 3600) / 60)).padStart(2, '0');
-                    const s = String(stats.uptime_secs % 60).padStart(2, '0');
-                    els.statUptime.textContent = `${h}:${m}:${s}`;
+                const s = await invoke('get_stats');
+                els.statMsgCount.textContent = s.message_count.toLocaleString();
+                if (s.is_running) {
+                    const h = String(Math.floor(s.uptime_secs / 3600)).padStart(2,'0');
+                    const m = String(Math.floor((s.uptime_secs % 3600) / 60)).padStart(2,'0');
+                    const s2 = String(s.uptime_secs % 60).padStart(2,'0');
+                    els.statUptime.textContent = `${h}:${m}:${s2}`;
                 }
-            } catch(e) { /* ignore */ }
+            } catch(e) {}
         }, 2000);
 
-        // ── Listen for backend log events ──
-        listen('log-line', (event) => {
-            appendLog(event.payload);
-        });
+        // ── Backend events ──
+        listen('log-line', (event) => appendLog(event.payload));
 
         // ── Init ──
         appendLog('gRPC Dialout Server GUI 已就绪');
