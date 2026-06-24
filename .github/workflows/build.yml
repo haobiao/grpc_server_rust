@@ -37,13 +37,17 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
+      # ── 生成 Cargo.lock（确保 cache key 稳定）─────────────────
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
+
       # ── Rust 依赖缓存（统一由 rust-cache 管理）─────────────────
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "src-tauri -> target"
           cache-all-crates: "true"
-          prefix-key: "cli-windows-v2"
+          prefix-key: "cli-windows-v3"
 
       - name: Build release binary (CI profile)
         run: |
@@ -87,13 +91,17 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
+      # ── 生成 Cargo.lock（确保 cache key 稳定）─────────────────
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "src-tauri -> target"
           cache-all-crates: "true"
           cache-bin: "true"
-          prefix-key: "gui-windows-v2"
+          prefix-key: "gui-windows-v3"
 
       - name: Install Tauri CLI (cached by rust-cache bin)
         run: cargo install tauri-cli --version "^2" --locked
