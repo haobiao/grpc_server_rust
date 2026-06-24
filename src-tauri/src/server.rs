@@ -88,8 +88,8 @@ impl Server {
 
     /// Start gRPC 2-layer dial-out (Normal mode).
     async fn start_normal(&self) -> Result<()> {
-        // 显式创建 SocketAddr，确保 IPv4 双栈监听
-        let addr: SocketAddr = format!("0.0.0.0:{}", self.config.port)
+        // IPv6 双栈监听：[::] 同时接受 IPv4 和 IPv6 连接
+        let addr: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
             .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.config.port)));
 
@@ -129,8 +129,8 @@ impl Server {
 
     /// Start gRPC 3-layer dial-out (GPB mode).
     async fn start_gpb_v3(&self) -> Result<()> {
-        // 显式创建 SocketAddr，确保 IPv4 双栈监听
-        let addr: SocketAddr = format!("0.0.0.0:{}", self.config.port)
+        // IPv6 双栈监听
+        let addr: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
             .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.config.port)));
 
@@ -187,8 +187,8 @@ impl Server {
 
     /// Start gNMI dial-out.
     async fn start_gnmi(&self) -> Result<()> {
-        // 显式创建 SocketAddr，确保 IPv4 双栈监听
-        let addr: SocketAddr = format!("0.0.0.0:{}", self.config.port)
+        // IPv6 双栈监听
+        let addr: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
             .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.config.port)));
 

@@ -55,7 +55,7 @@ jobs:
         run: |
           mkdir artifacts-cli
           # 可执行文件（重命名为 CLI 专用名）
-          cp target/ci/grpc-server-rust.exe artifacts-cli/grpc-dialout-cli.exe
+          cp target/ci/grpc-server-rust.exe artifacts-cli/grpc-server-cli.exe
           # 打包 proto 和 tls 目录（运行时需要）
           xcopy /E /I /Y proto artifacts-cli\proto
           xcopy /E /I /Y tls  artifacts-cli\tls
@@ -106,7 +106,7 @@ jobs:
 
       - name: Rename GUI exe
         run: |
-          cp target/ci/grpc-server-rust.exe target/ci/grpc-dialout-gui.exe
+          cp target/ci/grpc-server-rust.exe target/ci/grpc-server-gui.exe
 
       - name: Upload GUI standalone exe
         if: always()
@@ -114,7 +114,7 @@ jobs:
         with:
           name: grpc-server-rust-gui-windows
           path: |
-            target/ci/grpc-dialout-gui.exe
+            target/ci/grpc-server-gui.exe
           retention-days: 30
 
   # ══════════════════════════════════════════════════════════════════

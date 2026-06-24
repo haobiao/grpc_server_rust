@@ -521,17 +521,6 @@
         }
 
         /* Footer */
-        .footer-bar {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            padding: var(--space-1) var(--space-4);
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border);
-            font-size: 11px;
-            color: var(--text-secondary);
-            flex-shrink: 0;
-        }
     </style>
 </head>
 <body data-theme="light">
@@ -695,10 +684,12 @@
                 <div class="settings-item">
                     <div class="settings-item__label">单个文件大小</div>
                     <select class="settings-select" id="log-size">
+                        <option value="1">1 MB</option>
+                        <option value="5" selected>5 MB</option>
+                        <option value="10">10 MB</option>
+                        <option value="20">20 MB</option>
                         <option value="50">50 MB</option>
-                        <option value="100" selected>100 MB</option>
-                        <option value="200">200 MB</option>
-                        <option value="500">500 MB</option>
+                        <option value="100">100 MB</option>
                     </select>
                 </div>
                 <div class="settings-item">
@@ -771,11 +762,6 @@
         </div>
     </div>
 
-    <!-- ═══ Footer ═══ -->
-    <div class="footer-bar">
-        <span id="footer-text">就绪</span>
-    </div>
-
     <script>
         const { invoke } = window.__TAURI__.core;
         const { listen } = window.__TAURI__.event;
@@ -800,7 +786,7 @@
             logSearch: $('log-search'),
             statStatus: $('stat-status'), statMsgCount: $('stat-msg-count'),
             statUptime: $('stat-uptime'), statAddr: $('stat-addr'),
-            statusDot: $('status-dot'), footerText: $('footer-text'),
+            statusDot: $('status-dot'),
         };
 
         // ── Tab switching ──
@@ -814,19 +800,30 @@
         });
 
         // ── Theme ──
-        els.themeToggle.addEventListener('click', () => {
-            const cur = document.body.dataset.theme;
-            const next = cur === 'dark' ? 'light' : 'dark';
-            document.body.dataset.theme = next;
+        const { getCurrentWindow } = window.__TAURI__.window || {};
+        const currentWindow = getCurrentWindow ? getCurrentWindow() : null;
+
+        async function applyTheme(theme) {
+            document.body.dataset.theme = theme;
+            // Sync Tauri window theme (title bar + native elements)
+            if (currentWindow && currentWindow.setTheme) {
+                try { await currentWindow.setTheme(theme); } catch(e) {}
+            }
             // Swap icon
-            if (next === 'dark') {
+            if (theme === 'dark') {
                 els.iconSun.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
             } else {
                 els.iconSun.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
             }
-            els.iconSun.setAttribute('fill', next === 'dark' ? 'currentColor' : 'none');
+            els.iconSun.setAttribute('fill', theme === 'dark' ? 'currentColor' : 'none');
             els.iconSun.setAttribute('stroke', 'currentColor');
             els.iconSun.setAttribute('stroke-width', '2');
+        }
+
+        els.themeToggle.addEventListener('click', () => {
+            const cur = document.body.dataset.theme;
+            const next = cur === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
         });
 
         // ── Log file toggle ──
@@ -889,6 +886,16 @@
             logArea.innerHTML = '';
         });
 
+        // ── Disable settings during run ──
+        function setSettingsDisabled(disabled) {
+            const ids = ['mode', 'port', 'tls', 'orignal', 'format', 'perf',
+                         'log-file', 'only-log', 'log-size', 'log-num'];
+            ids.forEach(id => {
+                const el = $(id);
+                if (el) el.disabled = disabled;
+            });
+        }
+
         // ── Server control ──
         els.btnStart.addEventListener('click', async () => {
             const mode = els.mode.value;
@@ -909,7 +916,8 @@
                 els.statStatus.textContent = '运行中';
                 els.statusDot.classList.add('running');
                 els.statAddr.textContent = `0.0.0.0:${port}`;
-                els.footerText.textContent = `运行中 — ${mode.toUpperCase()} — :${port}`;
+                // Disable all settings while running
+                setSettingsDisabled(true);
             } catch (e) {
                 appendLog(`启动失败: ${e}`);
                 els.statStatus.textContent = '错误';
@@ -923,7 +931,8 @@
                 els.btnStop.disabled = true;
                 els.statStatus.textContent = '已停止';
                 els.statusDot.classList.remove('running');
-                els.footerText.textContent = '已停止';
+                // Re-enable settings
+                setSettingsDisabled(false);
             } catch (e) { appendLog(`停止失败: ${e}`); }
         });
 
@@ -942,7 +951,10 @@
         }, 2000);
 
         // ── Backend events ──
-        listen('log-line', (event) => appendLog(event.payload));
+        // listen() returns a Promise in Tauri 2; ensure it's properly registered
+        listen('log-line', (event) => {
+            appendLog(event.payload);
+        }).catch(e => console.error('Failed to listen for log-line:', e));
 
         // ── Init ──
         appendLog('gRPC Dialout Server GUI 已就绪');

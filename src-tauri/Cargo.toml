@@ -1,6 +1,6 @@
 [package]
 name = "grpc-server-rust"
-version = "3.0.7"
+version = "4.0.0"
 description = "gRPC Dialout Telemetry Collector - Rust rewrite"
 edition = "2021"
 

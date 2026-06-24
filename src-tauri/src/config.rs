@@ -17,7 +17,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(
     name = "grpc-server-rust",
-    version = "3.0.7",
+    version = "4.0.0",
     about = "生产级 gRPC Dialout 遥测采集器",
     long_about = "gRPC Dialout Telemetry Collector — 从 Python 版重写为 Rust\n\n\
                   支持四种 dial-out 模式，可通过以下选项选择：\n  \
