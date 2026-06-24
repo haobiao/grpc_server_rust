@@ -464,7 +464,6 @@ fn field_value_to_json(val: &prost_reflect::Value, kind: &prost_reflect::Kind) -
             }
             serde_json::Value::Object(obj)
         }
-        _ => serde_json::Value::Null,
     }
 }
 
