@@ -94,9 +94,9 @@ where
         event.record(&mut visitor);
 
         let msg = if visitor.message.is_empty() {
-            format!("{}", event.level())
+            format!("{}", event.metadata().level())
         } else {
-            format!("{}: {}", event.level(), visitor.message)
+            format!("{}: {}", event.metadata().level(), visitor.message)
         };
 
         let _ = self.app.emit("log-line", msg);
