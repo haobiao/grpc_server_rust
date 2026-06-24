@@ -37,10 +37,6 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      # ── 生成 Cargo.lock（确保 cache key 稳定）─────────────────
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
-
       # ── Rust 依赖缓存（统一由 rust-cache 管理）─────────────────
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
@@ -90,10 +86,6 @@ jobs:
       # ── Rust 工具链 + 统一缓存（rust-cache 管理 registry + bin）──
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
-      # ── 生成 Cargo.lock（确保 cache key 稳定）─────────────────
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
