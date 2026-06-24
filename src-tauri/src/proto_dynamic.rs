@@ -215,33 +215,32 @@ pub fn generate_descriptor_files() -> Result<()> {
         return Err(AppError::Config("No proto files found to compile".into()));
     }
 
-    let proto_dir_str = proto_dir.to_string_lossy().to_string();
+    // Compile all proto files together into a single combined descriptor,
+    // matching the behavior of -b (load_all_v3) which produces one v3_modules.desc
+    let proto_files_str: Vec<String> = proto_files
+        .iter()
+        .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
+        .collect();
 
-    // Compile each proto file individually and write descriptor
-    for proto_path in &proto_files {
-        let file_name = proto_path
-            .file_name()
-            .ok_or_else(|| AppError::Config("Invalid proto file name".into()))?
-            .to_string_lossy()
-            .to_string();
+    let mut compiler = protox::Compiler::new([&proto_dir])
+        .map_err(|e| AppError::Protoc(format!("protox compiler init failed: {}", e)))?;
+    compiler.include_imports(true);
+    compiler.open_files(&proto_files_str)
+        .map_err(|e| AppError::Protoc(format!("protox compile failed: {}", e)))?;
+    let file_descriptor_set = compiler.file_descriptor_set();
 
-        let proto_path_str = proto_path.to_string_lossy().to_string();
+    let desc_bytes = file_descriptor_set.encode_to_vec();
+    let desc_path = autogen_dir.join("v3_modules.desc");
+    std::fs::write(&desc_path, &desc_bytes)?;
 
-        match protox::compile([&proto_path_str], [&proto_dir_str]) {
-            Ok(file_descriptor_set) => {
-                let desc_bytes = file_descriptor_set.encode_to_vec();
-                let desc_name = file_name.replace(".proto", ".desc");
-                let desc_out = autogen_dir.join(&desc_name);
-                std::fs::write(&desc_out, &desc_bytes)?;
-                tracing::info!("Generated descriptor for {}", file_name);
-            }
-            Err(e) => {
-                tracing::error!("protox failed for {}: {}", file_name, e);
-            }
-        }
-    }
+    tracing::info!(
+        "Generated combined descriptor: {} ({} files, {} bytes)",
+        desc_path.display(),
+        proto_files.len(),
+        desc_bytes.len()
+    );
 
-    // Generate v3 combined descriptor
+    // Also load into registry for immediate use
     let mut registry = ProtoDynamicRegistry::new();
     registry.load_all_v3(&proto_dir, &autogen_dir)?;
 
