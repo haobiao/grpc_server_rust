@@ -283,7 +283,7 @@ impl DialoutV3Service {
     fn trans_gpb_content(
         registry: &Arc<std::sync::RwLock<ProtoDynamicRegistry>>,
         config: &Arc<V3Config>,
-        r: &DialoutV3Args,
+        _r: &DialoutV3Args,
         telemetry: &Telemetry,
         msg_info: &str,
         count: u64,
@@ -464,11 +464,7 @@ fn field_value_to_json(val: &prost_reflect::Value, kind: &prost_reflect::Kind) -
             }
             serde_json::Value::Object(obj)
         }
-        _ => match kind {
-            prost_reflect::Kind::Bool => serde_json::Value::Bool(false),
-            prost_reflect::Kind::String => serde_json::Value::String(String::new()),
-            _ => serde_json::Value::Null,
-        },
+        _ => serde_json::Value::Null,
     }
 }
 

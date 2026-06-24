@@ -23,7 +23,7 @@ pub fn init_file_logging(
     mode: &DialoutMode,
     port: u16,
     max_files: usize,
-    max_size_mb: usize,
+    _max_size_mb: usize,
 ) -> Result<()> {
     let base_dir = std::env::current_dir().map_err(|e| AppError::Io(e))?;
     let log_dir = base_dir.join(LOGS_DIR);
@@ -44,7 +44,7 @@ pub fn init_file_logging(
 
     // Use a timestamped file name for the current log
     let timestamp = Local::now().format("_%Y%m%d%H%M%S");
-    let filename = format!("{}.log", prefix);
+    let _filename = format!("{}.log", prefix);
 
     // Use custom rotation by size via tracing-appender
     let file_appender = RollingFileAppender::builder()

@@ -112,7 +112,7 @@ impl GrpcDialout for DialoutService {
 
             let device_msg_bytes: Bytes = msg.device_msg.encode_to_vec().into();
 
-            let (dev_msg, merged_json) = match chunk_records.add(
+            let (_dev_msg, merged_json) = match chunk_records.add(
                 device_msg_bytes,
                 &sensor_path,
                 json_data,

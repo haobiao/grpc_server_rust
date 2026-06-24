@@ -21,44 +21,55 @@ use error::AppError;
 use server::Server;
 use tracing_subscriber::EnvFilter;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = CliArgs::parse();
+fn main() {
+    // 初始化日志：支持 -d debug / -d info 控制日志级别
+    let log_level = std::env::args()
+        .position(|a| a == "-d" || a == "--debug")
+        .and_then(|pos| std::env::args().nth(pos + 1))
+        .unwrap_or_else(|| "info".to_string());
 
-    // Initialize console logging
-    let filter = match args.debug.as_str() {
+    let filter = match log_level.as_str() {
         "debug" => EnvFilter::new("debug"),
-        "info" => EnvFilter::new("info"),
         _ => EnvFilter::new("info"),
     };
 
-    // Only initialize console subscriber if not already initialized
     let _ = tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_target(false)
         .try_init();
 
-    // Handle special commands
+    // 解析 CLI 参数
+    let args = CliArgs::parse();
+
+    // 处理特殊命令
     if args.generate {
-        proto_dynamic::generate_descriptor_files()?;
+        if let Err(e) = proto_dynamic::generate_descriptor_files() {
+            eprintln!("ERROR: Failed to generate descriptor files: {}", e);
+            std::process::exit(1);
+        }
         tracing::info!("Generated .desc proto descriptor files successfully");
-        return Ok(());
+        return;
     }
 
     let dialout_mode = args.dialout_mode();
 
-    // Setup file logging if requested
+    // 文件日志（如果请求）
     if args.log {
-        logging_setup::init_file_logging(
+        if let Err(e) = logging_setup::init_file_logging(
             &dialout_mode,
             args.port,
             args.logfile_num,
             args.logfile_size,
-        )?;
+        ) {
+            eprintln!("ERROR: Failed to init file logging: {}", e);
+        }
     }
 
-    // Create and start the server
+    // 创建并启动服务器
     let mut srv = Server::new(args.into_server_config(dialout_mode));
-    srv.start()?;
-
-    Ok(())
+    if let Err(e) = srv.start() {
+        eprintln!("ERROR: Server failed to start: {}", e);
+        tracing::error!("Server failed to start: {}", e);
+        std::process::exit(1);
+    }
 }

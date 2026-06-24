@@ -131,7 +131,7 @@ fn parse_udp_header_mobile_impl(data: &[u8]) -> Result<UDPHeaderMobile> {
     let version = (first_word & 0xE000) >> 13;
     let standard = (first_word & 0x1000) >> 12;
     let et = first_word & 0x000F;
-    let header_length = (first_word & 0x00FF);
+    let header_length = first_word & 0x00FF;
 
     // Message length
     let message_length = u16::from_be_bytes([data[2], data[3]]);
@@ -202,9 +202,9 @@ fn parse_option_field(data: &[u8]) -> Result<UdpHeaderOption> {
 
     let option_type = data[0];
     let length = data[1];
-    let segment_number_L = u16::from_be_bytes([data[2], data[3]]);
-    let segment_number = (segment_number_L & 0xFFFE) >> 1;
-    let last = (segment_number_L & 0x0001) != 0;
+    let segment_number_l = u16::from_be_bytes([data[2], data[3]]);
+    let segment_number = (segment_number_l & 0xFFFE) >> 1;
+    let last = (segment_number_l & 0x0001) != 0;
 
     Ok(UdpHeaderOption {
         option_type,
