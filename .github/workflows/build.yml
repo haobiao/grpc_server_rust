@@ -43,17 +43,7 @@ jobs:
         with:
           workspaces: "src-tauri -> target"
           cache-all-crates: "true"
-          prefix-key: "cli-windows-v1"
-
-      # ── 安装 protoc ─────────────────────────────────────────────
-      - name: Install protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          version: "29.x"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify protoc
-        run: protoc --version
+          prefix-key: "cli-windows-v2"
 
       - name: Build release binary (CI profile)
         run: |
@@ -103,20 +93,10 @@ jobs:
           workspaces: "src-tauri -> target"
           cache-all-crates: "true"
           cache-bin: "true"
-          prefix-key: "gui-windows-v1"
+          prefix-key: "gui-windows-v2"
 
       - name: Install Tauri CLI (cached by rust-cache bin)
         run: cargo install tauri-cli --version "^2" --locked
-
-      # ── 安装 protoc ─────────────────────────────────────────────
-      - name: Install protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          version: "29.x"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify protoc
-        run: protoc --version
 
       - name: Build Tauri app (CI profile, no bundle)
         env:

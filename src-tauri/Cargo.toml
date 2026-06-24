@@ -7,6 +7,7 @@ edition = "2021"
 [build-dependencies]
 tonic-build = "0.12"
 prost-build = "0.13"
+protox = "0.7"
 tauri-build = { version = "2", optional = true }
 
 [dependencies]

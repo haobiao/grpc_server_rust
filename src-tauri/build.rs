@@ -12,30 +12,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "dial_out.proto",
     ];
 
-    let google_protos = [
-        "google/protobuf/any.proto",
-        "google/protobuf/descriptor.proto",
-    ];
-
-    let mut proto_files: Vec<PathBuf> = core_protos
+    let proto_files: Vec<PathBuf> = core_protos
         .iter()
         .map(|f| proto_root.join(f))
         .collect();
 
-    let google_proto_files: Vec<PathBuf> = google_protos
+    // Use protox (pure-Rust protoc) to compile .proto files into a
+    // FileDescriptorSet — no external protoc binary required at build time.
+    let proto_files_str: Vec<String> = proto_files
         .iter()
-        .map(|f| proto_root.join(f))
+        .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
         .collect();
 
-    proto_files.extend(google_proto_files);
+    let mut compiler = protox::Compiler::new([&proto_root])
+        .map_err(|e| format!("protox compiler init failed: {}", e))?;
+    compiler.include_imports(true);
+    compiler.open_files(&proto_files_str)
+        .map_err(|e| format!("protox compile failed: {}", e))?;
+    let file_descriptor_set = compiler.file_descriptor_set();
 
-    let protos_include: Vec<PathBuf> = vec![proto_root.clone()];
-
+    // Use tonic-build to generate Rust server code from the FileDescriptorSet.
+    // This replaces the old tonic_build::compile_protos() which needed external protoc.
     tonic_build::configure()
         .build_server(true)
         .build_client(false)
-        .compile_protos(&proto_files, &protos_include)?;
+        .compile_fds(file_descriptor_set);
 
+    // Tauri mobile build hook (no-op when Tauri is not enabled)
     #[cfg(feature = "gui")]
     {
         tauri_build::build();
