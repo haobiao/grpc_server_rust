@@ -199,7 +199,7 @@ fn process_udp_packet(
         }
         Err(e) => {
             // Header parse failed
-            tracing::error!("Failed to parse UDP header: {}", e);
+            tracing::warn!("Failed to parse UDP header: {}", e);
             if data.len() <= 12 {
                 return;
             }
