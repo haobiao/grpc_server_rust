@@ -27,6 +27,13 @@
   "bundle": {
     "active": true,
     "targets": ["nsis", "msi"],
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "../proto/*",
+      "../tls/*"
+    ],
     "windows": {
       "nsis": {
         "installMode": "currentUser",
