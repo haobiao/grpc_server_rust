@@ -97,6 +97,7 @@ impl GRpcDialoutV3 for DialoutV3Service {
             .unwrap_or_else(|| "unknown".to_string());
 
         tracing::info!("Stream connected. (3-layer/GPB) source addr: {}", peer);
+        crate::models::incr_client_count();
 
         let mut stream = request.into_inner();
         let mut chunk_data = BytesMut::new();
@@ -118,6 +119,7 @@ impl GRpcDialoutV3 for DialoutV3Service {
             e
         })? {
             count += 1;
+            crate::models::incr_msg_count();
 
             // Performance mode
             if self.config.performance_mode {

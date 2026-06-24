@@ -119,6 +119,7 @@ async fn run_udp_listener(
                 match result {
                     Ok((len, addr)) => {
                         count += 1;
+                        crate::models::incr_msg_count();
 
                         if config.performance_mode {
                             if count % 1000 == 0 {

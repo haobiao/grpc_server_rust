@@ -1,27 +1,23 @@
 //! Tauri GUI entry point.
 //!
-//! Exposes `start_server` / `stop_server` commands to the frontend and forwards
-//! all tracing logs to the webview via the `log-line` event.
-//!
-//! The server runs on a dedicated OS thread that owns its own tokio runtime;
-//! stopping is signalled through a `tokio::sync::watch` channel, after which
-//! dropping the runtime tears down every spawned task (gRPC serve futures /
-//! UDP listeners).
+//! Exposes `start_server` / `stop_server` / `get_stats` commands to the
+//! frontend and forwards all tracing logs to the webview via the `log-line`
+//! event.
 
 use std::sync::Mutex;
+use std::time::Instant;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
 use tracing::field::{Field, Visit};
 use tracing_subscriber::Layer;
 
-use crate::models::{DialoutMode, ServerConfig};
+use crate::models::{self, DialoutMode, ServerConfig};
 use crate::server::Server;
 
 /// Configuration payload sent from the frontend.
 #[derive(Debug, Clone, Deserialize)]
 pub struct GuiConfig {
-    /// "normal" | "gpb" | "gnmi" | "udp"
     pub mode: String,
     pub port: u16,
     pub tls: bool,
@@ -33,7 +29,6 @@ pub struct GuiConfig {
 }
 
 impl GuiConfig {
-    /// Parse the mode string into a `DialoutMode`.
     fn dialout_mode(&self) -> Result<DialoutMode, String> {
         match self.mode.as_str() {
             "normal" => Ok(DialoutMode::Normal),
@@ -44,7 +39,6 @@ impl GuiConfig {
         }
     }
 
-    /// Build a `ServerConfig` (CLI defaults fill in the GUI-irrelevant fields).
     fn to_server_config(&self, mode: DialoutMode) -> ServerConfig {
         ServerConfig {
             mode,
@@ -52,7 +46,6 @@ impl GuiConfig {
             tls: self.tls,
             orignal: self.orignal,
             format_json: self.format_json,
-            // Always include default fields in the GUI — mirrors CLI default.
             including_default: true,
             performance_mode: self.performance_mode,
             debug: "error".into(),
@@ -65,19 +58,25 @@ impl GuiConfig {
     }
 }
 
+/// Response from `get_stats`.
+#[derive(Debug, Clone, Serialize)]
+pub struct StatsResponse {
+    pub is_running: bool,
+    pub message_count: u64,
+    pub client_count: u64,
+    pub uptime_secs: u64,
+}
+
 /// Holds the background server thread plus the stop sender.
-///
-/// Both are `Option` so they can be taken (and the thread joined) by
-/// `stop_server` / the next `start_server`.
 #[derive(Default)]
 pub struct AppState {
     server_thread: Mutex<Option<std::thread::JoinHandle<()>>>,
     stop_tx: Mutex<Option<tokio::sync::watch::Sender<bool>>>,
+    start_time: Mutex<Option<Instant>>,
 }
 
 // ── tracing → frontend bridge ─────────────────────────────────────────
 
-/// `tracing` layer that mirrors every event to the webview as a `log-line` event.
 struct TauriLogLayer {
     app: tauri::AppHandle,
 }
@@ -104,7 +103,6 @@ where
     }
 }
 
-/// tracing field visitor that collects only the conventional `message` field.
 #[derive(Default)]
 struct LogVisitor {
     message: String,
@@ -124,12 +122,6 @@ impl Visit for LogVisitor {
     }
 }
 
-/// Install the global tracing subscriber so that logs produced by the server
-/// thread (and its tokio worker threads) are forwarded to the frontend.
-///
-/// `set_global_default` permanently installs the subscriber for the whole
-/// process — there is no guard to keep alive. It can only succeed once; a
-/// second call returns `Err`, which we safely ignore.
 fn install_global_logger(app: &tauri::AppHandle) {
     use tracing_subscriber::layer::SubscriberExt;
     let subscriber = tracing_subscriber::registry()
@@ -142,31 +134,30 @@ fn install_global_logger(app: &tauri::AppHandle) {
 
 // ── Tauri commands ─────────────────────────────────────────────────────
 
-/// Start the dial-out server on a background OS thread.
 #[tauri::command]
 async fn start_server(
     config: GuiConfig,
     state: State<'_, AppState>,
     app: tauri::AppHandle,
 ) -> Result<(), String> {
-    // If a previous run finished on its own, reap it before starting again.
     {
         let mut thread_lock = state.server_thread.lock().unwrap();
         if let Some(handle) = thread_lock.as_ref() {
             if !handle.is_finished() {
                 return Err("Server is already running".into());
             }
-            // Thread is done — take & discard the handle to free the slot.
             let _ = thread_lock.take();
         }
-        // Drop the stale stop sender (it has already been consumed).
         *state.stop_tx.lock().unwrap() = None;
     }
+
+    // Reset global counters
+    models::reset_global_stats();
+    *state.start_time.lock().unwrap() = Some(Instant::now());
 
     let mode = config.dialout_mode()?;
     let server_config = config.to_server_config(mode);
 
-    // watch channel used to ask the server thread to stop.
     let (stop_tx, stop_rx) = tokio::sync::watch::channel(false);
 
     let mut server = Server::new(server_config);
@@ -192,12 +183,8 @@ async fn start_server(
     Ok(())
 }
 
-/// Stop the currently running server, if any.
 #[tauri::command]
 async fn stop_server(state: State<'_, AppState>) -> Result<(), String> {
-    // Signal the server thread to stop, then take the handle out of the
-    // mutex *before* awaiting its join (so we don't hold the lock across the
-    // await — that would deadlock any start_server call happening concurrently).
     let handle = {
         if let Some(tx) = state.stop_tx.lock().unwrap().take() {
             let _ = tx.send(true);
@@ -209,25 +196,47 @@ async fn stop_server(state: State<'_, AppState>) -> Result<(), String> {
         let _ = tokio::task::spawn_blocking(move || handle.join()).await;
     }
 
+    *state.start_time.lock().unwrap() = None;
+
     Ok(())
+}
+
+/// Return live statistics to the frontend (polled via `setInterval`).
+#[tauri::command]
+async fn get_stats(state: State<'_, AppState>) -> Result<StatsResponse, String> {
+    let is_running = {
+        let lock = state.server_thread.lock().unwrap();
+        lock.as_ref().map(|h| !h.is_finished()).unwrap_or(false)
+    };
+
+    let uptime_secs = {
+        let lock = state.start_time.lock().unwrap();
+        lock.map(|t| t.elapsed().as_secs()).unwrap_or(0)
+    };
+
+    Ok(StatsResponse {
+        is_running,
+        message_count: models::get_global_msg_count(),
+        client_count: models::get_global_client_count(),
+        uptime_secs,
+    })
 }
 
 // ── entry point ────────────────────────────────────────────────────────
 
-/// Build and run the Tauri application.
 pub fn run() {
     tauri::Builder::default()
         .manage(AppState::default())
         .setup(|app| {
-            // Install the global tracing subscriber so all logs (including
-            // those from the server thread and its tokio workers) are
-            // forwarded to the frontend via the `log-line` event.
             install_global_logger(app.handle());
-
             let _ = app.emit("log-line", "gRPC Dialout Server GUI ready".to_string());
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![start_server, stop_server])
+        .invoke_handler(tauri::generate_handler![
+            start_server,
+            stop_server,
+            get_stats
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

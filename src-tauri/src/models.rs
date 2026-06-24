@@ -4,6 +4,44 @@
 //! Zero-copy: string fields use `Cow<'_, str>` or `bytes::Bytes` where possible.
 
 use std::borrow::Cow;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+// ── 全局统计计数器（供 GUI get_stats 读取）──────────────────────────
+/// 全局消息总数计数器（所有 dialout 模式共享）
+static GLOBAL_MSG_COUNT: AtomicU64 = AtomicU64::new(0);
+/// 全局已连接客户端总数
+static GLOBAL_CLIENT_COUNT: AtomicU64 = AtomicU64::new(0);
+
+/// 增加消息计数（dialout 模块每收到一条消息调用一次）
+#[inline]
+pub fn incr_msg_count() {
+    GLOBAL_MSG_COUNT.fetch_add(1, Ordering::Relaxed);
+}
+
+/// 增加客户端连接计数（每次新连接调用一次）
+#[inline]
+pub fn incr_client_count() {
+    GLOBAL_CLIENT_COUNT.fetch_add(1, Ordering::Relaxed);
+}
+
+/// 读取当前消息总数
+#[inline]
+pub fn get_global_msg_count() -> u64 {
+    GLOBAL_MSG_COUNT.load(Ordering::Relaxed)
+}
+
+/// 读取当前客户端连接总数
+#[inline]
+pub fn get_global_client_count() -> u64 {
+    GLOBAL_CLIENT_COUNT.load(Ordering::Relaxed)
+}
+
+/// 重置所有全局计数器（start_server 时调用）
+#[inline]
+pub fn reset_global_stats() {
+    GLOBAL_MSG_COUNT.store(0, Ordering::Relaxed);
+    GLOBAL_CLIENT_COUNT.store(0, Ordering::Relaxed);
+}
 
 /// gRPC dialout mode enumeration.
 /// Maps Python's integer constants: NORMAL=0, GPB=1, GNMI=2, UDP=3

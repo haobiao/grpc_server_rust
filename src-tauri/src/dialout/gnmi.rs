@@ -82,6 +82,7 @@ impl proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutServi
             "A client connected. (gNMI) source addr: {}",
             peer
         );
+        crate::models::incr_client_count();
 
         let mut stream = request.into_inner();
         let mut count: u64 = 0;
@@ -95,6 +96,7 @@ impl proto::gnmi::sonic::g_nmi_dial_out_server::GNmiDialOut for GnmiDialoutServi
             e
         })? {
             count += 1;
+            crate::models::incr_msg_count();
 
             // Performance mode
             if self.config.performance_mode {

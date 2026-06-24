@@ -71,6 +71,7 @@ impl GrpcDialout for DialoutService {
             .unwrap_or_else(|| "unknown".to_string());
 
         tracing::info!("A client connected. (2-layer) source addr: {}", peer);
+        crate::models::incr_client_count();
 
         let mut stream = request.into_inner();
         let mut client_count: u64 = 0;
@@ -81,6 +82,7 @@ impl GrpcDialout for DialoutService {
             e
         })? {
             client_count += 1;
+            crate::models::incr_msg_count();
 
             // Performance mode: only log every 1000 messages
             if self.config.performance_mode {
