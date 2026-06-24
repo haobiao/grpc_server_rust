@@ -54,8 +54,8 @@ jobs:
       - name: Prepare CLI artifact
         run: |
           mkdir artifacts-cli
-          # 可执行文件
-          cp target/ci/grpc-server-rust.exe artifacts-cli/
+          # 可执行文件（重命名为 CLI 专用名）
+          cp target/ci/grpc-server-rust.exe artifacts-cli/grpc-dialout-cli.exe
           # 打包 proto 和 tls 目录（运行时需要）
           xcopy /E /I /Y proto artifacts-cli\proto
           xcopy /E /I /Y tls  artifacts-cli\tls
@@ -104,14 +104,17 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: cd src-tauri && cargo build --features gui --profile ci
 
+      - name: Rename GUI exe
+        run: |
+          cp target/ci/grpc-server-rust.exe target/ci/grpc-dialout-gui.exe
+
       - name: Upload GUI standalone exe
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: grpc-server-rust-gui-windows
           path: |
-            target/ci/grpc-server-rust.exe
-            target/release/grpc-server-rust.exe
+            target/ci/grpc-dialout-gui.exe
           retention-days: 30
 
   # ══════════════════════════════════════════════════════════════════
