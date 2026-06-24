@@ -18,8 +18,9 @@ use crate::error::{AppError, Result};
 use crate::models::{DialoutMode, UDPHeader};
 use crate::udp_header;
 
-/// Maximum UDP datagram size.
-const UDP_MAX_SIZE: usize = 65535;
+/// Maximum UDP datagram size (65536 = max IP packet payload).
+/// Use 65536 to match Windows internal UDP buffer and avoid WSAEMSGSIZE.
+const UDP_MAX_SIZE: usize = 65536;
 /// Maximum gRPC message size (10 MB).
 const MAX_MESSAGE_SIZE: usize = 10 * 1024 * 1024;
 
@@ -135,8 +136,16 @@ async fn run_udp_listener(
                         process_udp_packet(data, ip_type, count, addr, &config, &mut chunk_data);
                     }
                     Err(e) => {
-                        // Socket timeout is expected
-                        if e.kind() != std::io::ErrorKind::WouldBlock {
+                        // WSAEMSGSIZE (10040) on Windows: the datagram was larger than
+                        // the buffer. The buffer is still filled with the first part.
+                        // We log it as a warning (not error) and try to process the
+                        // truncated data, matching Python's behavior of continuing.
+                        if e.raw_os_error() == Some(10040) {
+                            tracing::warn!(
+                                "UDP datagram too large for buffer ({}), truncated ({}): {}",
+                                buf.len(), ip_type, e
+                            );
+                        } else if e.kind() != std::io::ErrorKind::WouldBlock {
                             tracing::error!("UDP recv error ({}): {}", ip_type, e);
                         }
                     }
