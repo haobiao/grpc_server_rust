@@ -4,6 +4,7 @@
 //! Handles TLS configuration, port binding, and graceful shutdown via Ctrl+C.
 
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use tonic::transport::{Certificate, Identity, Server as TonicServer, ServerTlsConfig};
 
@@ -88,12 +89,13 @@ impl Server {
 
     /// Start gRPC 2-layer dial-out (Normal mode).
     async fn start_normal(&self) -> Result<()> {
-        // IPv6 双栈监听：[::] 同时接受 IPv4 和 IPv6 连接
-        let addr: SocketAddr = format!("[::]:{}", self.config.port)
+        let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
+        let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
-            .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.config.port)));
+            .unwrap_or(addr_v4);
 
-        tracing::info!("Server {} listen on: {}", self.config.mode, addr);
+        tracing::info!("Server {} listen on: {} (IPv4) and {} (IPv6)",
+            self.config.mode, addr_v4, addr_v6);
 
         let config = DialoutConfig {
             orignal: self.config.orignal,
@@ -102,39 +104,59 @@ impl Server {
             performance_mode: self.config.performance_mode,
         };
 
-        let service = GrpcDialoutServer::new(DialoutService::new(config));
-
         if self.config.tls {
-            tracing::info!("Server {} listen on: {} with TLS", self.config.mode, addr);
             let tls_config = self.load_tls_config()?;
-            let tls = ServerTlsConfig::new()
+
+            let tls_v4 = ServerTlsConfig::new()
+                .identity(tls_config.identity.clone())
+                .client_ca_root(tls_config.ca.clone());
+            let tls_v6 = ServerTlsConfig::new()
                 .identity(tls_config.identity)
                 .client_ca_root(tls_config.ca);
-            TonicServer::builder()
-                .tls_config(tls)?
+
+            let service_v4 = GrpcDialoutServer::new(DialoutService::new(config.clone()));
+            let service_v6 = GrpcDialoutServer::new(DialoutService::new(config));
+
+            let server_v4 = TonicServer::builder()
+                .tls_config(tls_v4)?
                 .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service)
-                .serve(addr)
-                .await
-                .map_err(Into::into)
+                .add_service(service_v4)
+                .serve(addr_v4);
+
+            let server_v6 = TonicServer::builder()
+                .tls_config(tls_v6)?
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
+                .add_service(service_v6)
+                .serve(addr_v6);
+
+            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
         } else {
-            TonicServer::builder()
+            let service_v4 = GrpcDialoutServer::new(DialoutService::new(config.clone()));
+            let service_v6 = GrpcDialoutServer::new(DialoutService::new(config));
+
+            let server_v4 = TonicServer::builder()
                 .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service)
-                .serve(addr)
-                .await
-                .map_err(Into::into)
+                .add_service(service_v4)
+                .serve(addr_v4);
+
+            let server_v6 = TonicServer::builder()
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
+                .add_service(service_v6)
+                .serve(addr_v6);
+
+            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
         }
     }
 
     /// Start gRPC 3-layer dial-out (GPB mode).
     async fn start_gpb_v3(&self) -> Result<()> {
-        // IPv6 双栈监听
-        let addr: SocketAddr = format!("[::]:{}", self.config.port)
+        let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
+        let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
-            .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.config.port)));
+            .unwrap_or(addr_v4);
 
-        tracing::info!("Server {} listen on: {}", self.config.mode, addr);
+        tracing::info!("Server {} listen on: {} (IPv4) and {} (IPv6)",
+            self.config.mode, addr_v4, addr_v6);
 
         // Load dynamic proto registry
         let mut registry = ProtoDynamicRegistry::new();
@@ -154,6 +176,7 @@ impl Server {
 
         registry.load_all_v3(&proto_dir, &autogen_dir)?;
 
+        let registry = Arc::new(registry);
         let config = V3Config {
             orignal: self.config.orignal,
             format_json: self.config.format_json,
@@ -161,38 +184,59 @@ impl Server {
             performance_mode: self.config.performance_mode,
         };
 
-        let service = GRpcDialoutV3Server::new(DialoutV3Service::new(registry, config));
-
         if self.config.tls {
             let tls_config = self.load_tls_config()?;
-            let tls = ServerTlsConfig::new()
+
+            let tls_v4 = ServerTlsConfig::new()
+                .identity(tls_config.identity.clone())
+                .client_ca_root(tls_config.ca.clone());
+            let tls_v6 = ServerTlsConfig::new()
                 .identity(tls_config.identity)
                 .client_ca_root(tls_config.ca);
-            TonicServer::builder()
-                .tls_config(tls)?
+
+            let service_v4 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config.clone()));
+            let service_v6 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config));
+
+            let server_v4 = TonicServer::builder()
+                .tls_config(tls_v4)?
                 .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service)
-                .serve(addr)
-                .await
-                .map_err(Into::into)
+                .add_service(service_v4)
+                .serve(addr_v4);
+
+            let server_v6 = TonicServer::builder()
+                .tls_config(tls_v6)?
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
+                .add_service(service_v6)
+                .serve(addr_v6);
+
+            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
         } else {
-            TonicServer::builder()
+            let service_v4 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config.clone()));
+            let service_v6 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config));
+
+            let server_v4 = TonicServer::builder()
                 .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service)
-                .serve(addr)
-                .await
-                .map_err(Into::into)
+                .add_service(service_v4)
+                .serve(addr_v4);
+
+            let server_v6 = TonicServer::builder()
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
+                .add_service(service_v6)
+                .serve(addr_v6);
+
+            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
         }
     }
 
     /// Start gNMI dial-out.
     async fn start_gnmi(&self) -> Result<()> {
-        // IPv6 双栈监听
-        let addr: SocketAddr = format!("[::]:{}", self.config.port)
+        let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
+        let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
-            .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.config.port)));
+            .unwrap_or(addr_v4);
 
-        tracing::info!("Server {} listen on: {}", self.config.mode, addr);
+        tracing::info!("Server {} listen on: {} (IPv4) and {} (IPv6)",
+            self.config.mode, addr_v4, addr_v6);
 
         let config = GnmiConfig {
             orignal: self.config.orignal,
@@ -201,27 +245,47 @@ impl Server {
             performance_mode: self.config.performance_mode,
         };
 
-        let service = GNmiDialOutServer::new(GnmiDialoutService::new(config));
-
         if self.config.tls {
             let tls_config = self.load_tls_config()?;
-            let tls = ServerTlsConfig::new()
+
+            let tls_v4 = ServerTlsConfig::new()
+                .identity(tls_config.identity.clone())
+                .client_ca_root(tls_config.ca.clone());
+            let tls_v6 = ServerTlsConfig::new()
                 .identity(tls_config.identity)
                 .client_ca_root(tls_config.ca);
-            TonicServer::builder()
-                .tls_config(tls)?
+
+            let service_v4 = GNmiDialOutServer::new(GnmiDialoutService::new(config.clone()));
+            let service_v6 = GNmiDialOutServer::new(GnmiDialoutService::new(config));
+
+            let server_v4 = TonicServer::builder()
+                .tls_config(tls_v4)?
                 .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service)
-                .serve(addr)
-                .await
-                .map_err(Into::into)
+                .add_service(service_v4)
+                .serve(addr_v4);
+
+            let server_v6 = TonicServer::builder()
+                .tls_config(tls_v6)?
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
+                .add_service(service_v6)
+                .serve(addr_v6);
+
+            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
         } else {
-            TonicServer::builder()
+            let service_v4 = GNmiDialOutServer::new(GnmiDialoutService::new(config.clone()));
+            let service_v6 = GNmiDialOutServer::new(GnmiDialoutService::new(config));
+
+            let server_v4 = TonicServer::builder()
                 .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service)
-                .serve(addr)
-                .await
-                .map_err(Into::into)
+                .add_service(service_v4)
+                .serve(addr_v4);
+
+            let server_v6 = TonicServer::builder()
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
+                .add_service(service_v6)
+                .serve(addr_v6);
+
+            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
         }
     }
 

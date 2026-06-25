@@ -168,6 +168,16 @@ impl ProtoDynamicRegistry {
     }
 }
 
+impl Clone for ProtoDynamicRegistry {
+    fn clone(&self) -> Self {
+        Self {
+            pool: self.pool.clone(),
+            message_by_name: self.message_by_name.clone(),
+            v3_files: self.v3_files.clone(),
+        }
+    }
+}
+
 impl Default for ProtoDynamicRegistry {
     fn default() -> Self {
         Self::new()

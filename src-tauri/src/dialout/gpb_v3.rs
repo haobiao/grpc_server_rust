@@ -1,4 +1,4 @@
-//! gRPC 3-layer dial-out (GPB) service implementation.
+//! gRPC 3-layer dial-out service implementation.
 //!
 //! Implements the `gRPCDialoutV3` service from `grpc_dialout_v3.proto`.
 //! Supports both JSON and GPB-encoded telemetry data.
@@ -31,6 +31,7 @@ use proto::grpc_dialout_v3::{
 use proto::telemetry::Telemetry;
 
 /// gRPC 3-layer dialout service.
+#[derive(Clone)]
 pub struct DialoutV3Service {
     /// Runtime proto registry for dynamic message decoding.
     registry: Arc<std::sync::RwLock<ProtoDynamicRegistry>>,
@@ -49,9 +50,9 @@ pub struct V3Config {
 
 impl DialoutV3Service {
     /// Create a new DialoutV3Service.
-    pub fn new(registry: ProtoDynamicRegistry, config: V3Config) -> Self {
+    pub fn new(registry: Arc<ProtoDynamicRegistry>, config: V3Config) -> Self {
         Self {
-            registry: Arc::new(std::sync::RwLock::new(registry)),
+            registry: Arc::new(std::sync::RwLock::new((*registry).clone())),
             config: Arc::new(config),
         }
     }
@@ -96,7 +97,7 @@ impl GRpcDialoutV3 for DialoutV3Service {
             .map(|a| a.to_string())
             .unwrap_or_else(|| "unknown".to_string());
 
-        tracing::info!("Stream connected. (3-layer/GPB) source addr: {}", peer);
+        tracing::info!("Stream connected. (3-layer) source addr: {}", peer);
         crate::models::incr_client_count();
 
         let mut stream = request.into_inner();
@@ -161,7 +162,7 @@ impl GRpcDialoutV3 for DialoutV3Service {
             }
         }
 
-        tracing::info!("Stream disconnected. (3-layer/GPB) source addr: {}", peer);
+        tracing::info!("Stream disconnected. (3-layer) source addr: {}", peer);
 
         // Return an empty response stream
         let empty_stream = tokio_stream::wrappers::ReceiverStream::new(rx);
