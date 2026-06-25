@@ -449,7 +449,7 @@ pub fn run() {
                     log_count_atomic.fetch_sub(n, std::sync::atomic::Ordering::Relaxed);
 
                     // Emit to frontend unless only_log_file is set
-                    if !only_log_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                    if !only_log_flag {
                         let batch = messages.join("\n");
                         let _ = app_handle.emit("log-line", &batch);
                     }
