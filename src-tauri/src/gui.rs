@@ -6,6 +6,7 @@
 
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc as std_mpsc;
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
@@ -88,16 +89,20 @@ pub struct AppState {
     server_thread: Mutex<Option<std::thread::JoinHandle<()>>>,
     stop_tx: Mutex<Option<tokio::sync::watch::Sender<bool>>>,
     start_time: Mutex<Option<Instant>>,
-    /// Shared log file writer — `None` when file logging is disabled.
+    /// Channel sender for log messages (tracing layer → Tauri main thread)
+    log_tx: std_mpsc::Sender<String>,
+    /// Shared file writer for optional log-to-file
     file_writer: SharedFileWriter,
 }
 
 impl Default for AppState {
     fn default() -> Self {
+        let (log_tx, _log_rx) = std_mpsc::channel::<String>();
         Self {
             server_thread: Mutex::new(None),
             stop_tx: Mutex::new(None),
             start_time: Mutex::new(None),
+            log_tx,
             file_writer: Arc::new(Mutex::new(None)),
         }
     }
@@ -110,7 +115,7 @@ impl Default for AppState {
 pub type SharedFileWriter = Arc<Mutex<Option<std::fs::File>>>;
 
 struct TauriLogLayer {
-    app: tauri::AppHandle,
+    log_tx: std_mpsc::Sender<String>,
     file_writer: SharedFileWriter,
 }
 
@@ -133,8 +138,8 @@ where
             format!("{}: {}", level, visitor.message)
         };
 
-        // Emit to frontend
-        let _ = self.app.emit("log-line", &msg);
+        // Send log to Tauri main thread via channel
+        let _ = self.log_tx.send(msg.clone());
 
         // Optionally write to file
         if let Ok(mut fw) = self.file_writer.lock() {
@@ -159,18 +164,26 @@ impl Visit for LogVisitor {
     }
 
     fn record_debug(&mut self, field: &Field, value: &dyn std::fmt::Debug) {
+        // For the "message" field, use Display-like formatting (not Debug)
+        // to avoid extra quotes and escape characters on long strings.
         if field.name() == "message" {
-            self.message = format!("{:?}", value);
+            // Use the Debug formatter but strip surrounding quotes if it's a string
+            let debug_str = format!("{:?}", value);
+            // If it looks like a quoted string ("..."), strip the quotes
+            if debug_str.starts_with('"') && debug_str.ends_with('"') {
+                self.message = debug_str[1..debug_str.len()-1].to_string();
+            } else {
+                self.message = debug_str;
+            }
         }
     }
 }
 
-fn install_global_logger(app: &tauri::AppHandle, file_writer: SharedFileWriter) {
+fn install_global_logger(log_tx: std_mpsc::Sender<String>, file_writer: SharedFileWriter) {
     use tracing_subscriber::layer::SubscriberExt;
     let subscriber = tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new("info"))
-        .with(tracing_subscriber::fmt::layer().with_target(false))
-        .with(TauriLogLayer { app: app.clone(), file_writer });
+        .with(TauriLogLayer { log_tx, file_writer });
 
     let _ = tracing::subscriber::set_global_default(subscriber);
 }
@@ -324,11 +337,42 @@ fn open_log_file(config: &GuiConfig) -> std::io::Result<std::fs::File> {
 }
 
 pub fn run() {
+    // Create log channel: tracing layer sends via log_tx, Tauri main loop receives via log_rx
+    let (log_tx, log_rx) = std_mpsc::channel::<String>();
+
     tauri::Builder::default()
-        .manage(AppState::default())
-        .setup(|app| {
+        .manage(AppState {
+            log_tx: log_tx.clone(),
+            ..Default::default()
+        })
+        .setup(move |app| {
+            // Install global tracing subscriber with channel bridge
             let state: tauri::State<AppState> = app.state();
-            install_global_logger(app.handle(), state.file_writer.clone());
+            install_global_logger(log_tx, state.file_writer.clone());
+
+            // Spawn a Tauri-side task to forward log messages to the frontend
+            let app_handle = app.handle().clone();
+            let log_rx = std::sync::Arc::new(std::sync::Mutex::new(log_rx));
+            let app_handle_clone = app_handle.clone();
+            let log_rx_clone = log_rx.clone();
+
+            // Poll the channel every 100ms and batch-emit to frontend
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                    let mut messages = Vec::new();
+                    {
+                        let rx = log_rx_clone.lock().unwrap();
+                        while let Ok(msg) = rx.try_recv() {
+                            messages.push(msg);
+                        }
+                    }
+                    for msg in messages {
+                        let _ = app_handle_clone.emit("log-line", &msg);
+                    }
+                }
+            });
+
             let _ = app.emit("log-line", "gRPC Dialout Server GUI ready".to_string());
             Ok(())
         })
