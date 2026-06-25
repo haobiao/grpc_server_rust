@@ -92,8 +92,8 @@ pub struct AppState {
     log_tx: std_mpsc::Sender<String>,
     file_writer: SharedFileWriter,
     only_log_file: std::sync::atomic::AtomicBool,
-    logfile_max_bytes: u64,
-    logfile_max_num: usize,
+    logfile_max_bytes: Mutex<u64>,
+    logfile_max_num: Mutex<usize>,
     logfile_dir: Mutex<std::path::PathBuf>,
     logfile_prefix: Mutex<String>,
 }
@@ -109,8 +109,8 @@ impl Default for AppState {
             log_tx,
             file_writer: Arc::new(Mutex::new(None)),
             only_log_file: std::sync::atomic::AtomicBool::new(false),
-            logfile_max_bytes: 5 * 1024 * 1024,
-            logfile_max_num: 50,
+            logfile_max_bytes: Mutex::new(5 * 1024 * 1024),
+            logfile_max_num: Mutex::new(50),
             logfile_dir: Mutex::new(std::path::PathBuf::from("logs")),
             logfile_prefix: Mutex::new(String::new()),
         }
@@ -253,8 +253,8 @@ async fn start_server(
         state.only_log_file.store(config.only_log_file, std::sync::atomic::Ordering::Relaxed);
 
         // Store rotation config
-        state.logfile_max_bytes = (config.logfile_size as u64) * 1024 * 1024;
-        state.logfile_max_num = config.logfile_num;
+        *state.logfile_max_bytes.lock().unwrap() = (config.logfile_size as u64) * 1024 * 1024;
+        *state.logfile_max_num.lock().unwrap() = config.logfile_num;
 
         match open_log_file(&config) {
             Ok((file, dir, prefix)) => {
@@ -421,9 +421,9 @@ pub fn run() {
             let log_rx_clone = log_rx.clone();
             let state_ref = app.state::<AppState>();
             let file_writer: SharedFileWriter = state_ref.file_writer.clone();
-            let only_log_flag = state_ref.only_log_file.clone();
-            let max_bytes = state_ref.logfile_max_bytes.clone();
-            let max_num = state_ref.logfile_max_num.clone();
+            let only_log_flag = state_ref.only_log_file.load(std::sync::atomic::Ordering::Relaxed);
+            let max_bytes = *state_ref.logfile_max_bytes.lock().unwrap();
+            let max_num = *state_ref.logfile_max_num.lock().unwrap();
             let log_dir = state_ref.logfile_dir.lock().unwrap().clone();
             let log_prefix = state_ref.logfile_prefix.lock().unwrap().clone();
             let log_count_atomic = LOG_BACKLOG_COUNTER.clone();
