@@ -782,6 +782,7 @@
         let logLines = [];
         let autoScroll = true;
         let msgCount = 0;
+        let logListenerReady = false;
 
         // ── DOM ──
         const $ = id => document.getElementById(id);
@@ -963,6 +964,7 @@
                 els.statusDot.classList.remove('running');
                 // Re-enable settings
                 setSettingsDisabled(false);
+                appendLog('已停止');
             } catch (e) { appendLog(`停止失败: ${e}`); }
         });
 
@@ -981,14 +983,16 @@
         }, 2000);
 
         // ── Backend events ──
-        // listen() returns a Promise in Tauri 2; ensure it's properly registered
+        // Register log listener immediately — Tauri 2 listen() is async and returns a Promise.
+        // We must register BEFORE any invoke('start_server') call so events aren't missed.
         listen('log-line', (event) => {
             appendLog(event.payload);
+        }).then(() => {
+            logListenerReady = true;
         }).catch(e => console.error('Failed to listen for log-line:', e));
 
         // ── Init ──
         appendLog('gRPC Dialout Server GUI 已就绪');
-        appendLog('选择模式和端口后点击「开始采集」');
     </script>
 </body>
 </html>

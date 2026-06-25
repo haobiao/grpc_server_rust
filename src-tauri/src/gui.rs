@@ -97,7 +97,10 @@ pub struct AppState {
 
 impl Default for AppState {
     fn default() -> Self {
+        // Use a dummy channel; the real one is created in run()
         let (log_tx, _log_rx) = std_mpsc::channel::<String>();
+        // Discard _log_rx immediately — it will never be read
+        drop(_log_rx);
         Self {
             server_thread: Mutex::new(None),
             stop_tx: Mutex::new(None),

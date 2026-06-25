@@ -247,7 +247,6 @@ impl Server {
                 including_default: self.config.including_default,
                 performance_mode: self.config.performance_mode,
             };
-            tracing::info!("UDP server listen on: {} (IPv4+IPv6)", self.config.port);
             Some(tokio::spawn(async move {
                 let mut server = UdpDialoutServer::new(udp_config);
                 server.start().await
