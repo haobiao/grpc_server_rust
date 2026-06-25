@@ -871,28 +871,30 @@
         function appendLog(text) {
             // Batch messages may be joined with \n — split into individual lines
             const lines = text.split('\n');
+            const newEntries = [];
             for (const line of lines) {
                 if (!line) continue;
                 const level = parseLogLevel(line);
                 const time = now();
-                logLines.push({ time, level, text: line });
+                const entry = { time, level, text: line };
+                logLines.push(entry);
+                newEntries.push(entry);
             }
 
-            // Trim if over limit — remove oldest, remove corresponding DOM nodes
+            // Trim if over limit — remove oldest from array
             if (logLines.length > MAX_LINES) {
                 const removeCount = logLines.length - MAX_LINES;
                 logLines.splice(0, removeCount);
-                // Remove oldest DOM nodes (cheaper than full re-render)
+                // Remove oldest DOM nodes
                 for (let i = 0; i < removeCount && logArea.children.length > 0; i++) {
                     logArea.removeChild(logArea.firstChild);
                 }
             }
 
-            // Append only the new lines (not a full re-render)
-            const frag = document.createDocumentFragment();
+            // Append only the new entries to DOM
             const filter = els.logSearch.value.trim().toLowerCase();
-            for (let i = lines.length > 0 ? logLines.length - lines.length : 0; i < logLines.length; i++) {
-                const entry = logLines[i];
+            const frag = document.createDocumentFragment();
+            for (const entry of newEntries) {
                 if (filter && !entry.text.toLowerCase().includes(filter)) continue;
                 const div = document.createElement('div');
                 div.className = `log-line log-line--${entry.level}`;
