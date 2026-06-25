@@ -171,7 +171,8 @@ impl Server {
                 let tls_config = self.load_tls_config()?;
                 let tls = ServerTlsConfig::new()
                     .identity(tls_config.identity.clone())
-                    .client_auth_optional(tls_config.ca.clone());
+                    .client_ca_root(tls_config.ca.clone())
+                    .client_auth_optional(true);
                 builder = builder.tls_config(tls)?;
                 tracing::info!("gRPC {} server listen on: {} with TLS", label, addr);
             } else {
