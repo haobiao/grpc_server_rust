@@ -91,11 +91,6 @@ pub struct AppState {
     start_time: Mutex<Option<Instant>>,
     log_tx: std_mpsc::Sender<String>,
     file_writer: SharedFileWriter,
-    only_log_file: std::sync::atomic::AtomicBool,
-    logfile_max_bytes: Mutex<u64>,
-    logfile_max_num: Mutex<usize>,
-    logfile_dir: Mutex<std::path::PathBuf>,
-    logfile_prefix: Mutex<String>,
 }
 
 impl Default for AppState {
@@ -108,11 +103,6 @@ impl Default for AppState {
             start_time: Mutex::new(None),
             log_tx,
             file_writer: Arc::new(Mutex::new(None)),
-            only_log_file: std::sync::atomic::AtomicBool::new(false),
-            logfile_max_bytes: Mutex::new(5 * 1024 * 1024),
-            logfile_max_num: Mutex::new(50),
-            logfile_dir: Mutex::new(std::path::PathBuf::from("logs")),
-            logfile_prefix: Mutex::new(String::new()),
         }
     }
 }
@@ -134,6 +124,14 @@ const MAX_CHANNEL_BACKLOG: usize = 2000;
 /// the Tauri async poll task (consumer).
 static LOG_BACKLOG_COUNTER: std::sync::LazyLock<Arc<std::sync::atomic::AtomicUsize>> =
     std::sync::LazyLock::new(|| Arc::new(std::sync::atomic::AtomicUsize::new(0)));
+
+/// Global log config — updated by start_server, read by async poll task.
+/// Using globals avoids lifetime issues with Tauri State (which is &T only).
+static LOG_ONLY_FILE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static LOG_MAX_BYTES: std::sync::Mutex<u64> = std::sync::Mutex::new(5 * 1024 * 1024);
+static LOG_MAX_NUM: std::sync::Mutex<usize> = std::sync::Mutex::new(50);
+static LOG_DIR: std::sync::Mutex<std::path::PathBuf> = std::sync::Mutex::new(std::path::PathBuf::from("logs"));
+static LOG_PREFIX: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
 
 impl<S> Layer<S> for TauriLogLayer
 where
@@ -249,18 +247,16 @@ async fn start_server(
     }
 
     if config.log_output {
-        // Set only_log_file flag BEFORE opening file
-        state.only_log_file.store(config.only_log_file, std::sync::atomic::Ordering::Relaxed);
-
-        // Store rotation config
-        *state.logfile_max_bytes.lock().unwrap() = (config.logfile_size as u64) * 1024 * 1024;
-        *state.logfile_max_num.lock().unwrap() = config.logfile_num;
+        // Set global log config (read by async poll task on every iteration)
+        LOG_ONLY_FILE.store(config.only_log_file, std::sync::atomic::Ordering::Relaxed);
+        *LOG_MAX_BYTES.lock().unwrap() = (config.logfile_size as u64) * 1024 * 1024;
+        *LOG_MAX_NUM.lock().unwrap() = config.logfile_num;
 
         match open_log_file(&config) {
             Ok((file, dir, prefix)) => {
                 *state.file_writer.lock().unwrap() = Some(file);
-                *state.logfile_dir.lock().unwrap() = dir;
-                *state.logfile_prefix.lock().unwrap() = prefix;
+                *LOG_DIR.lock().unwrap() = dir;
+                *LOG_PREFIX.lock().unwrap() = prefix;
             }
             Err(e) => {
                 let _ = app.emit("log-line", format!("WARNING: Failed to open log file: {}", e));
@@ -416,22 +412,13 @@ pub fn run() {
             ..Default::default()
         })
         .setup(move |app| {
-            // Spawn a Tauri-side task to forward log messages to the frontend
             let app_handle = app.handle().clone();
             let log_rx_clone = log_rx.clone();
-            let state_ref = app.state::<AppState>();
-            let file_writer: SharedFileWriter = state_ref.file_writer.clone();
-            let only_log_flag = state_ref.only_log_file.load(std::sync::atomic::Ordering::Relaxed);
-            let max_bytes = *state_ref.logfile_max_bytes.lock().unwrap();
-            let max_num = *state_ref.logfile_max_num.lock().unwrap();
-            let log_dir = state_ref.logfile_dir.lock().unwrap().clone();
-            let log_prefix = state_ref.logfile_prefix.lock().unwrap().clone();
+            let file_writer: SharedFileWriter = app.state::<AppState>().file_writer.clone();
             let log_count_atomic = LOG_BACKLOG_COUNTER.clone();
 
             // Poll the channel every 100ms and batch-emit to frontend + write file
             tauri::async_runtime::spawn(async move {
-                let max_bytes = std::sync::Arc::new(max_bytes); // already u64 (Copy)
-                let max_num = std::sync::Arc::new(max_num);
                 let mut current_file_size: u64 = 0u64;
 
                 loop {
@@ -448,8 +435,19 @@ pub fn run() {
                     let n = messages.len();
                     log_count_atomic.fetch_sub(n, std::sync::atomic::Ordering::Relaxed);
 
+                    // Read latest config from globals (updated by start_server)
+                    let only_log = LOG_ONLY_FILE.load(std::sync::atomic::Ordering::Relaxed);
+                    let max_bytes = *LOG_MAX_BYTES.lock().unwrap();
+                    let max_num = *LOG_MAX_NUM.lock().unwrap();
+                    let log_dir = LOG_DIR.lock().unwrap().clone();
+                    let log_prefix = LOG_PREFIX.lock().unwrap().clone();
+
+                    // Reset size counter when file_writer changes (new session)
+                    let fw_empty = file_writer.lock().map_or(true, |fw| fw.is_none());
+                    if fw_empty { current_file_size = 0; }
+
                     // Emit to frontend unless only_log_file is set
-                    if !only_log_flag {
+                    if !only_log {
                         let batch = messages.join("\n");
                         let _ = app_handle.emit("log-line", &batch);
                     }
@@ -457,16 +455,15 @@ pub fn run() {
                     // Write to file if enabled, with size-based rotation
                     if let Ok(mut fw) = file_writer.lock() {
                         if let Some(ref mut file) = *fw {
-                            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
                             for msg in &messages {
+                                let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
                                 let line = format!("{} {}\n", timestamp, msg);
                                 let line_bytes = line.len() as u64;
-                                // Check if writing this line would exceed max size
-                                if current_file_size + line_bytes > *max_bytes {
-                                    // Rotate: drop current file, create new one
-                                    drop(std::mem::replace(&mut *fw, None));
+
+                                if current_file_size + line_bytes > max_bytes {
+                                    let _ = file.flush();
                                     // Delete old files beyond max_num
-                                    cleanup_old_logs(&log_dir, &log_prefix, *max_num);
+                                    cleanup_old_logs(&log_dir, &log_prefix, max_num);
                                     // Create new file
                                     let ts = chrono::Local::now().format("%Y%m%d%H%M%S");
                                     let new_name = format!("{}_{}.log", log_prefix, ts);
@@ -480,7 +477,7 @@ pub fn run() {
                                             *fw = Some(new_file);
                                             current_file_size = 0;
                                         }
-                                        Err(_) => { break; }
+                                        Err(_) => break,
                                     }
                                 }
                                 if let Some(ref mut f) = *fw {
