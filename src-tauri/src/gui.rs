@@ -119,11 +119,15 @@ pub type SharedFileWriter = Arc<Mutex<Option<std::fs::File>>>;
 
 struct TauriLogLayer {
     log_tx: std_mpsc::Sender<String>,
-    log_count: Arc<std::sync::atomic::AtomicUsize>,
     file_writer: SharedFileWriter,
 }
 
 const MAX_CHANNEL_BACKLOG: usize = 2000;
+
+/// Global atomic counter shared between TauriLogLayer (producer) and
+/// the Tauri async poll task (consumer).
+static LOG_BACKLOG_COUNTER: std::sync::LazyLock<Arc<std::sync::atomic::AtomicUsize>> =
+    std::sync::LazyLock::new(|| Arc::new(std::sync::atomic::AtomicUsize::new(0)));
 
 impl<S> Layer<S> for TauriLogLayer
 where
@@ -144,17 +148,22 @@ where
             format!("{}: {}", level, visitor.message)
         };
 
-        // Drop old logs if channel backlog exceeds threshold
-        let count = self.log_count.load(std::sync::atomic::Ordering::Relaxed);
-        if count >= MAX_CHANNEL_BACKLOG {
-            // Channel is full — drain old messages to make room
-            // We can't drain std_mpsc from sender side, so just skip this log
+        // Drop this log if channel backlog exceeds threshold.
+        // The consumer (Tauri async poll) decrements log_count after draining.
+        if LOG_BACKLOG_COUNTER.load(std::sync::atomic::Ordering::Relaxed) >= MAX_CHANNEL_BACKLOG {
+            // Still write to file even if we skip the channel
+            if let Ok(mut fw) = self.file_writer.lock() {
+                if let Some(ref mut file) = *fw {
+                    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+                    let _ = writeln!(file, "{} {}", timestamp, msg);
+                }
+            }
             return;
         }
 
         // Send log to Tauri main thread via channel
         if self.log_tx.send(msg.clone()).is_ok() {
-            self.log_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            LOG_BACKLOG_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
 
         // Optionally write to file
@@ -199,11 +208,7 @@ fn install_global_logger(log_tx: std_mpsc::Sender<String>, file_writer: SharedFi
     use tracing_subscriber::layer::SubscriberExt;
     let subscriber = tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new("info"))
-        .with(TauriLogLayer {
-            log_tx,
-            log_count: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
-            file_writer,
-        });
+        .with(TauriLogLayer { log_tx, file_writer });
 
     let _ = tracing::subscriber::set_global_default(subscriber);
 }
@@ -374,19 +379,15 @@ pub fn run() {
             ..Default::default()
         })
         .setup(move |app| {
-            // Update file_writer in the global subscriber is not possible after
-            // set_global_default. Instead, we store file_writer in AppState and
-            // the TauriLogLayer references AppState's file_writer via a shared Arc.
-            // For now, file writing is handled in the async poll task below.
-
             // Spawn a Tauri-side task to forward log messages to the frontend
             let app_handle = app.handle().clone();
             let log_rx_clone = log_rx.clone();
             let file_writer: SharedFileWriter = app.state::<AppState>().file_writer.clone();
+            // Get the atomic counter used by TauriLogLayer to track backlog
+            let log_count_atomic = LOG_BACKLOG_COUNTER.clone();
 
             // Poll the channel every 100ms and batch-emit to frontend + write file
             tauri::async_runtime::spawn(async move {
-                let mut log_count = 0usize; // track messages in flight
                 loop {
                     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                     let mut messages = Vec::new();
@@ -397,6 +398,10 @@ pub fn run() {
                         }
                     }
                     if messages.is_empty() { continue; }
+
+                    // Decrement the backlog counter so sender can resume
+                    let n = messages.len();
+                    log_count_atomic.fetch_sub(n, std::sync::atomic::Ordering::Relaxed);
 
                     // Batch emit: send all messages as a single event to reduce IPC overhead
                     let batch = messages.join("\n");
