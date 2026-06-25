@@ -119,8 +119,11 @@ pub type SharedFileWriter = Arc<Mutex<Option<std::fs::File>>>;
 
 struct TauriLogLayer {
     log_tx: std_mpsc::Sender<String>,
+    log_count: Arc<std::sync::atomic::AtomicUsize>,
     file_writer: SharedFileWriter,
 }
+
+const MAX_CHANNEL_BACKLOG: usize = 2000;
 
 impl<S> Layer<S> for TauriLogLayer
 where
@@ -141,8 +144,18 @@ where
             format!("{}: {}", level, visitor.message)
         };
 
+        // Drop old logs if channel backlog exceeds threshold
+        let count = self.log_count.load(std::sync::atomic::Ordering::Relaxed);
+        if count >= MAX_CHANNEL_BACKLOG {
+            // Channel is full — drain old messages to make room
+            // We can't drain std_mpsc from sender side, so just skip this log
+            return;
+        }
+
         // Send log to Tauri main thread via channel
-        let _ = self.log_tx.send(msg.clone());
+        if self.log_tx.send(msg.clone()).is_ok() {
+            self.log_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
 
         // Optionally write to file
         if let Ok(mut fw) = self.file_writer.lock() {
@@ -186,7 +199,11 @@ fn install_global_logger(log_tx: std_mpsc::Sender<String>, file_writer: SharedFi
     use tracing_subscriber::layer::SubscriberExt;
     let subscriber = tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new("info"))
-        .with(TauriLogLayer { log_tx, file_writer });
+        .with(TauriLogLayer {
+            log_tx,
+            log_count: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
+            file_writer,
+        });
 
     let _ = tracing::subscriber::set_global_default(subscriber);
 }
@@ -369,6 +386,7 @@ pub fn run() {
 
             // Poll the channel every 100ms and batch-emit to frontend + write file
             tauri::async_runtime::spawn(async move {
+                let mut log_count = 0usize; // track messages in flight
                 loop {
                     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                     let mut messages = Vec::new();
@@ -378,9 +396,12 @@ pub fn run() {
                             messages.push(msg);
                         }
                     }
-                    for msg in &messages {
-                        let _ = app_handle.emit("log-line", msg);
-                    }
+                    if messages.is_empty() { continue; }
+
+                    // Batch emit: send all messages as a single event to reduce IPC overhead
+                    let batch = messages.join("\n");
+                    let _ = app_handle.emit("log-line", &batch);
+
                     // Write to file if enabled
                     if let Ok(mut fw) = file_writer.lock() {
                         if let Some(ref mut file) = *fw {

@@ -776,7 +776,7 @@
 
         // ── State ──
         const logArea = document.getElementById('log-area');
-        const MAX_LINES = 5000;
+        const MAX_LINES = 2000;
         let logLines = [];
         let autoScroll = true;
         let msgCount = 0;
@@ -869,15 +869,47 @@
         }
 
         function appendLog(text) {
-            const level = parseLogLevel(text);
-            const time = now();
-            logLines.push({ time, level, text });
-            if (logLines.length > MAX_LINES) {
-                logLines = logLines.slice(-MAX_LINES);
-                renderAll();
-            } else {
-                appendDom(time, level, text);
+            // Batch messages may be joined with \n — split into individual lines
+            const lines = text.split('\n');
+            for (const line of lines) {
+                if (!line) continue;
+                const level = parseLogLevel(line);
+                const time = now();
+                logLines.push({ time, level, text: line });
             }
+
+            // Trim if over limit — remove oldest, remove corresponding DOM nodes
+            if (logLines.length > MAX_LINES) {
+                const removeCount = logLines.length - MAX_LINES;
+                logLines.splice(0, removeCount);
+                // Remove oldest DOM nodes (cheaper than full re-render)
+                for (let i = 0; i < removeCount && logArea.children.length > 0; i++) {
+                    logArea.removeChild(logArea.firstChild);
+                }
+            }
+
+            // Append only the new lines (not a full re-render)
+            const frag = document.createDocumentFragment();
+            const filter = els.logSearch.value.trim().toLowerCase();
+            for (let i = lines.length > 0 ? logLines.length - lines.length : 0; i < logLines.length; i++) {
+                const entry = logLines[i];
+                if (filter && !entry.text.toLowerCase().includes(filter)) continue;
+                const div = document.createElement('div');
+                div.className = `log-line log-line--${entry.level}`;
+                const timeEl = document.createElement('span');
+                timeEl.className = 'log-line__time';
+                timeEl.textContent = entry.time;
+                const levelEl = document.createElement('span');
+                levelEl.className = 'log-line__level';
+                levelEl.textContent = entry.level;
+                const textEl = document.createElement('span');
+                textEl.className = 'log-line__text';
+                textEl.textContent = entry.text;
+                div.append(timeEl, levelEl, textEl);
+                frag.appendChild(div);
+            }
+            logArea.appendChild(frag);
+
             if (autoScroll) logArea.scrollTop = logArea.scrollHeight;
         }
 
