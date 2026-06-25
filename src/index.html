@@ -393,7 +393,7 @@
             font-size: 11.5px;
             line-height: 1.55;
         }
-        .log-output::-webkit-scrollbar { width: 6px; }
+        .log-output::-webkit-scrollbar { width: 12px; }
         .log-output::-webkit-scrollbar-track { background: transparent; }
         .log-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
@@ -561,7 +561,7 @@
     <!-- ═══ Tab 1: Collector ═══ -->
     <div class="tab-panel active" id="tab-collector">
         <div class="collector-panel">
-            <!-- Control bar -->
+            <!-- Control bar with stats inline -->
             <div class="control-bar">
                 <div class="input-group" id="mode-group">
                     <span class="input-label">模式</span>
@@ -578,20 +578,7 @@
                     <input type="number" class="apple-input" id="port" value="50051" min="1" max="65535" />
                 </div>
 
-                <div class="btn-group">
-                    <button class="apple-btn btn-primary" id="btn-start">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        开始采集
-                    </button>
-                    <button class="apple-btn btn-danger" id="btn-stop" disabled>
-                        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
-                        停止
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="stats-row">
+                <!-- Inline stats (moved from separate row) -->
                 <div class="stat-pill">
                     <div class="stat-pill__icon stat-pill__icon--status">
                         <div class="status-dot" id="status-dot"></div>
@@ -627,6 +614,17 @@
                         <span class="stat-pill__label">地址</span>
                         <span class="stat-pill__value" id="stat-addr">—</span>
                     </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="apple-btn btn-primary" id="btn-start">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        开始采集
+                    </button>
+                    <button class="apple-btn btn-danger" id="btn-stop" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                        停止
+                    </button>
                 </div>
             </div>
 
