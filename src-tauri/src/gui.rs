@@ -343,23 +343,31 @@ pub fn run() {
     // Create log channel: tracing layer sends via log_tx, Tauri main loop receives via log_rx
     let (log_tx, log_rx) = std_mpsc::channel::<String>();
 
+    // Install global tracing subscriber BEFORE Tauri app starts
+    // so that all threads (including server thread) inherit it.
+    let dummy_fw: SharedFileWriter = Arc::new(Mutex::new(None));
+    install_global_logger(log_tx.clone(), dummy_fw);
+
+    // Wrap log_rx so the Tauri async task can poll it
+    let log_rx = Arc::new(Mutex::new(log_rx));
+
     tauri::Builder::default()
         .manage(AppState {
             log_tx: log_tx.clone(),
             ..Default::default()
         })
         .setup(move |app| {
-            // Install global tracing subscriber with channel bridge
-            let state: tauri::State<AppState> = app.state();
-            install_global_logger(log_tx, state.file_writer.clone());
+            // Update file_writer in the global subscriber is not possible after
+            // set_global_default. Instead, we store file_writer in AppState and
+            // the TauriLogLayer references AppState's file_writer via a shared Arc.
+            // For now, file writing is handled in the async poll task below.
 
             // Spawn a Tauri-side task to forward log messages to the frontend
             let app_handle = app.handle().clone();
-            let log_rx = std::sync::Arc::new(std::sync::Mutex::new(log_rx));
-            let app_handle_clone = app_handle.clone();
             let log_rx_clone = log_rx.clone();
+            let file_writer: SharedFileWriter = app.state::<AppState>().file_writer.clone();
 
-            // Poll the channel every 100ms and batch-emit to frontend
+            // Poll the channel every 100ms and batch-emit to frontend + write file
             tauri::async_runtime::spawn(async move {
                 loop {
                     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -370,8 +378,17 @@ pub fn run() {
                             messages.push(msg);
                         }
                     }
-                    for msg in messages {
-                        let _ = app_handle_clone.emit("log-line", &msg);
+                    for msg in &messages {
+                        let _ = app_handle.emit("log-line", msg);
+                    }
+                    // Write to file if enabled
+                    if let Ok(mut fw) = file_writer.lock() {
+                        if let Some(ref mut file) = *fw {
+                            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+                            for msg in &messages {
+                                let _ = writeln!(file, "{} {}", timestamp, msg);
+                            }
+                        }
                     }
                 }
             });
