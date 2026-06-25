@@ -71,12 +71,12 @@ fn run_cli() {
         return;
     }
 
-    let dialout_mode = args.dialout_mode();
+    let dialout_modes = args.dialout_modes();
 
     // 文件日志（如果请求）
     if args.log {
         if let Err(e) = logging_setup::init_file_logging(
-            &dialout_mode,
+            &dialout_modes,
             args.port,
             args.logfile_num,
             args.logfile_size,
@@ -86,7 +86,7 @@ fn run_cli() {
     }
 
     // 创建并启动服务器
-    let mut srv = Server::new(args.into_server_config(dialout_mode));
+    let mut srv = Server::new(args.into_server_config(dialout_modes));
     if let Err(e) = srv.start() {
         eprintln!("ERROR: Server failed to start: {}", e);
         tracing::error!("Server failed to start: {}", e);

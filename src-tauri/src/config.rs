@@ -27,21 +27,21 @@ use clap::Parser;
                   -u, --udp       UDP 2 层拨号"
 )]
 pub struct CliArgs {
-    // ── 拨号模式（互斥，不指定则默认 normal）──────────────────────
-    /// gRPC 2 层拨号 (JSON 格式) — 默认模式
-    #[arg(short = 'n', long = "normal", group = "mode")]
+    // ── 拨号模式（独立 flag，可任意组合）─────────────────────────
+    /// gRPC 2 层拨号 (JSON 格式)
+    #[arg(short = 'n', long = "normal")]
     pub normal: bool,
 
     /// gRPC 3 层拨号 (GPB/Telemetry)
-    #[arg(short = 'b', long = "gpb", group = "mode")]
+    #[arg(short = 'b', long = "gpb")]
     pub gpb: bool,
 
     /// gRPC gNMI 拨号
-    #[arg(short = 'm', long = "gnmi", group = "mode")]
+    #[arg(short = 'm', long = "gnmi")]
     pub gnmi: bool,
 
     /// UDP 2 层拨号
-    #[arg(short = 'u', long = "udp", group = "mode")]
+    #[arg(short = 'u', long = "udp")]
     pub udp: bool,
 
     // ── 通用选项 ────────────────────────────────────────────────────
@@ -96,24 +96,25 @@ pub struct CliArgs {
 }
 
 impl CliArgs {
-    /// Determine the dialout mode from CLI flags.
-    /// Maps Python's `ArgsPreProc` logic.
-    pub fn dialout_mode(&self) -> DialoutMode {
-        if self.gpb {
-            DialoutMode::Gpb
-        } else if self.gnmi {
-            DialoutMode::Gnmi
-        } else if self.udp {
-            DialoutMode::Udp
+    /// Determine the dialout modes from CLI flags.
+    /// 不指定任何模式时默认启用 Normal。
+    pub fn dialout_modes(&self) -> Vec<DialoutMode> {
+        let mut modes = Vec::new();
+        if self.normal { modes.push(DialoutMode::Normal); }
+        if self.gpb { modes.push(DialoutMode::Gpb); }
+        if self.gnmi { modes.push(DialoutMode::Gnmi); }
+        if self.udp { modes.push(DialoutMode::Udp); }
+        if modes.is_empty() {
+            vec![DialoutMode::Normal]
         } else {
-            DialoutMode::Normal
+            modes
         }
     }
 
     /// Convert CLI args into a `ServerConfig`.
-    pub fn into_server_config(self, mode: DialoutMode) -> ServerConfig {
+    pub fn into_server_config(self, modes: Vec<DialoutMode>) -> ServerConfig {
         ServerConfig {
-            mode,
+            modes,
             port: self.port,
             tls: self.tls,
             orignal: self.orignal,

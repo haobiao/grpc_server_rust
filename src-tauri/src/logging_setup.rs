@@ -20,7 +20,7 @@ const BACKUP_DIR: &str = "backup";
 /// Creates the log directory if needed, cleans up old backup logs,
 /// and attaches a rolling file appender to the tracing subscriber.
 pub fn init_file_logging(
-    mode: &DialoutMode,
+    modes: &[DialoutMode],
     port: u16,
     max_files: usize,
     _max_size_mb: usize,
@@ -36,10 +36,13 @@ pub fn init_file_logging(
     rotate_old_logs(&log_dir)?;
 
     // Build a mode-specific filename prefix
-    let mode_name = mode.as_str()
-        .replace(' ', "_")
-        .replace('-', "_")
-        .to_lowercase();
+    let mode_name = if modes.len() > 1 {
+        "multi_mode".to_string()
+    } else {
+        modes.first()
+            .map(|m| m.as_str().replace(' ', "_").replace('-', "_").to_lowercase())
+            .unwrap_or_else(|| "server".into())
+    };
     let prefix = format!("{}_server_{}", mode_name, port);
 
     // Use a timestamped file name for the current log

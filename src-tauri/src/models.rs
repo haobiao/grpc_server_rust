@@ -58,6 +58,14 @@ pub enum DialoutMode {
 }
 
 impl DialoutMode {
+    /// 所有四种模式（用于「全模式启动」）
+    pub const ALL: [DialoutMode; 4] = [
+        DialoutMode::Normal,
+        DialoutMode::Gpb,
+        DialoutMode::Gnmi,
+        DialoutMode::Udp,
+    ];
+
     /// Returns a human-readable mode name (zero-copy).
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -65,6 +73,17 @@ impl DialoutMode {
             DialoutMode::Gpb => "gRPC 3-layer dial-out",
             DialoutMode::Gnmi => "gRPC gNMI dialout",
             DialoutMode::Udp => "UDP 2-layer dialout",
+        }
+    }
+
+    /// 从字符串解析模式（GUI / CLI 共用）
+    pub fn from_str_lossy(s: &str) -> Option<Self> {
+        match s {
+            "normal" | "Normal" => Some(DialoutMode::Normal),
+            "gpb" | "Gpb" | "GPB" => Some(DialoutMode::Gpb),
+            "gnmi" | "Gnmi" | "GNMI" => Some(DialoutMode::Gnmi),
+            "udp" | "Udp" | "UDP" => Some(DialoutMode::Udp),
+            _ => None,
         }
     }
 }
@@ -76,9 +95,37 @@ impl std::fmt::Display for DialoutMode {
 }
 
 /// Server configuration (maps Python `Server.__init__` fields).
+///
+/// 便捷方法：判断是否包含特定模式
+impl ServerConfig {
+    /// 当前是否包含 gRPC 模式（Normal / Gpb / Gnmi 任一）
+    pub fn has_grpc(&self) -> bool {
+        self.modes.iter().any(|m| {
+            matches!(m, DialoutMode::Normal | DialoutMode::Gpb | DialoutMode::Gnmi)
+        })
+    }
+
+    /// 当前是否包含 UDP 模式
+    pub fn has_udp(&self) -> bool {
+        self.modes.iter().any(|m| matches!(m, DialoutMode::Udp))
+    }
+
+    /// 返回需要启动的 gRPC 模式子集
+    pub fn grpc_modes(&self) -> Vec<DialoutMode> {
+        self.modes
+            .iter()
+            .copied()
+            .filter(|m| !matches!(m, DialoutMode::Udp))
+            .collect()
+    }
+}
+
+/// Server configuration (maps Python `Server.__init__` fields).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ServerConfig {
-    pub mode: DialoutMode,
+    /// 当前启用的 dialout 模式列表（支持多模式共存）
+    /// 空数组等价于 `[DialoutMode::Normal]`
+    pub modes: Vec<DialoutMode>,
     pub port: u16,
     pub tls: bool,
     /// Output original data without parsing
@@ -106,7 +153,7 @@ pub struct ServerConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            mode: DialoutMode::Normal,
+            modes: vec![DialoutMode::Normal],
             port: 50051,
             tls: false,
             orignal: false,

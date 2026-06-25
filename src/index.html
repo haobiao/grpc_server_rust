@@ -563,7 +563,7 @@
         <div class="collector-panel">
             <!-- Control bar -->
             <div class="control-bar">
-                <div class="input-group">
+                <div class="input-group" id="mode-group">
                     <span class="input-label">模式</span>
                     <select class="apple-select" id="mode">
                         <option value="normal">gRPC 2-layer</option>
@@ -712,6 +712,16 @@
             <div class="settings-group">
                 <div class="settings-item">
                     <div>
+                        <div class="settings-item__label">全模式启动</div>
+                        <div class="settings-item__desc">开启后同时监听全部四种模式，无需在采集页单独选择</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="all-mode" checked>
+                        <span class="toggle__slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item">
+                    <div>
                         <div class="settings-item__label">TLS 加密</div>
                         <div class="settings-item__desc">启用 TLS 安全传输（UDP 不支持）</div>
                     </div>
@@ -778,6 +788,7 @@
         const els = {
             mode: $('mode'), port: $('port'),
             tls: $('tls'), orignal: $('orignal'), format: $('format'), perf: $('perf'),
+            allMode: $('all-mode'), modeGroup: $('mode-group'),
             logFile: $('log-file'), onlyLog: $('only-log'),
             logSize: $('log-size'), logNum: $('log-num'),
             btnStart: $('btn-start'), btnStop: $('btn-stop'),
@@ -830,6 +841,15 @@
         els.logFile.addEventListener('change', () => {
             els.onlyLog.disabled = !els.logFile.checked;
         });
+
+        // ── 全模式开关联动 ──
+        function applyAllModeState() {
+            const allMode = els.allMode.checked;
+            // 全模式开启时隐藏模式选择器
+            els.modeGroup.style.display = allMode ? 'none' : '';
+        }
+        els.allMode.addEventListener('change', applyAllModeState);
+        applyAllModeState(); // 初始状态（默认开启）
 
         // ── Auto scroll ──
         els.btnScroll.addEventListener('click', () => {
@@ -889,21 +909,28 @@
         // ── Disable settings during run ──
         function setSettingsDisabled(disabled) {
             const ids = ['mode', 'port', 'tls', 'orignal', 'format', 'perf',
-                         'log-file', 'only-log', 'log-size', 'log-num'];
+                         'log-file', 'only-log', 'log-size', 'log-num', 'all-mode'];
             ids.forEach(id => {
                 const el = $(id);
                 if (el) el.disabled = disabled;
             });
+            // 运行中也隐藏模式选择器
+            if (disabled) els.modeGroup.style.display = 'none';
+            else applyAllModeState();
         }
 
         // ── Server control ──
         els.btnStart.addEventListener('click', async () => {
-            const mode = els.mode.value;
+            const allMode = els.allMode.checked;
+            // 全模式启动时传全部四个模式，否则传下拉框选中的单个模式
+            const modes = allMode
+                ? ["normal", "gpb", "gnmi", "udp"]
+                : [els.mode.value];
             const port = parseInt(els.port.value);
             try {
                 await invoke('start_server', {
                     config: {
-                        mode, port,
+                        modes, port,
                         tls: els.tls.checked, orignal: els.orignal.checked,
                         formatJson: els.format.checked, performanceMode: els.perf.checked,
                         logOutput: els.logFile.checked, onlyLogFile: els.onlyLog.checked,
@@ -916,6 +943,9 @@
                 els.statStatus.textContent = '运行中';
                 els.statusDot.classList.add('running');
                 els.statAddr.textContent = `0.0.0.0:${port}`;
+                if (allMode) {
+                    appendLog('全模式启动: gRPC 2-layer + gRPC 3-layer + gNMI + UDP');
+                }
                 // Disable all settings while running
                 setSettingsDisabled(true);
             } catch (e) {

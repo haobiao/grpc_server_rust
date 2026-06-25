@@ -1,7 +1,9 @@
 //! Unified server management.
 //!
-//! Creates and starts the appropriate dialout service based on the configured mode.
-//! Handles TLS configuration, port binding, and graceful shutdown via Ctrl+C.
+//! Creates and starts the appropriate dialout services based on the configured modes.
+//! Supports multi-mode coexistence: gRPC services share a single TCP port (HTTP/2 multiplexing),
+//! while UDP runs independently on the same port number (separate protocol namespace).
+//! Handles TLS configuration, port binding, and graceful shutdown.
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -41,7 +43,7 @@ impl Server {
         Self { config }
     }
 
-    /// Start the server based on the configured mode (CLI entry point).
+    /// Start the server based on the configured modes (CLI entry point).
     pub fn start(&mut self) -> Result<()> {
         let rt = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
@@ -77,230 +79,201 @@ impl Server {
         })
     }
 
-    /// Dispatch to the appropriate dialout service based on the configured mode.
+    /// Dispatch to multi-mode coexistence start logic.
     async fn start_inner(&self) -> Result<()> {
-        match self.config.mode {
-            DialoutMode::Normal => self.start_normal().await,
-            DialoutMode::Gpb => self.start_gpb_v3().await,
-            DialoutMode::Gnmi => self.start_gnmi().await,
-            DialoutMode::Udp => self.start_udp().await,
-        }
+        self.start_multi().await
     }
 
-    /// Start gRPC 2-layer dial-out (Normal mode).
-    async fn start_normal(&self) -> Result<()> {
+    /// Start all configured modes concurrently.
+    ///
+    /// - gRPC modes (Normal/Gpb/Gnmi) share a single TCP port via HTTP/2 multiplexing.
+    /// - UDP mode runs independently on the same port number (separate protocol namespace).
+    /// - IPv4 and IPv6 servers run concurrently via `tokio::try_join!`.
+    async fn start_multi(&self) -> Result<()> {
+        let modes: Vec<DialoutMode> = if self.config.modes.is_empty() {
+            vec![DialoutMode::Normal]
+        } else {
+            self.config.modes.clone()
+        };
+
+        let mode_names: Vec<&str> = modes.iter().map(|m| m.as_str()).collect();
+        tracing::info!("Server modes [{}] on port {}", mode_names.join(", "), self.config.port);
+
         let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
         let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
             .unwrap_or(addr_v4);
 
-        tracing::info!("Server {} listen on: {} (IPv4) and {} (IPv6)",
-            self.config.mode, addr_v4, addr_v6);
+        // ── Determine which sub-services to start ──────────────────────
+        let grpc_modes = self.config.grpc_modes();
+        let has_udp = self.config.has_udp();
 
-        let config = DialoutConfig {
+        if grpc_modes.is_empty() && !has_udp {
+            return Err(AppError::Config("No dialout modes configured".into()));
+        }
+
+        // ── Build shared config objects ────────────────────────────────
+        let dialout_config = DialoutConfig {
+            orignal: self.config.orignal,
+            format_json: self.config.format_json,
+            including_default: self.config.including_default,
+            performance_mode: self.config.performance_mode,
+        };
+        let gnmi_config = GnmiConfig {
+            orignal: self.config.orignal,
+            format_json: self.config.format_json,
+            including_default: self.config.including_default,
+            performance_mode: self.config.performance_mode,
+        };
+        let v3_config = V3Config {
             orignal: self.config.orignal,
             format_json: self.config.format_json,
             including_default: self.config.including_default,
             performance_mode: self.config.performance_mode,
         };
 
-        if self.config.tls {
-            let tls_config = self.load_tls_config()?;
+        // ── Load proto registry if GPB mode is active ──────────────────
+        let registry = if grpc_modes.contains(&DialoutMode::Gpb) {
+            let mut reg = ProtoDynamicRegistry::new();
+            let current_dir = std::env::current_dir()?;
+            let proto_dir = current_dir.join(PROTO_DIR);
+            let autogen_dir = current_dir.join(AUTOGEN_DIR);
 
-            let tls_v4 = ServerTlsConfig::new()
-                .identity(tls_config.identity.clone())
-                .client_ca_root(tls_config.ca.clone());
-            let tls_v6 = ServerTlsConfig::new()
-                .identity(tls_config.identity)
-                .client_ca_root(tls_config.ca);
-
-            let service_v4 = GrpcDialoutServer::new(DialoutService::new(config.clone()));
-            let service_v6 = GrpcDialoutServer::new(DialoutService::new(config));
-
-            let server_v4 = TonicServer::builder()
-                .tls_config(tls_v4)?
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v4)
-                .serve(addr_v4);
-
-            let server_v6 = TonicServer::builder()
-                .tls_config(tls_v6)?
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v6)
-                .serve(addr_v6);
-
-            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
-        } else {
-            let service_v4 = GrpcDialoutServer::new(DialoutService::new(config.clone()));
-            let service_v6 = GrpcDialoutServer::new(DialoutService::new(config));
-
-            let server_v4 = TonicServer::builder()
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v4)
-                .serve(addr_v4);
-
-            let server_v6 = TonicServer::builder()
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v6)
-                .serve(addr_v6);
-
-            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
-        }
-    }
-
-    /// Start gRPC 3-layer dial-out (GPB mode).
-    async fn start_gpb_v3(&self) -> Result<()> {
-        let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
-        let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
-            .parse()
-            .unwrap_or(addr_v4);
-
-        tracing::info!("Server {} listen on: {} (IPv4) and {} (IPv6)",
-            self.config.mode, addr_v4, addr_v6);
-
-        // Load dynamic proto registry
-        let mut registry = ProtoDynamicRegistry::new();
-        let current_dir = std::env::current_dir()?;
-        let proto_dir = current_dir.join(PROTO_DIR);
-        let autogen_dir = current_dir.join(AUTOGEN_DIR);
-
-        if !autogen_dir.exists() {
-            if !proto_dir.exists() {
-                return Err(AppError::Config(format!(
-                    "Proto directory '{}' does not exist",
-                    proto_dir.display()
-                )));
+            if !autogen_dir.exists() {
+                if !proto_dir.exists() {
+                    return Err(AppError::Config(format!(
+                        "Proto directory '{}' does not exist",
+                        proto_dir.display()
+                    )));
+                }
+                std::fs::create_dir_all(&autogen_dir)?;
             }
-            std::fs::create_dir_all(&autogen_dir)?;
-        }
-
-        registry.load_all_v3(&proto_dir, &autogen_dir)?;
-
-        let registry = Arc::new(registry);
-        let config = V3Config {
-            orignal: self.config.orignal,
-            format_json: self.config.format_json,
-            including_default: self.config.including_default,
-            performance_mode: self.config.performance_mode,
-        };
-
-        if self.config.tls {
-            let tls_config = self.load_tls_config()?;
-
-            let tls_v4 = ServerTlsConfig::new()
-                .identity(tls_config.identity.clone())
-                .client_ca_root(tls_config.ca.clone());
-            let tls_v6 = ServerTlsConfig::new()
-                .identity(tls_config.identity)
-                .client_ca_root(tls_config.ca);
-
-            let service_v4 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config.clone()));
-            let service_v6 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config));
-
-            let server_v4 = TonicServer::builder()
-                .tls_config(tls_v4)?
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v4)
-                .serve(addr_v4);
-
-            let server_v6 = TonicServer::builder()
-                .tls_config(tls_v6)?
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v6)
-                .serve(addr_v6);
-
-            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
+            reg.load_all_v3(&proto_dir, &autogen_dir)?;
+            Some(Arc::new(reg))
         } else {
-            let service_v4 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config.clone()));
-            let service_v6 = GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), config));
-
-            let server_v4 = TonicServer::builder()
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v4)
-                .serve(addr_v4);
-
-            let server_v6 = TonicServer::builder()
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v6)
-                .serve(addr_v6);
-
-            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
-        }
-    }
-
-    /// Start gNMI dial-out.
-    async fn start_gnmi(&self) -> Result<()> {
-        let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
-        let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
-            .parse()
-            .unwrap_or(addr_v4);
-
-        tracing::info!("Server {} listen on: {} (IPv4) and {} (IPv6)",
-            self.config.mode, addr_v4, addr_v6);
-
-        let config = GnmiConfig {
-            orignal: self.config.orignal,
-            format_json: self.config.format_json,
-            including_default: self.config.including_default,
-            performance_mode: self.config.performance_mode,
+            None
         };
 
-        if self.config.tls {
-            let tls_config = self.load_tls_config()?;
+        // ── Build gRPC router with chainable add_service ──────────────
+        // We need two routers (IPv4 + IPv6), each with the same set of services.
 
-            let tls_v4 = ServerTlsConfig::new()
-                .identity(tls_config.identity.clone())
-                .client_ca_root(tls_config.ca.clone());
-            let tls_v6 = ServerTlsConfig::new()
-                .identity(tls_config.identity)
-                .client_ca_root(tls_config.ca);
+        let mut futures: Vec<tokio::task::JoinHandle<std::result::Result<(), tonic::transport::Error>>> = Vec::new();
 
-            let service_v4 = GNmiDialOutServer::new(GnmiDialoutService::new(config.clone()));
-            let service_v6 = GNmiDialOutServer::new(GnmiDialoutService::new(config));
+        for (addr, label) in [(addr_v4, "IPv4"), (addr_v6, "IPv6")] {
+            if grpc_modes.is_empty() {
+                continue;
+            }
 
-            let server_v4 = TonicServer::builder()
-                .tls_config(tls_v4)?
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v4)
-                .serve(addr_v4);
+            let mut builder = TonicServer::builder()
+                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32));
 
-            let server_v6 = TonicServer::builder()
-                .tls_config(tls_v6)?
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v6)
-                .serve(addr_v6);
+            if self.config.tls {
+                let tls_config = self.load_tls_config()?;
+                let tls = ServerTlsConfig::new()
+                    .identity(tls_config.identity.clone())
+                    .client_ca_optional(tls_config.ca.clone());
+                builder = builder.tls_config(tls)?;
+                tracing::info!("gRPC {} server listen on: {} with TLS", label, addr);
+            } else {
+                tracing::info!("gRPC {} server listen on: {}", label, addr);
+            }
 
-            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
+            // Chain services — each add_service returns a new router type.
+            // We handle up to 3 gRPC modes via nested add_service calls.
+            if grpc_modes.contains(&DialoutMode::Normal)
+                && grpc_modes.contains(&DialoutMode::Gpb)
+                && grpc_modes.contains(&DialoutMode::Gnmi)
+            {
+                // All three gRPC modes
+                let registry = registry.clone().unwrap_or_default();
+                let r = builder
+                    .add_service(GrpcDialoutServer::new(DialoutService::new(dialout_config.clone())))
+                    .add_service(GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), v3_config.clone())))
+                    .add_service(GNmiDialOutServer::new(GnmiDialoutService::new(gnmi_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            } else if grpc_modes.contains(&DialoutMode::Normal)
+                && grpc_modes.contains(&DialoutMode::Gpb)
+            {
+                let registry = registry.clone().unwrap_or_default();
+                let r = builder
+                    .add_service(GrpcDialoutServer::new(DialoutService::new(dialout_config.clone())))
+                    .add_service(GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), v3_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            } else if grpc_modes.contains(&DialoutMode::Normal)
+                && grpc_modes.contains(&DialoutMode::Gnmi)
+            {
+                let r = builder
+                    .add_service(GrpcDialoutServer::new(DialoutService::new(dialout_config.clone())))
+                    .add_service(GNmiDialOutServer::new(GnmiDialoutService::new(gnmi_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            } else if grpc_modes.contains(&DialoutMode::Gpb)
+                && grpc_modes.contains(&DialoutMode::Gnmi)
+            {
+                let registry = registry.clone().unwrap_or_default();
+                let r = builder
+                    .add_service(GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), v3_config.clone())))
+                    .add_service(GNmiDialOutServer::new(GnmiDialoutService::new(gnmi_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            } else if grpc_modes.contains(&DialoutMode::Normal) {
+                let r = builder
+                    .add_service(GrpcDialoutServer::new(DialoutService::new(dialout_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            } else if grpc_modes.contains(&DialoutMode::Gpb) {
+                let registry = registry.clone().unwrap_or_default();
+                let r = builder
+                    .add_service(GRpcDialoutV3Server::new(DialoutV3Service::new(registry.clone(), v3_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            } else if grpc_modes.contains(&DialoutMode::Gnmi) {
+                let r = builder
+                    .add_service(GNmiDialOutServer::new(GnmiDialoutService::new(gnmi_config.clone())))
+                    .serve(addr);
+                futures.push(tokio::spawn(r));
+            }
+        }
+
+        // ── Start UDP if configured ────────────────────────────────────
+        let udp_handle = if has_udp {
+            let udp_config = UdpConfig {
+                port: self.config.port,
+                orignal: self.config.orignal,
+                format_json: self.config.format_json,
+                including_default: self.config.including_default,
+                performance_mode: self.config.performance_mode,
+            };
+            tracing::info!("UDP server listen on: {} (IPv4+IPv6)", self.config.port);
+            Some(tokio::spawn(async move {
+                let mut server = UdpDialoutServer::new(udp_config);
+                server.start().await
+            }))
         } else {
-            let service_v4 = GNmiDialOutServer::new(GnmiDialoutService::new(config.clone()));
-            let service_v6 = GNmiDialOutServer::new(GnmiDialoutService::new(config));
-
-            let server_v4 = TonicServer::builder()
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v4)
-                .serve(addr_v4);
-
-            let server_v6 = TonicServer::builder()
-                .max_frame_size(Some(MAX_MESSAGE_SIZE as u32))
-                .add_service(service_v6)
-                .serve(addr_v6);
-
-            tokio::try_join!(server_v4, server_v6).map(|_| ()).map_err(Into::into)
-        }
-    }
-
-    /// Start UDP dial-out.
-    async fn start_udp(&self) -> Result<()> {
-        let config = UdpConfig {
-            port: self.config.port,
-            orignal: self.config.orignal,
-            format_json: self.config.format_json,
-            including_default: self.config.including_default,
-            performance_mode: self.config.performance_mode,
+            None
         };
 
-        let mut server = UdpDialoutServer::new(config);
-        server.start().await
+        // ── Wait for all futures ───────────────────────────────────────
+        // Collect results; first error aborts.
+        for f in &mut futures {
+            match f.await {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => return Err(AppError::from(e)),
+                Err(e) => return Err(AppError::Config(format!("gRPC task panicked: {}", e))),
+            }
+        }
+
+        if let Some(handle) = udp_handle {
+            match handle.await {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => return Err(e),
+                Err(e) => return Err(AppError::Config(format!("UDP task panicked: {}", e))),
+            }
+        }
+
+        Ok(())
     }
 
     /// Load TLS configuration from the tls/ directory.

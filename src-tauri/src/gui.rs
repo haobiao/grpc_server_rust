@@ -19,7 +19,8 @@ use crate::server::Server;
 /// Configuration payload sent from the frontend.
 #[derive(Debug, Clone, Deserialize)]
 pub struct GuiConfig {
-    pub mode: String,
+    /// 选中的模式列表（单模式 ["normal"] 或全模式 ["normal","gpb","gnmi","udp"]）
+    pub modes: Vec<String>,
     pub port: u16,
     pub tls: bool,
     pub orignal: bool,
@@ -41,19 +42,22 @@ fn default_logfile_size() -> usize { 100 }
 fn default_logfile_num() -> usize { 50 }
 
 impl GuiConfig {
-    fn dialout_mode(&self) -> Result<DialoutMode, String> {
-        match self.mode.as_str() {
-            "normal" => Ok(DialoutMode::Normal),
-            "gpb" => Ok(DialoutMode::Gpb),
-            "gnmi" => Ok(DialoutMode::Gnmi),
-            "udp" => Ok(DialoutMode::Udp),
-            other => Err(format!("Unknown mode: '{}'", other)),
+    fn dialout_modes(&self) -> Result<Vec<DialoutMode>, String> {
+        if self.modes.is_empty() {
+            return Ok(vec![DialoutMode::Normal]);
         }
+        self.modes
+            .iter()
+            .map(|s| {
+                DialoutMode::from_str_lossy(s)
+                    .ok_or_else(|| format!("Unknown mode: '{}'", s))
+            })
+            .collect()
     }
 
-    fn to_server_config(&self, mode: DialoutMode) -> ServerConfig {
+    fn to_server_config(&self, modes: Vec<DialoutMode>) -> ServerConfig {
         ServerConfig {
-            mode,
+            modes,
             port: self.port,
             tls: self.tls,
             orignal: self.orignal,
@@ -211,8 +215,8 @@ async fn start_server(
         }
     }
 
-    let mode = config.dialout_mode()?;
-    let server_config = config.to_server_config(mode);
+    let modes = config.dialout_modes()?;
+    let server_config = config.to_server_config(modes);
 
     let (stop_tx, stop_rx) = tokio::sync::watch::channel(false);
 
@@ -290,12 +294,17 @@ fn open_log_file(config: &GuiConfig) -> std::io::Result<std::fs::File> {
         std::fs::create_dir_all(&log_dir)?;
     }
 
-    let mode_name = match config.mode.as_str() {
-        "normal" => "grpc_2_layer",
-        "gpb" => "grpc_3_layer",
-        "gnmi" => "grpc_gnmi",
-        "udp" => "udp_2_layer",
-        _ => "server",
+    // 根据选中的模式数量生成日志文件名前缀
+    let mode_name = if config.modes.len() > 1 {
+        "multi_mode".to_string()
+    } else {
+        match config.modes.first().map(|s| s.as_str()) {
+            Some("normal") => "grpc_2_layer".into(),
+            Some("gpb") => "grpc_3_layer".into(),
+            Some("gnmi") => "grpc_gnmi".into(),
+            Some("udp") => "udp_2_layer".into(),
+            _ => "server".into(),
+        }
     };
 
     let timestamp = chrono::Local::now().format("%Y%m%d%H%M%S");
