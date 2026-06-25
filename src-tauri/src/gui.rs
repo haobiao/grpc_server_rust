@@ -89,17 +89,18 @@ pub struct AppState {
     server_thread: Mutex<Option<std::thread::JoinHandle<()>>>,
     stop_tx: Mutex<Option<tokio::sync::watch::Sender<bool>>>,
     start_time: Mutex<Option<Instant>>,
-    /// Channel sender for log messages (tracing layer → Tauri main thread)
     log_tx: std_mpsc::Sender<String>,
-    /// Shared file writer for optional log-to-file
     file_writer: SharedFileWriter,
+    only_log_file: std::sync::atomic::AtomicBool,
+    logfile_max_bytes: u64,
+    logfile_max_num: usize,
+    logfile_dir: Mutex<std::path::PathBuf>,
+    logfile_prefix: Mutex<String>,
 }
 
 impl Default for AppState {
     fn default() -> Self {
-        // Use a dummy channel; the real one is created in run()
         let (log_tx, _log_rx) = std_mpsc::channel::<String>();
-        // Discard _log_rx immediately — it will never be read
         drop(_log_rx);
         Self {
             server_thread: Mutex::new(None),
@@ -107,6 +108,11 @@ impl Default for AppState {
             start_time: Mutex::new(None),
             log_tx,
             file_writer: Arc::new(Mutex::new(None)),
+            only_log_file: std::sync::atomic::AtomicBool::new(false),
+            logfile_max_bytes: 5 * 1024 * 1024,
+            logfile_max_num: 50,
+            logfile_dir: Mutex::new(std::path::PathBuf::from("logs")),
+            logfile_prefix: Mutex::new(String::new()),
         }
     }
 }
@@ -243,9 +249,18 @@ async fn start_server(
     }
 
     if config.log_output {
+        // Set only_log_file flag BEFORE opening file
+        state.only_log_file.store(config.only_log_file, std::sync::atomic::Ordering::Relaxed);
+
+        // Store rotation config
+        state.logfile_max_bytes = (config.logfile_size as u64) * 1024 * 1024;
+        state.logfile_max_num = config.logfile_num;
+
         match open_log_file(&config) {
-            Ok(file) => {
+            Ok((file, dir, prefix)) => {
                 *state.file_writer.lock().unwrap() = Some(file);
+                *state.logfile_dir.lock().unwrap() = dir;
+                *state.logfile_prefix.lock().unwrap() = prefix;
             }
             Err(e) => {
                 let _ = app.emit("log-line", format!("WARNING: Failed to open log file: {}", e));
@@ -326,13 +341,13 @@ async fn get_stats(state: State<'_, AppState>) -> Result<StatsResponse, String> 
 // ── entry point ────────────────────────────────────────────────────────
 
 /// Open (or create) a log file under `./logs/` with mode+port+timestamp name.
-fn open_log_file(config: &GuiConfig) -> std::io::Result<std::fs::File> {
+/// Returns (File, log_dir, prefix) for rotation tracking.
+fn open_log_file(config: &GuiConfig) -> std::io::Result<(std::fs::File, std::path::PathBuf, String)> {
     let log_dir = std::env::current_dir()?.join("logs");
     if !log_dir.exists() {
         std::fs::create_dir_all(&log_dir)?;
     }
 
-    // 根据选中的模式数量生成日志文件名前缀
     let mode_name = if config.modes.len() > 1 {
         "multi_mode".to_string()
     } else {
@@ -345,8 +360,9 @@ fn open_log_file(config: &GuiConfig) -> std::io::Result<std::fs::File> {
         }
     };
 
+    let prefix = format!("{}_server_{}", mode_name, config.port);
     let timestamp = chrono::Local::now().format("%Y%m%d%H%M%S");
-    let filename = format!("{}_server_{}_{}.log", mode_name, config.port, timestamp);
+    let filename = format!("{}_{}.log", prefix, timestamp);
     let filepath = log_dir.join(&filename);
 
     let file = std::fs::OpenOptions::new()
@@ -354,15 +370,36 @@ fn open_log_file(config: &GuiConfig) -> std::io::Result<std::fs::File> {
         .append(true)
         .open(&filepath)?;
 
-    // Emit a notice to frontend
-    // (file_writer not yet set at this point, so just emit)
     tracing::info!("Log file: {}", filepath.display());
 
-    Ok(file)
+    Ok((file, log_dir, prefix))
+}
+
+/// Delete oldest log files matching prefix if count exceeds max_num.
+fn cleanup_old_logs(log_dir: &std::path::Path, prefix: &str, max_num: usize) {
+    let mut files: Vec<(std::path::PathBuf, std::time::SystemTime)> = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(log_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with(prefix) && name.ends_with(".log") {
+                if let Ok(meta) = entry.metadata() {
+                    if let Ok(modified) = meta.modified() {
+                        files.push((entry.path(), modified));
+                    }
+                }
+            }
+        }
+    }
+    // Sort by modified time, oldest first
+    files.sort_by_key(|(_, t)| *t);
+    // Delete oldest until we have max_num - 1 (leaving room for the new file)
+    while files.len() >= max_num {
+        let (path, _) = files.remove(0);
+        let _ = std::fs::remove_file(&path);
+    }
 }
 
 pub fn run() {
-    // Create log channel: tracing layer sends via log_tx, Tauri main loop receives via log_rx
     let (log_tx, log_rx) = std_mpsc::channel::<String>();
 
     // Install global tracing subscriber BEFORE Tauri app starts
@@ -382,12 +419,21 @@ pub fn run() {
             // Spawn a Tauri-side task to forward log messages to the frontend
             let app_handle = app.handle().clone();
             let log_rx_clone = log_rx.clone();
-            let file_writer: SharedFileWriter = app.state::<AppState>().file_writer.clone();
-            // Get the atomic counter used by TauriLogLayer to track backlog
+            let state_ref = app.state::<AppState>();
+            let file_writer: SharedFileWriter = state_ref.file_writer.clone();
+            let only_log_flag = state_ref.only_log_file.clone();
+            let max_bytes = state_ref.logfile_max_bytes.clone();
+            let max_num = state_ref.logfile_max_num.clone();
+            let log_dir = state_ref.logfile_dir.lock().unwrap().clone();
+            let log_prefix = state_ref.logfile_prefix.lock().unwrap().clone();
             let log_count_atomic = LOG_BACKLOG_COUNTER.clone();
 
             // Poll the channel every 100ms and batch-emit to frontend + write file
             tauri::async_runtime::spawn(async move {
+                let max_bytes = std::sync::Arc::new(max_bytes); // already u64 (Copy)
+                let max_num = std::sync::Arc::new(max_num);
+                let mut current_file_size: u64 = 0u64;
+
                 loop {
                     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                     let mut messages = Vec::new();
@@ -399,20 +445,48 @@ pub fn run() {
                     }
                     if messages.is_empty() { continue; }
 
-                    // Decrement the backlog counter so sender can resume
                     let n = messages.len();
                     log_count_atomic.fetch_sub(n, std::sync::atomic::Ordering::Relaxed);
 
-                    // Batch emit: send all messages as a single event to reduce IPC overhead
-                    let batch = messages.join("\n");
-                    let _ = app_handle.emit("log-line", &batch);
+                    // Emit to frontend unless only_log_file is set
+                    if !only_log_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                        let batch = messages.join("\n");
+                        let _ = app_handle.emit("log-line", &batch);
+                    }
 
-                    // Write to file if enabled
+                    // Write to file if enabled, with size-based rotation
                     if let Ok(mut fw) = file_writer.lock() {
                         if let Some(ref mut file) = *fw {
                             let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
                             for msg in &messages {
-                                let _ = writeln!(file, "{} {}", timestamp, msg);
+                                let line = format!("{} {}\n", timestamp, msg);
+                                let line_bytes = line.len() as u64;
+                                // Check if writing this line would exceed max size
+                                if current_file_size + line_bytes > *max_bytes {
+                                    // Rotate: drop current file, create new one
+                                    drop(std::mem::replace(&mut *fw, None));
+                                    // Delete old files beyond max_num
+                                    cleanup_old_logs(&log_dir, &log_prefix, *max_num);
+                                    // Create new file
+                                    let ts = chrono::Local::now().format("%Y%m%d%H%M%S");
+                                    let new_name = format!("{}_{}.log", log_prefix, ts);
+                                    let new_path = log_dir.join(&new_name);
+                                    match std::fs::OpenOptions::new()
+                                        .create(true)
+                                        .append(true)
+                                        .open(&new_path)
+                                    {
+                                        Ok(new_file) => {
+                                            *fw = Some(new_file);
+                                            current_file_size = 0;
+                                        }
+                                        Err(_) => { break; }
+                                    }
+                                }
+                                if let Some(ref mut f) = *fw {
+                                    let _ = f.write_all(line.as_bytes());
+                                    current_file_size += line_bytes;
+                                }
                             }
                         }
                     }
