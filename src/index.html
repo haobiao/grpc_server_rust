@@ -787,7 +787,7 @@
             themeToggle: $('theme-toggle'), iconSun: $('icon-sun'),
             logSearch: $('log-search'),
             statStatus: $('stat-status'), statMsgCount: $('stat-msg-count'),
-            statUptime: $('stat-uptime'), statAddr: $('stat-addr'),
+            statUptime: $('stat-uptime'),
             statusDot: $('status-dot'),
         };
 
@@ -967,7 +967,6 @@
                 els.btnStop.disabled = false;
                 els.statStatus.textContent = '运行中';
                 els.statusDot.classList.add('running');
-                els.statAddr.textContent = `0.0.0.0:${port}`;
                 if (allMode) {
                     appendLog('全模式启动: gRPC 2-layer + gRPC 3-layer + gNMI + UDP');
                 }
