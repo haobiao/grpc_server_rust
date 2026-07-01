@@ -108,17 +108,20 @@
         .navbar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             padding: var(--space-2) var(--space-4);
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            position: relative;
         }
 
         .navbar__left {
             display: flex;
             align-items: center;
             gap: var(--space-3);
+            position: absolute;
+            left: var(--space-4);
         }
 
         .brand-icon {
@@ -173,6 +176,8 @@
             display: flex;
             align-items: center;
             gap: var(--space-2);
+            position: absolute;
+            right: var(--space-4);
         }
 
         .theme-btn {
@@ -1032,13 +1037,23 @@
         }, 2000);
 
         // ── Backend events ──
-        // Register log listener immediately — Tauri 2 listen() is async and returns a Promise.
-        // We must register BEFORE any invoke('start_server') call so events aren't missed.
         listen('log-line', (event) => {
             appendLog(event.payload);
         }).then(() => {
             logListenerReady = true;
         }).catch(e => console.error('Failed to listen for log-line:', e));
+
+        // Listen for server-stopped event (auto-stop on backend error)
+        listen('server-stopped', () => {
+            els.btnStart.disabled = false;
+            els.btnStop.disabled = true;
+            els.statStatus.textContent = '已停止';
+            els.statusDot.classList.remove('running');
+            setSettingsDisabled(false);
+        }).catch(e => console.error('Failed to listen for server-stopped:', e));
+
+        // ── Disable right-click context menu ──
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // ── Init ──
         appendLog('gRPC Dialout Server GUI 已就绪');

@@ -311,8 +311,13 @@ async fn start_server(
                 let _ = app_for_thread.emit("log-line", "Server exited cleanly".to_string());
             }
             Err(e) => {
-                let msg = format!("Server error: {}", e);
-                let _ = app_for_thread.emit("log-line", msg);
+                let msg = format!("ERROR: Server failed: {}", e);
+                // Log the error
+                tracing::error!("{}", msg);
+                // Emit error to frontend
+                let _ = app_for_thread.emit("log-line", msg.clone());
+                // Auto-stop: reset frontend UI state via a dedicated event
+                let _ = app_for_thread.emit("server-stopped", ());
             }
         }
     });
