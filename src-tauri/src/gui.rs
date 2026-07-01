@@ -130,7 +130,7 @@ static LOG_BACKLOG_COUNTER: std::sync::LazyLock<Arc<std::sync::atomic::AtomicUsi
 static LOG_ONLY_FILE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static LOG_MAX_BYTES: std::sync::Mutex<u64> = std::sync::Mutex::new(5 * 1024 * 1024);
 static LOG_MAX_NUM: std::sync::Mutex<usize> = std::sync::Mutex::new(50);
-static LOG_DIR: std::sync::Mutex<std::path::PathBuf> = std::sync::Mutex::new(std::path::PathBuf::from("logs"));
+static LOG_DIR: std::sync::Mutex<std::path::PathBuf> = std::sync::Mutex::new(std::path::PathBuf::new());
 static LOG_PREFIX: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
 
 impl<S> Layer<S> for TauriLogLayer
@@ -454,36 +454,40 @@ pub fn run() {
 
                     // Write to file if enabled, with size-based rotation
                     if let Ok(mut fw) = file_writer.lock() {
-                        if let Some(ref mut file) = *fw {
-                            for msg in &messages {
-                                let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-                                let line = format!("{} {}\n", timestamp, msg);
-                                let line_bytes = line.len() as u64;
+                        for msg in &messages {
+                            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+                            let line = format!("{} {}\n", timestamp, msg);
+                            let line_bytes = line.len() as u64;
 
-                                if current_file_size + line_bytes > max_bytes {
+                            // Check if we need rotation before writing
+                            let need_rotate = current_file_size + line_bytes > max_bytes;
+                            if need_rotate {
+                                // Flush and close current file
+                                if let Some(ref mut file) = *fw {
                                     let _ = file.flush();
-                                    // Delete old files beyond max_num
-                                    cleanup_old_logs(&log_dir, &log_prefix, max_num);
-                                    // Create new file
-                                    let ts = chrono::Local::now().format("%Y%m%d%H%M%S");
-                                    let new_name = format!("{}_{}.log", log_prefix, ts);
-                                    let new_path = log_dir.join(&new_name);
-                                    match std::fs::OpenOptions::new()
-                                        .create(true)
-                                        .append(true)
-                                        .open(&new_path)
-                                    {
-                                        Ok(new_file) => {
-                                            *fw = Some(new_file);
-                                            current_file_size = 0;
-                                        }
-                                        Err(_) => break,
+                                }
+                                // Delete old files beyond max_num
+                                cleanup_old_logs(&log_dir, &log_prefix, max_num);
+                                // Create new file
+                                let ts = chrono::Local::now().format("%Y%m%d%H%M%S");
+                                let new_name = format!("{}_{}.log", log_prefix, ts);
+                                let new_path = log_dir.join(&new_name);
+                                match std::fs::OpenOptions::new()
+                                    .create(true)
+                                    .append(true)
+                                    .open(&new_path)
+                                {
+                                    Ok(new_file) => {
+                                        *fw = Some(new_file);
+                                        current_file_size = 0;
                                     }
+                                    Err(_) => break,
                                 }
-                                if let Some(ref mut f) = *fw {
-                                    let _ = f.write_all(line.as_bytes());
-                                    current_file_size += line_bytes;
-                                }
+                            }
+                            // Write the line
+                            if let Some(ref mut file) = *fw {
+                                let _ = file.write_all(line.as_bytes());
+                                current_file_size += line_bytes;
                             }
                         }
                     }
