@@ -17,6 +17,37 @@ use tracing_subscriber::Layer;
 use crate::models::{self, DialoutMode, ServerConfig};
 use crate::server::Server;
 
+/// Open the current working directory in the OS file explorer.
+#[tauri::command]
+async fn open_current_dir() -> Result<(), String> {
+    let dir = std::env::current_exe()
+        .map_err(|e| format!("Failed to get exe path: {}", e))?;
+    let dir = dir.parent()
+        .ok_or("Failed to get parent directory")?;
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open explorer: {}", e))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open Finder: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open file manager: {}", e))?;
+    }
+    Ok(())
+}
+
 /// Configuration payload sent from the frontend.
 #[derive(Debug, Clone, Deserialize)]
 pub struct GuiConfig {
@@ -500,7 +531,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             start_server,
             stop_server,
-            get_stats
+            get_stats,
+            open_current_dir
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

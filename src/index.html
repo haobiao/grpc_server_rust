@@ -97,6 +97,13 @@
             user-select: none;
         }
 
+        /* Allow text selection in log area */
+        .log-output, .log-line {
+            user-select: text;
+            cursor: text;
+        }
+        }
+
         /* ═══ Nav Bar (Apple segmented control style) ═══ */
         .navbar {
             display: flex;
@@ -609,6 +616,9 @@
 
 
                 <div class="btn-group">
+                    <button class="apple-btn btn-ghost" id="btn-open-dir" title="打开程序所在目录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    </button>
                     <button class="apple-btn btn-primary" id="btn-start">
                         <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         开始采集
@@ -782,6 +792,7 @@
             allMode: $('all-mode'), modeGroup: $('mode-group'),
             logFile: $('log-file'), onlyLog: $('only-log'),
             logSize: $('log-size'), logNum: $('log-num'),
+            btnOpenDir: $('btn-open-dir'),
             btnStart: $('btn-start'), btnStop: $('btn-stop'),
             btnClear: $('btn-clear'), btnScroll: $('btn-scroll'),
             themeToggle: $('theme-toggle'), iconSun: $('icon-sun'),
@@ -831,6 +842,9 @@
         // ── Log file toggle ──
         els.logFile.addEventListener('change', () => {
             els.onlyLog.disabled = !els.logFile.checked;
+            if (!els.logFile.checked && els.onlyLog.checked) {
+                els.onlyLog.checked = false;
+            }
         });
 
         // ── 全模式开关联动 ──
@@ -924,6 +938,15 @@
         }
 
         els.logSearch.addEventListener('input', renderAll);
+
+        // ── Open directory ──
+        els.btnOpenDir.addEventListener('click', async () => {
+            try {
+                await invoke('open_current_dir');
+            } catch (e) {
+                appendLog(`打开目录失败: ${e}`);
+            }
+        });
 
         els.btnClear.addEventListener('click', () => {
             logLines = []; msgCount = 0;
