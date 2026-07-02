@@ -107,14 +107,11 @@
         /* ═══ Nav Bar (Apple segmented control style) ═══ */
         .navbar {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: var(--space-2);
-            padding: var(--space-3) var(--space-4);
+            padding: var(--space-2) var(--space-4);
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            position: relative;
         }
 
         .navbar__top {
@@ -147,6 +144,7 @@
         /* Segmented Control (Apple style tabs) */
         .segmented {
             display: flex;
+            justify-content: center;
             background: var(--bg-input);
             border-radius: var(--radius-sm);
             padding: 2px;
@@ -543,38 +541,33 @@
 
     <!-- ═══ Navbar ═══ -->
     <nav class="navbar">
-        <!-- Top row: brand left, theme toggle right -->
         <div class="navbar__top">
+            <!-- Left: empty placeholder for centering -->
             <div class="navbar__left">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                </div>
-                <span class="brand-text">gRPC Dialout</span>
             </div>
 
+            <!-- Center: tabs -->
+            <div class="segmented" role="tablist">
+                <button class="seg-btn active" data-tab="collector" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+                    采集
+                </button>
+                <button class="seg-btn" data-tab="logfile" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    日志文件
+                </button>
+                <button class="seg-btn" data-tab="advanced" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    高级
+                </button>
+            </div>
+
+            <!-- Right: theme toggle -->
             <div class="navbar__right">
                 <button class="theme-btn" id="theme-toggle" title="切换主题">
                     <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
             </div>
-        </div>
-
-        <!-- Bottom row: centered tabs -->
-        <div class="segmented" role="tablist">
-            <button class="seg-btn active" data-tab="collector" role="tab">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
-                采集
-            </button>
-            <button class="seg-btn" data-tab="logfile" role="tab">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                日志文件
-            </button>
-            <button class="seg-btn" data-tab="advanced" role="tab">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                高级
-            </button>
         </div>
     </nav>
 
@@ -786,8 +779,11 @@
     </div>
 
     <script>
-        const { invoke } = window.__TAURI__.core;
-        const { listen } = window.__TAURI__.event;
+        // Safe extraction with fallback for local browser testing (no effect on Tauri)
+        const tauriCore = window.__TAURI__?.core || {};
+        const tauriEvent = window.__TAURI__?.event || {};
+        const invoke = tauriCore.invoke || (async () => { console.warn('invoke: no Tauri'); });
+        const listen = tauriEvent.listen || (async () => { console.warn('listen: no Tauri'); });
 
         // ── State ──
         const logArea = document.getElementById('log-area');
