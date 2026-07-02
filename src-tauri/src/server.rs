@@ -99,6 +99,13 @@ impl Server {
         let mode_names: Vec<&str> = modes.iter().map(|m| m.as_str()).collect();
         tracing::info!("Server modes [{}] on port {}", mode_names.join(", "), self.config.port);
 
+        // ── Pre-check: verify port availability before starting ──
+        let port = self.config.port;
+        if let Err(e) = check_port_available(port) {
+            tracing::error!("{}", e);
+            return Err(AppError::Config(e));
+        }
+
         let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], self.config.port));
         let addr_v6: SocketAddr = format!("[::]:{}", self.config.port)
             .parse()
@@ -332,4 +339,42 @@ impl Server {
 struct TlsConfig {
     identity: Identity,
     ca: Certificate,
+}
+
+/// Check if a TCP port is available on IPv4.
+/// Returns Ok(()) if available, Err with message if occupied.
+fn check_port_available(port: u16) -> std::result::Result<(), String> {
+    // Try binding IPv4
+    let addr_v4: SocketAddr = SocketAddr::from(([0, 0, 0, 0], port));
+    match std::net::TcpListener::bind(addr_v4) {
+        Ok(_) => {}
+        Err(_) => {
+            return Err(format!(
+                "端口 {} 已被占用，请更换其他端口后重试 (Port {} is already in use)",
+                port, port
+            ));
+        }
+    }
+
+    // Try binding IPv6 (may fail if IPv6 not available, which is OK)
+    let addr_v6: SocketAddr = format!("[::]:{}", port)
+        .parse()
+        .unwrap_or(addr_v4);
+    match std::net::TcpListener::bind(addr_v6) {
+        Ok(_) => Ok(()),
+        Err(_) => {
+            // IPv6 bind failed — check if it's because IPv6 is unavailable vs port occupied
+            // Try binding a random IPv6 port to see if IPv6 works at all
+            let test_addr: SocketAddr = "[::]:0".parse().unwrap_or(addr_v4);
+            if std::net::TcpListener::bind(test_addr).is_err() {
+                // IPv6 not available on this system — that's OK
+                return Ok(());
+            }
+            // IPv6 works but our port is occupied
+            Err(format!(
+                "端口 {} 已被占用 (IPv6)，请更换其他端口后重试 (Port {} is already in use on IPv6)",
+                port, port
+            ))
+        }
+    }
 }
