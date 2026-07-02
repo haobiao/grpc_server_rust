@@ -278,17 +278,22 @@ impl Server {
 
     /// Load TLS configuration from the tls/ directory.
     fn load_tls_config(&self) -> Result<TlsConfig> {
-        // Check exe directory first, then current dir (for GUI mode)
-        let exe_dir = std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+        // Try multiple candidate directories for TLS files
+        let candidates: Vec<std::path::PathBuf> = vec![
+            std::env::current_exe().ok()
+                .and_then(|p| p.parent().map(|d| d.join(TLS_DIR)))
+                .unwrap_or_else(|| std::path::PathBuf::from(TLS_DIR)),
+            std::env::current_dir().map(|d| d.join(TLS_DIR)).unwrap_or_default(),
+            std::path::PathBuf::from(TLS_DIR),
+        ];
 
-        let tls_dir = if let Some(ref exe) = exe_dir {
-            let d = exe.join(TLS_DIR);
-            if d.exists() { d } else { std::env::current_dir()?.join(TLS_DIR) }
-        } else {
-            std::env::current_dir()?.join(TLS_DIR)
-        };
+        let tls_dir = candidates.iter()
+            .find(|d| d.join(CERT_CHAIN).exists())
+            .cloned()
+            .ok_or_else(|| AppError::Tls(format!(
+                "TLS files not found. Searched: {:?}. Need: {}, {}, {}",
+                candidates, CERT_CHAIN, PRIVATE_KEY, ROOT_CERT
+            )))?;
 
         let cert_path = tls_dir.join(CERT_CHAIN);
         let key_path = tls_dir.join(PRIVATE_KEY);

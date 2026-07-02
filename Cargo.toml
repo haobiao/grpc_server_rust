@@ -11,6 +11,7 @@ codegen-units = 16
 opt-level = 2
 debug = false
 strip = true
+panic = "unwind"
 
 # 正式发布 profile：使用 thin LTO 平衡性能与编译速度
 [profile.release]
@@ -18,4 +19,4 @@ opt-level = 3
 lto = "thin"
 codegen-units = 16
 strip = true
-panic = "abort"
+panic = "unwind"
