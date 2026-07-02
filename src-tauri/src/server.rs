@@ -278,8 +278,17 @@ impl Server {
 
     /// Load TLS configuration from the tls/ directory.
     fn load_tls_config(&self) -> Result<TlsConfig> {
-        let current_dir = std::env::current_dir()?;
-        let tls_dir = current_dir.join(TLS_DIR);
+        // Check exe directory first, then current dir (for GUI mode)
+        let exe_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+
+        let tls_dir = if let Some(ref exe) = exe_dir {
+            let d = exe.join(TLS_DIR);
+            if d.exists() { d } else { std::env::current_dir()?.join(TLS_DIR) }
+        } else {
+            std::env::current_dir()?.join(TLS_DIR)
+        };
 
         let cert_path = tls_dir.join(CERT_CHAIN);
         let key_path = tls_dir.join(PRIVATE_KEY);
@@ -314,6 +323,7 @@ impl Server {
 }
 
 /// TLS configuration container.
+#[derive(Clone)]
 struct TlsConfig {
     identity: Identity,
     ca: Certificate,

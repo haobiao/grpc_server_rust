@@ -1001,9 +1001,9 @@
                 els.statusDot.classList.add('running');
                 if (allMode) {
                     appendLog('全模式启动: gRPC 2-layer + gRPC 3-layer + gNMI + UDP');
-                }
-                else{
-                    appendLog('${els.mode.text} 启动');
+                } else {
+                    const modeText = els.mode.options[els.mode.selectedIndex].text;
+                    appendLog(`${modeText} 启动`);
                 }
                 // Disable all settings while running
                 setSettingsDisabled(true);
